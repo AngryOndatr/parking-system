@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: Client Service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/PARKING_DB
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # or validate, none
+    show-sql: true
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html # Path to interface
+  api-docs:
+    path: /v3/api-docs # Path to JSON-specification
+  info:
+    title: Parking Client Service API
+    version: 1.0.0
+    description: API to manage clients and vehicles
+

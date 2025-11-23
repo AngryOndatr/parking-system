@@ -1,15 +1,15 @@
-# Database
+# Backend
 
-This directory contains database migration scripts for the parking system.
-
-## Migration Tools
-
-- Flyway or Liquibase (to be decided)
+This directory contains the Spring Boot microservice code for the parking system.
 
 ## Structure
 
-TBD - Migration scripts will be organized by version as the schema evolves.
+TBD - Will be organized as the application develops.
 
-## Usage
+## Technologies
 
-TBD - Instructions will be added once the migration tool is chosen and configured.
+- Java
+- Spring Boot
+- Spring Data JPA
+- Spring Security
+- Maven/Gradle

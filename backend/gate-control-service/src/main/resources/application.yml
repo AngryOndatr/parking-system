@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: Gate Control Service
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html # Устанавливаем путь к интерфейсу
+  api-docs:
+    path: /v3/api-docs # Путь к JSON-спецификации
+  info:
+    title: Parking Client Service API
+    version: 1.0.0
+    description: API для управления клиентами и транспортными средствами
