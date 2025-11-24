@@ -2,34 +2,34 @@ openapi: 3.0.3
 info:
   title: Parking Client Service API
   description: |
-    API для управления клиентами (владельцами абонементов) и их транспортными средствами.
-    Это центральный сервис для регистрации и идентификации абонентов.
+    API for managing clients (subscription owners) and their vehicles.
+    This is the central service for registering and identifying subscribers.
   version: 1.0.0
 servers:
-  - url: http://localhost:8080 # Внутренний порт контейнера
+  - url: http://localhost:8080 # Internal container port
     description: Client Service Development Server
-  - url: http://client-service:8080 # Внутреннее имя Docker
+  - url: http://client-service:8080 # Internal Docker network name
     description: Client Service Docker Network
 
 tags:
   - name: clients
-    description: Операции с клиентами и абонентами
+    description: Operations with clients and subscribers
   - name: vehicles
-    description: Операции с транспортными средствами
+    description: Operations with vehicles
 
 paths:
   # =================================================================
-  # CLIENTS (Клиенты)
+  # CLIENTS
   # =================================================================
   /api/v1/clients:
     get:
       tags:
         - clients
-      summary: Получить список всех зарегистрированных клиентов
+      summary: Get a list of all registered clients
       operationId: getAllClients
       responses:
         '200':
-          description: Успешный ответ. Список клиентов.
+          description: Successful response. List of clients.
           content:
             application/json:
               schema:
@@ -41,7 +41,7 @@ paths:
     post:
       tags:
         - clients
-      summary: Зарегистрировать нового клиента
+      summary: Register a new client
       operationId: createClient
       requestBody:
         required: true
@@ -51,7 +51,7 @@ paths:
               $ref: '#/components/schemas/ClientRequest'
       responses:
         '201':
-          description: Клиент успешно создан
+          description: Client successfully created
           content:
             application/json:
               schema:
@@ -65,7 +65,7 @@ paths:
     get:
       tags:
         - clients
-      summary: Получить клиента по ID
+      summary: Get client by ID
       operationId: getClientById
       parameters:
         - name: id
@@ -76,7 +76,7 @@ paths:
             format: int64
       responses:
         '200':
-          description: Успешный ответ
+          description: Successful response
           content:
             application/json:
               schema:
@@ -88,7 +88,7 @@ paths:
     put:
       tags:
         - clients
-      summary: Обновить данные клиента по ID
+      summary: Update client data by ID
       operationId: updateClient
       parameters:
         - name: id
@@ -105,7 +105,7 @@ paths:
               $ref: '#/components/schemas/ClientRequest'
       responses:
         '200':
-          description: Клиент успешно обновлен
+          description: Client successfully updated
           content:
             application/json:
               schema:
@@ -119,7 +119,7 @@ paths:
     get:
       tags:
         - clients
-      summary: Поиск клиента по номеру телефона
+      summary: Search client by phone number
       operationId: searchClientByPhone
       parameters:
         - name: phone
@@ -127,10 +127,10 @@ paths:
           required: true
           schema:
             type: string
-          description: Номер телефона клиента (используется для быстрой идентификации)
+          description: Client phone number (used for quick identification)
       responses:
         '200':
-          description: Клиент найден
+          description: Client found
           content:
             application/json:
               schema:
@@ -139,13 +139,13 @@ paths:
           $ref: '#/components/responses/NotFoundError'
 
   # =================================================================
-  # VEHICLES (Транспортные средства)
+  # VEHICLES
   # =================================================================
   /api/v1/clients/{clientId}/vehicles:
     post:
       tags:
         - vehicles
-      summary: Добавить новое транспортное средство клиенту
+      summary: Add a new vehicle to a client
       operationId: addVehicleToClient
       parameters:
         - name: clientId
@@ -162,7 +162,7 @@ paths:
               $ref: '#/components/schemas/VehicleRequest'
       responses:
         '201':
-          description: Автомобиль успешно добавлен
+          description: Vehicle successfully added
           content:
             application/json:
               schema:
@@ -174,7 +174,7 @@ paths:
     get:
       tags:
         - vehicles
-      summary: Получить список всех ТС клиента
+      summary: Get a list of all client's vehicles
       operationId: getVehiclesByClient
       parameters:
         - name: clientId
@@ -185,7 +185,7 @@ paths:
             format: int64
       responses:
         '200':
-          description: Список транспортных средств
+          description: List of vehicles
           content:
             application/json:
               schema:
@@ -195,7 +195,7 @@ paths:
 
 components:
   schemas:
-    # --- Схемы для Клиента (DTO) ---
+    # --- Schemas for Client (DTO) ---
     ClientRequest:
       type: object
       properties:
@@ -230,8 +230,8 @@ components:
           type: string
           format: date-time
           example: 2025-11-20T10:00:00Z
-    
-    # --- Схемы для Транспортного Средства (DTO) ---
+
+    # --- Schemas for Vehicle (DTO) ---
     VehicleRequest:
       type: object
       properties:
@@ -257,7 +257,7 @@ components:
           type: integer
           format: int64
 
-    # --- Схема для Ошибок ---
+    # --- Schema for Errors ---
     ApiError:
       type: object
       properties:
@@ -273,23 +273,23 @@ components:
           example: Not Found
         message:
           type: string
-          example: Клиент с ID 123 не найден.
+          example: Client with ID 123 not found.
 
   responses:
     NotFoundError:
-      description: Ресурс не найден (404)
+      description: Resource not found (404)
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiError'
     BadRequestError:
-      description: Некорректный запрос или невалидные данные (400)
+      description: Bad request or invalid data (400)
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiError'
     InternalServerError:
-      description: Внутренняя ошибка сервера (500)
+      description: Internal server error (500)
       content:
         application/json:
           schema:
