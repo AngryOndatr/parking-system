@@ -1,12 +1,21 @@
 spring:
   application:
     name: Billing Service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/parking_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html # Устанавливаем путь к интерфейсу
+    path: /swagger-ui.html
   api-docs:
-    path: /v3/api-docs # Путь к JSON-спецификации
+    path: /v3/api-docs
   info:
-    title: Parking Client Service API
+    title: Parking Billing Service API
     version: 1.0.0
-    description: API для управления клиентами и транспортными средствами
+    description: REST API for billing and payment management
+
+server:
+  port: 8080

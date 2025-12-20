@@ -1,48 +1,5 @@
-# ============================================
-# СТАДИЯ 1: СБОРКА (BUILD STAGE)
-# Используется для компиляции и сборки JAR-файла
-# ============================================
-FROM eclipse-temurin:17-jdk-alpine AS build
-
-# Установка Maven (если вы используете Maven)
-# Если вы используете Gradle, замените этот раздел
-RUN apk update && apk add maven
-
-# Создание каталога приложения
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-
-# Копирование файлов pom.xml (для Maven) для загрузки зависимостей
-# Это позволяет Docker использовать кеш слоев, если pom не изменился
-COPY pom.xml .
-
-# Копирование исходного кода
-COPY src src
-
-# Выполнение сборки
-RUN mvn clean package -DskipTests
-
-# ============================================
-# СТАДИЯ 2: РАБОЧИЙ ОБРАЗ (RUNTIME STAGE)
-# Использование минимального JRE для запуска приложения
-# ============================================
-FROM eclipse-temurin:17-jre-alpine
-
-# Копирование JAR-файла из стадии сборки
-# Имя JAR_FILE передается из docker-compose
-ARG JAR_FILE
-
-# Копирование JAR-файла из первой стадии
-# Используем '*-SNAPSHOT.jar', если вы работаете с Snapshot-версиями
-COPY --from=build /app/target/${JAR_FILE} app.jar
-
-# Установка часового пояса (рекомендовано для логов и временных меток)
-ENV TZ UTC
-
-# Установка рабочего каталога
-WORKDIR /
-
-# Сервис запускается на порту 8080 внутри контейнера
+COPY target/*.jar app.jar
 EXPOSE 8080
-
-# Команда для запуска приложения
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

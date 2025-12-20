@@ -1,6 +1,8 @@
 
 services:
   postgres:
+    networks:
+      - app-network
     image: postgres:16-alpine
     container_name: parking_db
     environment:
@@ -19,6 +21,8 @@ services:
       retries: 5
 
   client-service:
+    networks:
+      - app-network
     build:
       context: ./backend/client-service
       args:
@@ -92,18 +96,34 @@ services:
 #      SPRING_DATASOURCE_USERNAME: postgres
 #      SPRING_DATASOURCE_PASSWORD: postgres
 #
-#  api-gateway:
-#    build:
-#      context: ./backend/api-gateway
-#    container_name: api-gateway
-#    ports:
-#      - "8086:8080"
-#    depends_on:
-#      - postgres
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/parking_db
-#      SPRING_DATASOURCE_USERNAME: postgres
-#      SPRING_DATASOURCE_PASSWORD: postgres
+  eureka-server:
+    image: steeltoeoss/eureka-server:latest
+    container_name: eureka-server
+    networks:
+      - app-network
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+      - EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false
+
+  api-gateway:
+    networks:
+      - app-network
+    build:
+      context: ./backend/api-gateway
+    container_name: api-gateway
+    ports:
+      - "8086:8080"
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   parking_data: {}

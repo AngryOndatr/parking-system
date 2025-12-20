@@ -1,12 +1,193 @@
+server:
+  port: ${PORT:8080}
+
 spring:
   application:
     name: API Gateway
+  
+  # Profile Configuration
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod-security}
+  
+  # Redis Configuration for Security
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD}  # REQUIRED for production!
+      timeout: ${SPRING_REDIS_TIMEOUT:2000}
+      lettuce:
+        pool:
+          enabled: true
+          max-active: 10
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1
+      database: 0
+  
+  # Database Configuration
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/parking_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+  
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: ${HIBERNATE_DDL_AUTO:validate}  # validate for production, create-drop for dev
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    show-sql: false
+    open-in-view: false
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: development
+  
+  # JPA Configuration for Development
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # OK for development
+    show-sql: true  # OK for development
+
+logging:
+  level:
+    com.parking: DEBUG  # OK for development
+    org.springframework.security: DEBUG
+
+security:
+  jwt:
+    access-token-expiration: 3600    # 1 hour (for development convenience)
+    refresh-token-expiration: 86400  # 24 hours
+
+---
+# Production Security Profile
+spring:
+  config:
+    activate:
+      on-profile: prod-security
+
+# Security Configuration
+security:
+  jwt:
+    secret: ${JWT_SECRET}  # MUST be set as environment variable (min 64 chars)
+    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:1800}    # 30 minutes (more secure)
+    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:43200}  # 12 hours (more secure)
+    issuer: ${JWT_ISSUER:parking-system}
+  
+  rate-limiting:
+    enabled: ${RATE_LIMITING_ENABLED:true}
+    max-requests-per-minute: ${RATE_LIMIT_MINUTE:60}
+    max-requests-per-hour: ${RATE_LIMIT_HOUR:1000}
+    brute-force-threshold: ${BRUTE_FORCE_THRESHOLD:10}
+  
+  audit:
+    enabled: ${SECURITY_AUDIT_ENABLED:true}
+    log-level: ${SECURITY_AUDIT_LOG_LEVEL:INFO}
+
+# OpenTelemetry Configuration
+otel:
+  service:
+    name: ${spring.application.name}
+    version: ${MANAGEMENT_TRACING_SERVICE_VERSION:1.0.0}
+  exporter:
+    otlp:
+      endpoint: ${MANAGEMENT_TRACING_OTLP_ENDPOINT:http://localhost:4317}
+  instrumentation:
+    spring-webmvc:
+      enabled: true
+    jdbc:
+      enabled: true
+    redis:
+      enabled: true
+
+---
+# No-Redis Profile (Development Only)
+spring:
+  config:
+    activate:
+      on-profile: no-redis
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.*
+      - org.springframework.boot.actuate.autoconfigure.data.redis.*
+
+---
+# Actuator Management Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,traces
+  endpoint:
+    health:
+      show-details: when-authorized
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    enabled: ${MANAGEMENT_TRACING_ENABLED:true}
+    otlp:
+      endpoint: ${MANAGEMENT_TRACING_OTLP_ENDPOINT:http://localhost:4317}
+    service:
+      version: ${MANAGEMENT_TRACING_SERVICE_VERSION:1.0.0}
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:0.1}  # 10% sampling
+  health:
+    defaults:
+      enabled: true
+    redis:
+      enabled: true
+    db:
+      enabled: true
+    diskSpace:
+      enabled: true
+    ping:
+      enabled: true
+
+# Eureka Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html # Устанавливаем путь к интерфейсу
+    path: /swagger-ui.html # Set the path to the UI
   api-docs:
-    path: /v3/api-docs # Путь к JSON-спецификации
+    path: /v3/api-docs # Path to the JSON specification
   info:
-    title: Parking Client Service API Gateaway
+    title: Parking System API Gateway
     version: 1.0.0
-    description: API для управления клиентами и транспортными средствами
+    description: API Gateway with JWT Authentication for Parking System
+
+logging:
+  level:
+    com.parking: ${LOGGING_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOGGING_LEVEL:WARN}
+    root: WARN

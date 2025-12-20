@@ -24,7 +24,7 @@ paths:
   /api/v1/clients:
     get:
       tags:
-        - clients
+        - Clients
       summary: Get a list of all registered clients
       operationId: getAllClients
       responses:
@@ -40,7 +40,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     post:
       tags:
-        - clients
+        - Clients
       summary: Register a new client
       operationId: createClient
       requestBody:
@@ -64,7 +64,7 @@ paths:
   /api/v1/clients/{id}:
     get:
       tags:
-        - clients
+        - Clients
       summary: Get client by ID
       operationId: getClientById
       parameters:
@@ -87,7 +87,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     put:
       tags:
-        - clients
+        - Clients
       summary: Update client data by ID
       operationId: updateClient
       parameters:
@@ -118,7 +118,7 @@ paths:
   /api/v1/clients/search:
     get:
       tags:
-        - clients
+        - Clients
       summary: Search client by phone number
       operationId: searchClientByPhone
       parameters:
@@ -144,7 +144,7 @@ paths:
   /api/v1/clients/{clientId}/vehicles:
     post:
       tags:
-        - vehicles
+        - Vehicles
       summary: Add a new vehicle to a client
       operationId: addVehicleToClient
       parameters:
@@ -173,7 +173,7 @@ paths:
           $ref: '#/components/responses/BadRequestError'
     get:
       tags:
-        - vehicles
+        - Vehicles
       summary: Get a list of all client's vehicles
       operationId: getVehiclesByClient
       parameters:
