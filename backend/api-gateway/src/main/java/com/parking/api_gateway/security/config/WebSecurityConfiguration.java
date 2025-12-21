@@ -1,8 +1,8 @@
 package com.parking.api_gateway.security.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProfile;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -26,7 +26,7 @@ public class WebSecurityConfiguration {
     private final CorsConfigurationSource corsConfigurationSource;
     
     @Bean
-    @ConditionalOnProfile("prod-security")
+    @Profile("prod-security")
     public SecurityFilterChain productionSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
             // Disable CSRF for stateless JWT authentication
@@ -47,7 +47,8 @@ public class WebSecurityConfiguration {
                     "/actuator/health",
                     "/api/health",
                     "/swagger-ui/**",
-                    "/v3/api-docs/**"
+                    "/v3/api-docs/**",
+                    "/api/clients/**"  // TODO: TEMPORARY - Remove after testing
                 ).permitAll()
                 
                 // All other endpoints require authentication
@@ -56,18 +57,15 @@ public class WebSecurityConfiguration {
             
             // Add security headers for production
             .headers(headers -> headers
-                .frameOptions().deny()  // Prevent clickjacking
-                .contentTypeOptions().and()  // Prevent MIME type sniffing
+                .frameOptions(frameOptions -> frameOptions.deny())  // Prevent clickjacking
+                .contentTypeOptions(contentType -> {})  // Prevent MIME type sniffing
                 .httpStrictTransportSecurity(hstsConfig -> hstsConfig
                     .maxAgeInSeconds(31536000)  // 1 year
-                    .includeSubdomains(true)
+                    .includeSubDomains(true)
                     .preload(true)
                 )
-                .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                .and()
-                .httpStrictTransportSecurity(hstsConfig -> hstsConfig
-                    .maxAgeInSeconds(31536000)
-                    .includeSubdomains(true)
+                .referrerPolicy(referrer -> referrer
+                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 )
             )
             
@@ -78,7 +76,7 @@ public class WebSecurityConfiguration {
     }
     
     @Bean
-    @ConditionalOnProfile("development") 
+    @Profile("development")
     public SecurityFilterChain developmentSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
@@ -91,7 +89,8 @@ public class WebSecurityConfiguration {
                     "/actuator/**",
                     "/api/health",
                     "/swagger-ui/**",
-                    "/v3/api-docs/**"
+                    "/v3/api-docs/**",
+                    "/api/clients/**"  // Allow for testing
                 ).permitAll()
                 .anyRequest().authenticated()
             )

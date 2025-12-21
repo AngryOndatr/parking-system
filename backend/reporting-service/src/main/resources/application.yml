@@ -3,10 +3,10 @@ spring:
     name: Reporting Service
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html # Устанавливаем путь к интерфейсу
+    path: /swagger-ui.html # Path to swagger UI
   api-docs:
-    path: /v3/api-docs # Путь к JSON-спецификации
+    path: /v3/api-docs # Path to JSON documentation
   info:
-    title: Parking Client Service API
+    title: Reporting Service API
     version: 1.0.0
-    description: API для управления клиентами и транспортными средствами
+    description: API for parking reporting and analytics

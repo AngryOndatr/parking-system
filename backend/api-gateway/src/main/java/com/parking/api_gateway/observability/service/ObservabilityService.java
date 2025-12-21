@@ -7,12 +7,11 @@ import io.micrometer.core.instrument.Gauge;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -21,7 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ObservabilityService {
     
@@ -77,17 +75,17 @@ public class ObservabilityService {
             .register(meterRegistry);
         
         // Initialize gauges
-        Gauge.builder("sessions.active")
+        Gauge.builder("sessions.active", activeSessions, ai -> ai.get())
             .description("Number of active user sessions")
-            .register(meterRegistry, activeSessions, AtomicInteger::get);
-            
-        Gauge.builder("security.blocked_ips")
+            .register(meterRegistry);
+
+        Gauge.builder("security.blocked_ips", blockedIps, ai -> ai.get())
             .description("Number of currently blocked IP addresses")
-            .register(meterRegistry, blockedIps, AtomicInteger::get);
-            
-        Gauge.builder("requests.total")
+            .register(meterRegistry);
+
+        Gauge.builder("requests.total", totalRequests, al -> al.get())
             .description("Total number of requests processed")
-            .register(meterRegistry, totalRequests, AtomicLong::get);
+            .register(meterRegistry);
     }
     
     // Authentication metrics
@@ -112,21 +110,16 @@ public class ObservabilityService {
     }
     
     public void recordLoginFailure(String username, String ipAddress, String reason) {
-        loginFailures.increment(
-            Attributes.of(
-                AttributeKey.stringKey("reason"), reason,
-                AttributeKey.stringKey("username"), username,
-                AttributeKey.stringKey("client_ip"), ipAddress
-            )
-        );
-        
+        loginFailures.increment();
+
         Span span = tracer.spanBuilder("auth.login.failure")
             .setAttribute("user.name", username)
             .setAttribute("client.ip", ipAddress)
             .setAttribute("failure.reason", reason)
-            .setStatus(StatusCode.ERROR, "Login failed: " + reason)
             .startSpan();
         
+        span.setStatus(StatusCode.ERROR, "Login failed: " + reason);
+
         try {
             log.warn("Failed login recorded for user: {} from IP: {}, reason: {}", 
                     username, ipAddress, reason);
@@ -137,19 +130,15 @@ public class ObservabilityService {
     
     // Security metrics
     public void recordRateLimitViolation(String ipAddress, String endpoint) {
-        rateLimitViolations.increment(
-            Attributes.of(
-                AttributeKey.stringKey("client_ip"), ipAddress,
-                AttributeKey.stringKey("endpoint"), endpoint
-            )
-        );
-        
+        rateLimitViolations.increment();
+
         Span span = tracer.spanBuilder("security.rate_limit_violation")
             .setAttribute("client.ip", ipAddress)
             .setAttribute("endpoint", endpoint)
-            .setStatus(StatusCode.ERROR, "Rate limit exceeded")
             .startSpan();
         
+        span.setStatus(StatusCode.ERROR, "Rate limit exceeded");
+
         try {
             log.warn("Rate limit violation from IP: {} on endpoint: {}", ipAddress, endpoint);
         } finally {
@@ -158,20 +147,16 @@ public class ObservabilityService {
     }
     
     public void recordSecurityViolation(String type, String details, String ipAddress) {
-        securityViolations.increment(
-            Attributes.of(
-                AttributeKey.stringKey("violation_type"), type,
-                AttributeKey.stringKey("client_ip"), ipAddress
-            )
-        );
-        
+        securityViolations.increment();
+
         Span span = tracer.spanBuilder("security.violation")
             .setAttribute("violation.type", type)
             .setAttribute("violation.details", details)
             .setAttribute("client.ip", ipAddress)
-            .setStatus(StatusCode.ERROR, "Security violation: " + type)
             .startSpan();
         
+        span.setStatus(StatusCode.ERROR, "Security violation: " + type);
+
         try {
             log.error("Security violation [{}] from IP: {} - {}", type, ipAddress, details);
         } finally {
@@ -186,7 +171,9 @@ public class ObservabilityService {
     }
     
     public void stopJwtValidationTimer(Timer.Sample sample, boolean successful) {
-        sample.stop(jwtValidationTimer.tag("success", String.valueOf(successful)));
+        sample.stop(Timer.builder("jwt.validation")
+            .tag("success", String.valueOf(successful))
+            .register(meterRegistry));
     }
     
     @WithSpan("auth.process")
@@ -195,7 +182,9 @@ public class ObservabilityService {
     }
     
     public void stopAuthenticationTimer(Timer.Sample sample, boolean successful) {
-        sample.stop(authenticationTimer.tag("success", String.valueOf(successful)));
+        sample.stop(Timer.builder("auth.authentication")
+            .tag("success", String.valueOf(successful))
+            .register(meterRegistry));
     }
     
     // Request tracking

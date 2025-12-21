@@ -12,7 +12,6 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
-import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.semconv.ResourceAttributes;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -29,9 +28,6 @@ public class OpenTelemetryConfig {
 
     @Value("${management.tracing.otlp.endpoint:http://localhost:4317}")
     private String otlpEndpoint;
-    
-    @Value("${management.tracing.jaeger.endpoint:http://localhost:14250}")
-    private String jaegerEndpoint;
     
     @Value("${spring.application.name:api-gateway}")
     private String serviceName;
@@ -61,23 +57,14 @@ public class OpenTelemetryConfig {
 
         return OpenTelemetrySdk.builder()
             .setTracerProvider(tracerProvider)
-            .setGlobalTracerProvider(tracerProvider)
             .buildAndRegisterGlobal();
     }
 
     private io.opentelemetry.sdk.trace.export.SpanExporter createSpanExporter() {
-        // Try OTLP first, fallback to Jaeger
-        try {
-            log.info("Configuring OTLP exporter to: {}", otlpEndpoint);
-            return OtlpGrpcSpanExporter.builder()
-                .setEndpoint(otlpEndpoint)
-                .build();
-        } catch (Exception e) {
-            log.warn("Failed to configure OTLP exporter, falling back to Jaeger: {}", e.getMessage());
-            return JaegerGrpcSpanExporter.builder()
-                .setEndpoint(jaegerEndpoint)
-                .build();
-        }
+        log.info("Configuring OTLP exporter to: {}", otlpEndpoint);
+        return OtlpGrpcSpanExporter.builder()
+            .setEndpoint(otlpEndpoint)
+            .build();
     }
 
     @Bean

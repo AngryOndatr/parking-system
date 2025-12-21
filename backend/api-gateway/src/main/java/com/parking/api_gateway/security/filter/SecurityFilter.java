@@ -51,7 +51,8 @@ public class SecurityFilter extends OncePerRequestFilter {
             "/actuator/health",
             "/api/docs",
             "/api/swagger-ui",
-            "/api/v3/api-docs"
+            "/api/v3/api-docs",
+            "/api/clients"  // TODO: TEMPORARY - for testing proxy functionality
     );
     
     @Override

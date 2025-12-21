@@ -66,13 +66,11 @@
 			</dependency>
 			-->
 
-			<!-- Security -->
-		<!-- 
+		<!-- Security -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
-		-->
 
 		<!-- Monitoring -->
 			<dependency>
@@ -172,9 +170,22 @@
 		
 		<!-- OpenTelemetry Annotations for custom tracing -->
 		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-extension-annotations</artifactId>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-instrumentation-annotations</artifactId>
 		</dependency>
+
+		<!-- OpenTelemetry propagators -->
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
+		</dependency>
+
+		<!-- OpenTelemetry OTLP Exporter -->
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-otlp</artifactId>
+		</dependency>
+
 
 		<!-- Micrometer for metrics -->
 		<dependency>
@@ -185,8 +196,9 @@
 		<!-- OpenTelemetry Micrometer bridge -->
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-micrometer1-shim</artifactId>
-		</dependency>	</dependencies>
+			<artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+		</dependency>
+	</dependencies>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

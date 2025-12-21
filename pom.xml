@@ -12,6 +12,10 @@
         <module>backend/api-gateway</module>
         <module>backend/parking-common</module>
         <module>backend/client-service</module>
+        <module>backend/billing-service</module>
+        <module>backend/gate-control-service</module>
+        <module>backend/management-service</module>
+        <module>backend/reporting-service</module>
     </modules>
 
 <properties>

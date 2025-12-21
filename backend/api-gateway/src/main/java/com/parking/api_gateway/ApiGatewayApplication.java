@@ -10,14 +10,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-@SpringBootApplication(exclude = {
-		// Redis exclusions - максимально полное исключение
-		org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
-		org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration.class,
-		org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration.class,
-		org.springframework.boot.actuate.autoconfigure.data.redis.RedisHealthContributorAutoConfiguration.class,
-		org.springframework.boot.actuate.autoconfigure.data.redis.RedisReactiveHealthContributorAutoConfiguration.class
-})
+@SpringBootApplication
 @ComponentScan(basePackages = "com.parking.api_gateway")
 @EnableJpaRepositories(basePackages = "com.parking.api_gateway.security.repository")
 @EntityScan(basePackages = "com.parking.api_gateway.security.entity")
@@ -30,7 +23,7 @@ public class ApiGatewayApplication {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration corsConfig = new CorsConfiguration();
-		corsConfig.addAllowedOriginPattern("*");
+		corsConfig.addAllowedOrigin("*");
 		corsConfig.addAllowedMethod("*");
 		corsConfig.addAllowedHeader("*");
 		corsConfig.setAllowCredentials(true);
