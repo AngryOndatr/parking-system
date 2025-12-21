@@ -16,6 +16,11 @@ spring:
         format_sql: true
     show-sql: true
 
+# JWT Configuration (must match API Gateway)
+security:
+  jwt:
+    secret: ${JWT_SECRET:ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html # Path to interface
