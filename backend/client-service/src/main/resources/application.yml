@@ -1,8 +1,11 @@
 spring:
   application:
-    name: Client Service
+    name: client-service
+  cloud:
+    compatibility-verifier:
+      enabled: false
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/parking_db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/parking_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -16,10 +19,45 @@ spring:
         format_sql: true
     show-sql: true
 
+server:
+  port: ${SERVER_PORT:8081}
+
+# Eureka Client Configuration
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    preferIpAddress: true
+    instance-id: ${spring.application.name}:${random.value}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
 # JWT Configuration (must match API Gateway)
 security:
   jwt:
     secret: ${JWT_SECRET:ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+  health:
+    defaults:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 springdoc:
   swagger-ui:

@@ -11,35 +11,27 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'parking-api-gateway'
+  - job_name: 'api-gateway'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 10s
     static_configs:
       - targets: ['api-gateway:8080']
-    scrape_timeout: 5s
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
-      - target_label: __address__
-        replacement: 'api-gateway:8080'
 
-  - job_name: 'parking-postgres'
+  - job_name: 'client-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
     static_configs:
-      - targets: ['postgres-db:5432']
-    metrics_path: '/metrics'
-    scrape_interval: 30s
+      - targets: ['client-service:8080']
 
-  - job_name: 'parking-redis'
+  - job_name: 'eureka-server'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
     static_configs:
-      - targets: ['redis-cache:6379']
-    metrics_path: '/metrics'
-    scrape_interval: 30s
+      - targets: ['eureka-server:8761']
 
   - job_name: 'otel-collector'
     static_configs:
-      - targets: ['otel-collector:8888']
+      - targets: ['parking_otel_collector:8889']
     metrics_path: '/metrics'
     scrape_interval: 15s
 

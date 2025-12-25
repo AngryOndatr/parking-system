@@ -22,36 +22,53 @@ import java.util.Enumeration;
 public class ClientProxyController {
 
     private final RestTemplate restTemplate;
-    private static final String CLIENT_SERVICE_URL = "http://client-service:8080";
+    private static final String CLIENT_SERVICE_URL = "http://client-service:8081";
 
     /**
      * Proxy GET request to fetch all clients
      */
     @GetMapping
     public ResponseEntity<?> getAllClients(HttpServletRequest request) {
-        log.info("Proxying GET request to Client Service: /api/clients");
+        log.info("🚀 [PROXY CONTROLLER START] Received GET /api/clients request");
+        log.info("📍 [PROXY CONTROLLER] Remote IP: {}", request.getRemoteAddr());
+        log.info("📍 [PROXY CONTROLLER] Request URI: {}", request.getRequestURI());
+        log.info("📍 [PROXY CONTROLLER] Username from request: {}", request.getAttribute("username"));
+        log.info("📍 [PROXY CONTROLLER] Roles from request: {}", request.getAttribute("roles"));
 
         try {
             HttpHeaders headers = extractHeaders(request);
+            log.info("📦 [PROXY CONTROLLER] Headers extracted: {}", headers.keySet());
+            log.info("📦 [PROXY CONTROLLER] Authorization header present: {}", headers.containsKey("Authorization"));
+
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
+            String targetUrl = CLIENT_SERVICE_URL + "/api/clients";
+            log.info("🎯 [PROXY CONTROLLER] Proxying GET request to: {}", targetUrl);
+
             ResponseEntity<String> response = restTemplate.exchange(
-                CLIENT_SERVICE_URL + "/api/clients",
+                targetUrl,
                 HttpMethod.GET,
                 entity,
                 String.class
             );
 
-            log.info("Client Service responded with status: {}", response.getStatusCode());
+            log.info("✅ [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
+            log.info("✅ [PROXY CONTROLLER] Response body length: {} bytes",
+                response.getBody() != null ? response.getBody().length() : 0);
+
             return ResponseEntity.status(response.getStatusCode())
                     .headers(response.getHeaders())
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
+            log.error("❌ [PROXY CONTROLLER] Client Service returned error status: {}", e.getStatusCode());
+            log.error("❌ [PROXY CONTROLLER] Error message: {}", e.getMessage());
+            log.error("❌ [PROXY CONTROLLER] Response body: {}", e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("Error proxying request to Client Service", e);
+            log.error("💥 [PROXY CONTROLLER] Exception occurred while proxying request", e);
+            log.error("💥 [PROXY CONTROLLER] Exception type: {}", e.getClass().getName());
+            log.error("💥 [PROXY CONTROLLER] Exception message: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error communicating with Client Service: " + e.getMessage());
         }
@@ -126,6 +143,7 @@ public class ClientProxyController {
      * Extract headers from incoming request
      */
     private HttpHeaders extractHeaders(HttpServletRequest request) {
+        log.info("🔧 [EXTRACT HEADERS] Starting header extraction");
         HttpHeaders headers = new HttpHeaders();
         Enumeration<String> headerNames = request.getHeaderNames();
 
@@ -135,11 +153,21 @@ public class ClientProxyController {
                 // Forward important headers, skip host-specific ones
                 if (!headerName.equalsIgnoreCase("host") &&
                     !headerName.equalsIgnoreCase("connection")) {
+
+                    String headerValue = request.getHeader(headerName);
                     headers.put(headerName, Collections.list(request.getHeaders(headerName)));
+
+                    // Mask sensitive data in logs
+                    if (headerName.equalsIgnoreCase("Authorization")) {
+                        log.info("🔧 [EXTRACT HEADERS] {}: Bearer ***", headerName);
+                    } else {
+                        log.info("🔧 [EXTRACT HEADERS] {}: {}", headerName, headerValue);
+                    }
                 }
             }
         }
 
+        log.info("🔧 [EXTRACT HEADERS] Total headers extracted: {}", headers.size());
         return headers;
     }
 }

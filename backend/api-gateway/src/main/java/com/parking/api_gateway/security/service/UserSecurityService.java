@@ -30,8 +30,8 @@ public class UserSecurityService {
     
     private final UserSecurityRepository userRepository;
     private final SecurityAuditService auditService;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12); // High strength
-    
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10); // Match database hash strength
+
     // Security Configuration
     private static final int MAX_FAILED_ATTEMPTS = 5;
     private static final int LOCKOUT_DURATION_MINUTES = 30;
@@ -39,36 +39,90 @@ public class UserSecurityService {
     private static final int SESSION_TIMEOUT_HOURS = 8;
     
     /**
-     * Authenticate user with comprehensive security checks
+     * Authenticate user with comprehensive security checks (Reactive wrapper)
      */
     public Mono<AuthResponse> authenticateUser(AuthRequest request, String clientIpAddress, String userAgent) {
-        return Mono.fromCallable(() -> {
-            // 1. Find user
-            UserSecurityEntity user = findActiveUser(request.getUsername())
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
-            
-            // 2. Pre-authentication security checks
-            validateAccountStatus(user);
-            
-            // 3. Password verification
-            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                handleFailedLogin(user, clientIpAddress, "Invalid password");
-                throw new InvalidCredentialsException("Invalid username or password");
-            }
-            
-            // 4. Post-authentication checks
-            checkPasswordExpiry(user);
-            checkCredentialsExpiry(user);
-            
-            // 5. Record successful login
-            recordSuccessfulLogin(user, clientIpAddress, userAgent);
-            
-            // 6. Create auth response
-            return createAuthResponse(user, clientIpAddress, userAgent);
-            
-        }).subscribeOn(Schedulers.boundedElastic())
+        return Mono.fromCallable(() -> authenticateUserSync(request, clientIpAddress, userAgent))
+          .subscribeOn(Schedulers.boundedElastic())
           .doOnSuccess(response -> auditService.logSuccessfulLogin(response.getUser().getUsername(), clientIpAddress, userAgent))
           .doOnError(error -> auditService.logFailedLogin(request.getUsername(), clientIpAddress, userAgent, error.getMessage()));
+    }
+
+    /**
+     * Synchronous authentication with transactional support
+     */
+    @Transactional
+    private AuthResponse authenticateUserSync(AuthRequest request, String clientIpAddress, String userAgent) {
+        log.info("🔐 [STEP 1] Starting authentication for user: {} from IP: {}", request.getUsername(), clientIpAddress);
+
+        // 1. Find user
+        log.debug("🔍 [STEP 1.1] Searching for active user in database...");
+        UserSecurityEntity user = findActiveUser(request.getUsername())
+            .orElseThrow(() -> {
+                log.warn("❌ [STEP 1.1 FAILED] User not found: {}", request.getUsername());
+                return new InvalidCredentialsException("Invalid username or password");
+            });
+
+        log.info("✓ [STEP 1.1 SUCCESS] User found: id={}, username={}, enabled={}, accountNonLocked={}",
+                 user.getId(), user.getUsername(), user.getEnabled(), user.isAccountNonLocked());
+
+        // 2. Pre-authentication security checks
+        log.debug("🔒 [STEP 2] Validating account status...");
+        try {
+            validateAccountStatus(user);
+            log.info("✓ [STEP 2 SUCCESS] Account status valid");
+        } catch (Exception e) {
+            log.error("❌ [STEP 2 FAILED] Account status validation failed: {}", e.getMessage());
+            throw e;
+        }
+
+        // 3. Password verification
+        log.debug("🔑 [STEP 3] Verifying password...");
+        log.debug("🔍 [DEBUG] Password from request: length={}", request.getPassword() != null ? request.getPassword().length() : 0);
+        log.debug("🔍 [DEBUG] Password hash from DB: {}", user.getPassword() != null ? user.getPassword().substring(0, Math.min(20, user.getPassword().length())) + "..." : "NULL");
+        log.debug("🔍 [DEBUG] Encoder strength: BCrypt(10)");
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.warn("❌ [STEP 3 FAILED] Password verification failed for user: {}", user.getUsername());
+            log.debug("🔧 [STEP 3.1] Calling handleFailedLogin...");
+            try {
+                handleFailedLogin(user, clientIpAddress, "Invalid password");
+                log.debug("✓ [STEP 3.1 SUCCESS] Failed login recorded");
+            } catch (Exception e) {
+                log.error("❌ [STEP 3.1 FAILED] Error recording failed login: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+                throw e;
+            }
+            throw new InvalidCredentialsException("Invalid username or password");
+        }
+        log.info("✓ [STEP 3 SUCCESS] Password verified");
+
+        // 4. Post-authentication checks
+        log.debug("📅 [STEP 4] Checking password and credentials expiry...");
+        try {
+            checkPasswordExpiry(user);
+            checkCredentialsExpiry(user);
+            log.info("✓ [STEP 4 SUCCESS] Expiry checks passed");
+        } catch (Exception e) {
+            log.error("❌ [STEP 4 FAILED] Expiry check failed: {}", e.getMessage());
+            throw e;
+        }
+
+        // 5. Record successful login
+        log.debug("📝 [STEP 5] Recording successful login...");
+        try {
+            recordSuccessfulLogin(user, clientIpAddress, userAgent);
+            log.info("✓ [STEP 5 SUCCESS] Successful login recorded");
+        } catch (Exception e) {
+            log.error("❌ [STEP 5 FAILED] Error recording successful login: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+            throw e;
+        }
+
+        // 6. Create auth response
+        log.debug("🎫 [STEP 6] Creating auth response...");
+        AuthResponse response = createAuthResponse(user, clientIpAddress, userAgent);
+        log.info("✅ [AUTHENTICATION SUCCESS] User {} authenticated successfully from IP {}", user.getUsername(), clientIpAddress);
+
+        return response;
     }
     
     /**
@@ -136,18 +190,39 @@ public class UserSecurityService {
     /**
      * Handle failed login attempt
      */
+    @Transactional
     private void handleFailedLogin(UserSecurityEntity user, String ipAddress, String reason) {
-        userRepository.incrementFailedLoginAttempts(user.getId());
-        
-        int attempts = user.getFailedLoginAttempts() + 1;
-        
+        log.debug("🔧 [handleFailedLogin] Starting - userId: {}, currentAttempts: {}", user.getId(), user.getFailedLoginAttempts());
+
+        try {
+            log.debug("🔧 [handleFailedLogin] Incrementing failed attempts using entity method...");
+            // Increment using entity and save
+            user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
+            user.setLastLoginIp(ipAddress);
+            userRepository.save(user);
+            log.debug("✓ [handleFailedLogin] Successfully incremented failed attempts");
+        } catch (Exception e) {
+            log.error("❌ [handleFailedLogin] ERROR incrementing attempts: {} - {}",
+                     e.getClass().getSimpleName(), e.getMessage(), e);
+            throw e;
+        }
+
+        int attempts = user.getFailedLoginAttempts();
+
         log.warn("Failed login attempt #{} for user {} from IP {}: {}", 
                 attempts, user.getUsername(), ipAddress, reason);
         
         if (attempts >= MAX_FAILED_ATTEMPTS) {
-            lockAccountTemporarily(user);
-            log.error("Account {} locked due to {} failed login attempts from IP {}", 
-                     user.getUsername(), attempts, ipAddress);
+            log.warn("🔒 [handleFailedLogin] MAX_FAILED_ATTEMPTS reached, locking account...");
+            try {
+                lockAccountTemporarily(user);
+                log.error("Account {} locked due to {} failed login attempts from IP {}",
+                         user.getUsername(), attempts, ipAddress);
+            } catch (Exception e) {
+                log.error("❌ [handleFailedLogin] ERROR locking account: {} - {}",
+                         e.getClass().getSimpleName(), e.getMessage(), e);
+                throw e;
+            }
         }
     }
     
@@ -156,8 +231,19 @@ public class UserSecurityService {
      */
     private void lockAccountTemporarily(UserSecurityEntity user) {
         LocalDateTime lockUntil = LocalDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES);
-        userRepository.lockAccount(user.getId(), lockUntil);
-        
+        log.debug("🔒 [lockAccountTemporarily] Locking user {} until {}", user.getUsername(), lockUntil);
+
+        try {
+            // Use entity method and save instead of native query
+            user.setAccountLockedUntil(lockUntil);
+            user.setAccountNonLocked(false);
+            userRepository.save(user);
+            log.debug("✓ [lockAccountTemporarily] Account locked successfully");
+        } catch (Exception e) {
+            log.error("❌ [lockAccountTemporarily] ERROR: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            throw e;
+        }
+
         auditService.logAccountLocked(user.getUsername(), lockUntil, "Too many failed login attempts");
     }
     
@@ -165,12 +251,31 @@ public class UserSecurityService {
      * Record successful login
      */
     private void recordSuccessfulLogin(UserSecurityEntity user, String ipAddress, String userAgent) {
-        userRepository.recordSuccessfulLogin(user.getId(), LocalDateTime.now(), ipAddress);
-        
-        // Update user agent hash for device tracking
-        String userAgentHash = hashUserAgent(userAgent);
-        user.setUserAgentHash(userAgentHash);
-        
+        log.debug("📝 [recordSuccessfulLogin] Recording login for userId: {}", user.getId());
+
+        try {
+            log.debug("📝 [recordSuccessfulLogin] Updating user entity...");
+            // Use entity methods and save instead of native query
+            user.setLastLoginAt(user.getCurrentLoginAt());
+            user.setLastLoginIp(user.getCurrentLoginIp());
+            user.setCurrentLoginAt(LocalDateTime.now());
+            user.setCurrentLoginIp(ipAddress);
+            user.setLoginCount(user.getLoginCount() + 1);
+            user.setFailedLoginAttempts(0); // Reset failed attempts
+            user.setAccountLockedUntil(null); // Clear any lock
+
+            // Update user agent hash for device tracking
+            String userAgentHash = hashUserAgent(userAgent);
+            user.setUserAgentHash(userAgentHash);
+
+            userRepository.save(user);
+            log.debug("✓ [recordSuccessfulLogin] Login recorded in database");
+        } catch (Exception e) {
+            log.error("❌ [recordSuccessfulLogin] ERROR: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            throw e;
+        }
+
+
         log.info("Successful login for user {} from IP {} (attempts reset)", 
                 user.getUsername(), ipAddress);
     }

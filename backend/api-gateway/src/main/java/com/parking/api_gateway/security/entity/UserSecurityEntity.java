@@ -1,5 +1,6 @@
 package com.parking.api_gateway.security.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,6 +25,7 @@ public class UserSecurityEntity {
     @Column(unique = true, nullable = false)
     private String username;
     
+    @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     private String password;
     
@@ -108,6 +110,7 @@ public class UserSecurityEntity {
     @Column(name = "two_factor_secret")
     private String twoFactorSecret;
     
+    @JsonIgnore
     @ElementCollection
     @CollectionTable(
         name = "user_backup_codes",

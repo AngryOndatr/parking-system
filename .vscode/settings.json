@@ -1,4 +1,11 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "[powershell]": {
+        "files.encoding": "utf8bom",
+        "files.autoGuessEncoding": false
+    },
+    "files.associations": {
+        "*.ps1": "powershell"
+    },
+    "powershell.codeFormatting.preset": "OTBS"
 }
+

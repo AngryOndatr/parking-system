@@ -1,11 +1,14 @@
 package com.parking.api_gateway.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * This configuration is kept for potential future use but is disabled by default.
+ * Redis is now enabled by default via RedisConfig.
+ */
 @Configuration
-@ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(name = "spring.redis.enabled", havingValue = "false")
 public class RedisDisabledConfig {
-    // This configuration disables Redis autoconfiguration when redis is not enabled
+    // Redis is enabled by default. Set spring.redis.enabled=false to disable.
 }

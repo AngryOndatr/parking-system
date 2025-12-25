@@ -9,6 +9,9 @@
     <file url="file://$PROJECT_DIR$/backend/gate-control-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backend/management-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backend/parking-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/parking-common/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backend/reporting-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>
 </project>

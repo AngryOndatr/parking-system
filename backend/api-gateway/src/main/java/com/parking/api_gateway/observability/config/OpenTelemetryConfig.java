@@ -3,16 +3,11 @@ package com.parking.api_gateway.observability.config;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
-import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
-import io.opentelemetry.semconv.ResourceAttributes;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,11 +17,11 @@ import org.springframework.context.annotation.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
-@ConditionalOnProperty(value = "management.tracing.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(value = "management.tracing.enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class OpenTelemetryConfig {
 
-    @Value("${management.tracing.otlp.endpoint:http://localhost:4317}")
+    @Value("${management.otlp.tracing.endpoint:http://parking_otel_collector:4318/v1/traces}")
     private String otlpEndpoint;
     
     @Value("${spring.application.name:api-gateway}")
@@ -37,14 +32,15 @@ public class OpenTelemetryConfig {
 
     @Bean
     public OpenTelemetry openTelemetry() {
-        log.info("Configuring OpenTelemetry for service: {} version: {}", serviceName, serviceVersion);
-        
+        log.info("Configuring OpenTelemetry for service: {} version: {} endpoint: {}",
+                 serviceName, serviceVersion, otlpEndpoint);
+
         Resource resource = Resource.getDefault()
             .merge(Resource.create(
                 Attributes.builder()
-                    .put(ResourceAttributes.SERVICE_NAME, serviceName)
-                    .put(ResourceAttributes.SERVICE_VERSION, serviceVersion)
-                    .put(ResourceAttributes.DEPLOYMENT_ENVIRONMENT, 
+                    .put("service.name", serviceName)
+                    .put("service.version", serviceVersion)
+                    .put("deployment.environment",
                          System.getProperty("spring.profiles.active", "development"))
                     .build()));
 
@@ -61,8 +57,8 @@ public class OpenTelemetryConfig {
     }
 
     private io.opentelemetry.sdk.trace.export.SpanExporter createSpanExporter() {
-        log.info("Configuring OTLP exporter to: {}", otlpEndpoint);
-        return OtlpGrpcSpanExporter.builder()
+        log.info("Configuring OTLP HTTP exporter to: {}", otlpEndpoint);
+        return OtlpHttpSpanExporter.builder()
             .setEndpoint(otlpEndpoint)
             .build();
     }

@@ -92,6 +92,35 @@
 				</exclusions>
 			</dependency>
 
+			<!-- Micrometer Prometheus for metrics -->
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-registry-prometheus</artifactId>
+				<scope>runtime</scope>
+			</dependency>
+
+			<!-- Caffeine Cache for LoadBalancer (Production recommendation) -->
+			<dependency>
+				<groupId>com.github.ben-manes.caffeine</groupId>
+				<artifactId>caffeine</artifactId>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-cache</artifactId>
+			</dependency>
+
+			<!-- Micrometer Tracing with OpenTelemetry -->
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-tracing-bridge-otel</artifactId>
+			</dependency>
+
+			<!-- OpenTelemetry Exporter for OTLP (HTTP) -->
+			<dependency>
+				<groupId>io.opentelemetry</groupId>
+				<artifactId>opentelemetry-exporter-otlp</artifactId>
+			</dependency>
+
 			<!-- Lombok -->
 			<dependency>
 				<groupId>org.projectlombok</groupId>

@@ -30,10 +30,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                    FilterChain filterChain) throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+        String method = request.getMethod();
         String authHeader = request.getHeader("Authorization");
+        String clientIp = request.getRemoteAddr();
+
+        log.info("🔍 [CLIENT-SERVICE FILTER START] Processing request: {} {} from IP: {}", method, path, clientIp);
+        log.info("🔑 [CLIENT-SERVICE FILTER] Authorization header present: {}", authHeader != null ? "Yes" : "No");
+
+        // Skip JWT validation for public endpoints
+        if (path.startsWith("/actuator") || path.startsWith("/api/health") ||
+            path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
+            log.info("✅ [CLIENT-SERVICE FILTER] Public endpoint, skipping JWT validation");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        log.info("🔒 [CLIENT-SERVICE FILTER] Protected endpoint, validating JWT");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+            log.info("🔐 [CLIENT-SERVICE FILTER] Token extracted, length: {} characters", token.length());
 
             try {
                 if (jwtTokenProvider.validateToken(token)) {
@@ -41,7 +58,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String role = jwtTokenProvider.getRoleFromToken(token);
                     Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
-                    log.debug("Authenticated user: {} with role: {}", username, role);
+                    log.info("✅ [CLIENT-SERVICE FILTER] Token validated successfully");
+                    log.info("👤 [CLIENT-SERVICE FILTER] Username: {}, Role: {}, UserId: {}", username, role, userId);
 
                     UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -51,13 +69,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         );
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.info("✅ [CLIENT-SERVICE FILTER] Authentication set in SecurityContext");
+                } else {
+                    log.warn("❌ [CLIENT-SERVICE FILTER] Token validation failed - invalid token");
                 }
             } catch (Exception e) {
-                log.error("Cannot set user authentication: {}", e.getMessage());
+                log.error("❌ [CLIENT-SERVICE FILTER] Exception during JWT validation: {}", e.getMessage(), e);
             }
+        } else {
+            log.warn("❌ [CLIENT-SERVICE FILTER] Missing or invalid Authorization header");
         }
 
+        log.info("🚀 [CLIENT-SERVICE FILTER] Passing request to next filter");
         filterChain.doFilter(request, response);
+        log.info("✅ [CLIENT-SERVICE FILTER END] Request completed with status: {}", response.getStatus());
     }
 }
 

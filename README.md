@@ -1,20 +1,50 @@
 Markdown
-# 🅿️ Parking System - Микросервисная архитектура
+# 🅿️ Parking System - Microservices Architecture
 
-Современная система управления парковочными местами, построенная на микросервисной архитектуре с использованием Spring Boot, Spring Cloud и Docker.
+Modern parking lot management system built on microservices architecture using Spring Boot, Spring Cloud, and Docker.
 
-## 🆕 Последние обновления (2025-12-20)
+## 🆕 Latest Updates (2025-12-25)
 
-✅ **Система полностью развернута и работает!**
+✅ **System fully deployed and operational!**
 
-- ✅ Все 7 микросервисов собраны и запущены в Docker
-- ✅ API Gateway с механизмом проксирования к Client Service
-- ✅ PostgreSQL и Redis работают и доступны
-- ✅ Исправлены ошибки сборки и кодировки
-- 📖 Полная документация изменений: [SESSION_CHANGES_2025-12-20.md](./docs/SESSION_CHANGES_2025-12-20.md)
-- 📊 Отчет о тестировании проксирования: [API_GATEWAY_PROXY_TEST_REPORT.md](./docs/API_GATEWAY_PROXY_TEST_REPORT.md)
+- ✅ API Gateway with JWT authentication and security features
+- ✅ Complete microservices implementation (Eureka, API Gateway, Client Service)
+- ✅ PostgreSQL and Redis working and accessible
+- ✅ Observability stack integrated (Prometheus, Grafana, Jaeger, OpenTelemetry)
+- ✅ Docker Compose configuration optimized
+- ✅ Correct password hashes configured (BCrypt)
+- 📖 Complete development documentation: [SESSION_DEVELOPMENT_2025-12-25_EN.md](./SESSION_DEVELOPMENT_2025-12-25_EN.md)
+- 📋 Russian version: [SESSION_DEVELOPMENT_2025-12-25.md](./SESSION_DEVELOPMENT_2025-12-25.md)
 
-## 🏗️ Архитектура системы
+## 📈 Project Status & Roadmap
+
+### Phase 0: Infrastructure & Foundation (85% Complete) 🟢
+
+| Task | Description | Status | Completion |
+|------|-------------|--------|------------|
+| 0.1 | **GitHub Setup** | ✅ Complete | 100% |
+| 0.2 | **Docker Compose** | ✅ Complete | 100% |
+| 0.3 | **PostgreSQL DDL** | 🟡 Partial | 70% |
+| 0.4 | **Spring Boot Services** | ✅ Good | 95% |
+
+**What's Done:**
+- ✅ Professional GitHub repository with comprehensive documentation
+- ✅ Complete Docker Compose setup (10 containers running)
+- ✅ API Gateway with JWT authentication fully implemented
+- ✅ Client Service and Eureka Server fully operational
+- ✅ Observability stack (Prometheus, Grafana, Jaeger, OpenTelemetry)
+- ✅ PostgreSQL with Users, Clients, Vehicles tables
+- ✅ Security features (rate limiting, brute force protection)
+
+**What's Needed:**
+- ⚠️ GitHub Projects Kanban board
+- ⚠️ Flyway/Liquibase migration setup
+- ⚠️ Complete database schema (8 more tables needed)
+- ⚠️ Full implementation of remaining 8 microservices
+
+📖 **Detailed Report:** [PHASE_0_READINESS_REPORT.md](./PHASE_0_READINESS_REPORT.md)
+
+## 🏗️ System Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
@@ -38,103 +68,146 @@ Markdown
                                                └─────────────────┘
 ```
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
-### Предварительные требования
+### Prerequisites
 - Docker & Docker Compose
 - Java 21+
 - Maven 3.8+
 
-### Запуск системы
+### Launch System
 ```bash
-# Клонирование репозитория
+# Clone repository
 git clone <repository-url>
 cd parking-system
 
-# Запуск всех сервисов
+# Start all services
 docker-compose up -d
 
-# Проверка статуса
+# Check status
 docker-compose ps
 ```
 
-### Доступ к сервисам
+### Service Access
 - **API Gateway**: http://localhost:8086
 - **Eureka Server**: http://localhost:8761
-- **Client Service**: http://localhost:8081
-- **PostgreSQL**: localhost:5432 (parking_db/postgres/postgres)
+- **Client Service**: http://localhost:8081 (via Gateway)
+- **Grafana**: http://localhost:3000 (admin/admin123)
+- **Prometheus**: http://localhost:9090
+- **Jaeger**: http://localhost:16686
+- **pgAdmin**: http://localhost:5050 (admin@parking.com/admin)
+- **PostgreSQL**: localhost:5433 (parking_db/postgres/postgres)
 
-## ️ Микросервисы
+## 🔧 Microservices
 
 ### 1. API Gateway (Port 8086)
-- Централизованная точка входа
-- Маршрутизация запросов к микросервисам
-- CORS и базовая безопасность
-- Мониторинг и метрики
+- Centralized entry point
+- JWT authentication and authorization
+- Request routing to microservices
+- Security features:
+  - Rate limiting (100 req/min per IP)
+  - Brute force protection (5 failed attempts)
+  - Suspicious IP detection
+  - Security audit logging
+- CORS and basic security
+- Monitoring and metrics
 
-📖 **Документация**: [API Gateway Developer Guide](./docs/API-Gateway-Developer-Guide.md)
+📖 **Documentation**: See SESSION_DEVELOPMENT_2025-12-25_EN.md
 
 ### 2. Client Service (Port 8081)
-- Управление клиентами и их транспортными средствами
-- CRUD операции для клиентов
-- Интеграция с базой данных PostgreSQL
-- HTTP Basic аутентификация
+- Client and vehicle management
+- CRUD operations for clients
+- PostgreSQL database integration
+- JWT authentication via API Gateway
 
-**Endpoints**:
-- `GET /api/clients` - Список клиентов
-- `POST /api/clients` - Создание клиента
-- `GET /api/clients/{id}` - Получение клиента
-- `PUT /api/clients/{id}` - Обновление клиента
-- `DELETE /api/clients/{id}` - Удаление клиента
+**Endpoints** (via API Gateway):
+- `GET /api/clients` - List clients
+- `POST /api/clients` - Create client
+- `GET /api/clients/{id}` - Get client
+- `PUT /api/clients/{id}` - Update client
+- `DELETE /api/clients/{id}` - Delete client
 
 ### 3. Service Registry (Port 8761)
-- Eureka Server для service discovery
-- Регистрация и обнаружение микросервисов
-- Health checks и мониторинг
+- Eureka Server for service discovery
+- Microservice registration and discovery
+- Health checks and monitoring
 
-### 4. Планируемые сервисы
-- **User Service** - Управление пользователями системы
-- **Parking Service** - Управление парковками и местами
-- **Booking Service** - Бронирование парковочных мест
-- **Payment Service** - Обработка платежей
-- **Billing Service** - Биллинг и тарифные планы
-- **Gate Control Service** - Управление воротами парковки
-- **Management Service** - Административные функции
-- **Reporting Service** - Отчеты и аналитика
+### 4. Observability Stack
+- **Prometheus** (Port 9090) - Metrics collection
+- **Grafana** (Port 3000) - Dashboards and visualization
+- **Jaeger** (Port 16686) - Distributed tracing
+- **OpenTelemetry Collector** (Port 4317/4318) - Telemetry collection
 
-## 📊 Технологический стек
+### 5. Database Management
+- **PostgreSQL 16** (Port 5433) - Main database
+- **pgAdmin 4** (Port 5050) - Database management UI
+- **Redis 7** (Port 6379) - Caching and session storage
+
+### 6. Planned Services
+- **User Service** - System user management
+- **Parking Service** - Parking lot and space management
+- **Booking Service** - Parking space reservations
+- **Payment Service** - Payment processing
+- **Billing Service** - Billing and tariff plans
+- **Gate Control Service** - Parking gate management
+- **Management Service** - Administrative functions
+- **Reporting Service** - Reports and analytics
+
+## 📊 Technology Stack
 
 ### Backend
-- **Java 21** - Основной язык программирования
-- **Spring Boot 3.5.8** - Фреймворк для микросервисов
-- **Spring Cloud 2025.0.0** - Микросервисная архитектура
-- **Spring Data JPA** - Работа с базой данных
-- **MapStruct** - Маппинг между DTO и Entity
-- **Lombok** - Уменьшение boilerplate кода
+- **Java 21** - Main programming language
+- **Spring Boot 3.5.8** - Microservices framework
+- **Spring Cloud 2025.0.0** - Microservices architecture
+- **Spring Security** - Authentication and authorization
+- **Spring Data JPA** - Database operations
+- **JWT (jjwt 0.12.6)** - Token-based authentication
+- **MapStruct** - DTO to Entity mapping
+- **Lombok** - Boilerplate code reduction
 
 ### Infrastructure
-- **Docker & Docker Compose** - Контейнеризация
-- **PostgreSQL 16** - Основная база данных
+- **Docker & Docker Compose** - Containerization
+- **PostgreSQL 16** - Main database
+- **Redis 7** - Caching and session storage
 - **Eureka Server** - Service Registry
 - **Spring Cloud Gateway** - API Gateway
-- **Maven** - Система сборки
+- **Maven** - Build system
+
+### Observability
+- **Prometheus** - Metrics collection
+- **Grafana** - Monitoring dashboards
+- **Jaeger** - Distributed tracing
+- **OpenTelemetry** - Telemetry instrumentation
 
 ### Documentation & Testing
-- **OpenAPI 3 / Swagger UI** - API документация
-- **JUnit 5** - Unit тестирование
-- **Spring Boot Test** - Integration тестирование
+- **OpenAPI 3 / Swagger UI** - API documentation
+- **JUnit 5** - Unit testing
+- **Spring Boot Test** - Integration testing
 
-## 🗄️ База данных
+## 🗄️ Database
 
 ### PostgreSQL Configuration
 - **Database**: `parking_db`
 - **Username**: `postgres`
 - **Password**: `postgres`
-- **Port**: `5432`
+- **Port**: `5433` (Docker), `5432` (local)
 
-### Схема данных
+### Data Schema
 ```sql
--- Клиенты
+-- Users (for authentication)
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    user_role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    account_locked_until TIMESTAMP,
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+    -- ... + 30 additional security fields
+);
+
+-- Clients
 CREATE TABLE clients (
     id BIGSERIAL PRIMARY KEY,
     full_name VARCHAR(255) NOT NULL,
@@ -143,7 +216,7 @@ CREATE TABLE clients (
     registered_at TIMESTAMP DEFAULT NOW()
 );
 
--- Транспортные средства  
+-- Vehicles
 CREATE TABLE vehicles (
     id BIGSERIAL PRIMARY KEY,
     client_id BIGINT REFERENCES clients(id),
@@ -155,30 +228,57 @@ CREATE TABLE vehicles (
 );
 ```
 
-## 🔧 Конфигурация
+## 🔑 Test Credentials
+
+### For Development and Testing:
+
+| Username | Password | Role | Email |
+|----------|----------|------|-------|
+| **admin** | `parking123` | ADMIN | admin@parking.com |
+| **user** | `user1234` | USER | user@parking.com |
+| **manager** | `manager123` | MANAGER | manager@parking.com |
+
+**⚠️ IMPORTANT:** These credentials are for development only! For production, use strong passwords and environment variables.
+
+### Quick Authentication Test:
+```powershell
+# PowerShell
+$body = @{ username = "admin"; password = "parking123" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://localhost:8086/api/auth/login" -Method POST -ContentType "application/json" -Body $body
+```
+
+```bash
+# Bash/cURL
+curl -X POST http://localhost:8086/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"parking123"}'
+```
+
+## 🔧 Configuration
 
 ### Environment Variables
 ```bash
 # Database
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/parking_db
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5433/parking_db
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=postgres
+
+# JWT Security
+JWT_SECRET=<YOUR_64_CHAR_SECRET>
+JWT_ACCESS_TOKEN_EXPIRATION=3600
+JWT_REFRESH_TOKEN_EXPIRATION=604800
 
 # Eureka
 EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 
 # Application
 SERVER_PORT=8080
+SPRING_PROFILES_ACTIVE=development
 ```
 
 ### Docker Compose Services
 ```yaml
 services:
-  # Service Registry
-  eureka-server:
-    image: steeltoeoss/eureka-server:latest
-    ports: ["8761:8761"]
-
   # Database
   postgres:
     image: postgres:16-alpine
@@ -186,13 +286,23 @@ services:
       POSTGRES_DB: parking_db
       POSTGRES_USER: postgres  
       POSTGRES_PASSWORD: postgres
-    ports: ["5432:5432"]
+    ports: ["5433:5432"]
+
+  # Cache
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  # Service Registry
+  eureka-server:
+    build: ./backend/eureka-server
+    ports: ["8761:8761"]
 
   # API Gateway  
   api-gateway:
     build: ./backend/api-gateway
     ports: ["8086:8080"]
-    depends_on: [eureka-server]
+    depends_on: [eureka-server, postgres, redis]
 
   # Client Service
   client-service:
@@ -201,101 +311,175 @@ services:
     depends_on: [postgres, eureka-server]
 ```
 
-## 📚 Документация
+## 📚 Documentation
 
-### Архитектура и безопасность
-- **[API Gateway Developer Guide](./docs/API-Gateway-Developer-Guide.md)** - Разработчикам API Gateway
+### Architecture and Security
+- **[SESSION_DEVELOPMENT_2025-12-25_EN.md](./SESSION_DEVELOPMENT_2025-12-25_EN.md)** - Complete development session report
+- **[SESSION_DEVELOPMENT_2025-12-25.md](./SESSION_DEVELOPMENT_2025-12-25.md)** - Russian version
+- **[Authentication Architecture](./docs/AUTHENTICATION.md)** - JWT authentication system
+- **[Security Architecture](./docs/SECURITY_ARCHITECTURE.md)** - Security features and components
+- **[Observability Setup](./docs/OBSERVABILITY_SETUP.md)** - Monitoring and tracing
 
-### Специализированная документация
-- **[Database README](./database/README.md)** - Настройка и схема базы данных
-- **[DevOps README](./devops/README.md)** - Инструкции по развертыванию
+### Specialized Documentation
+- **[DevOps README](./devops/README.md)** - Deployment instructions and scripts
+- **[API Documentation](./docs/API-Gateway-Developer-Guide.md)** - API Gateway guide
 
-## 🧪 Тестирование
+## 🧪 Testing
 
-### Автоматические тесты
+### Automated Tests
 ```bash
-# Unit тесты
+# Unit tests
 mvn test
 
-# Integration тесты
+# Integration tests
 mvn verify
 
-# Тестирование всех модулей
+# Test all modules
 mvn clean test -f pom.xml
 ```
 
-### Ручное тестирование
+### Manual Testing
 
-#### HTTP файлы для тестирования
-- [`client-service-test.http`](./client-service-test.http) - Client Service API
-
-#### Примеры запросов
+#### Test Authentication
 ```bash
-# Health check
-curl http://localhost:8086/actuator/health
+# Get JWT token
+curl -X POST http://localhost:8086/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"parking123"}'
 
-# Получение клиентов
-curl -X GET http://localhost:8086/api/clients
+# Use token to access protected endpoint
+curl -X GET http://localhost:8086/api/clients \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-## 📚 Документация
+#### Health Checks
+```bash
+# API Gateway health
+curl http://localhost:8086/actuator/health
 
-### API Documentation
+# Client Service health
+curl http://localhost:8081/actuator/health
+
+# Eureka dashboard
+open http://localhost:8761
+```
+
+### PowerShell Scripts for Testing
+Located in `devops/` folder:
+- `check-system.ps1` - Complete system health check
+- `test-auth.ps1` - Authentication testing
+- `test-client-service-via-gateway.ps1` - Proxy testing
+- `full-rebuild.ps1` - Full rebuild and test
+
+## 📚 API Documentation
+
+### Interactive Documentation
 - **Swagger UI**: http://localhost:8086/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8086/v3/api-docs
-- **Postman Collection**: [Доступна в папке /docs](./docs/)
 
 ### Developer Guides
-- [API Gateway Developer Guide](./docs/API-Gateway-Developer-Guide.md)
-- [Client Service Documentation](./docs/Client-Service.md)
-- [Database Schema](./docs/Database-Schema.md)
+- **[API Gateway Developer Guide](./docs/API-Gateway-Developer-Guide.md)** - Complete guide for API Gateway
+- **[Authentication Components](./docs/AUTHENTICATION_COMPONENTS.md)** - JWT authentication system
+- **[Brute Force Protection](./docs/BRUTE_FORCE_PROTECTION.md)** - Security features
 
-1.  **`client-service`**: Manages the client database and subscriptions, and verifies their validity.
-2.  **`gate-control-service`**: Receives events from scanners, decides on vehicle admission, and manages the barrier gates (via an emulator).
-3.  **`billing-service`**: Calculates the cost for one-time parking sessions and records payments.
-4.  **`management-service`**: Tracks available parking spaces and provides an API for the external information display board.
-5.  **`	`**: Collects and stores all system logs, and generates reports.
+### Postman Collection
+Available in `/docs` folder for easy API testing.
 
-## 🔑 Functional Requirements
+## 🎯 System Features
 
-* **Automatic Mode:** Free access for subscribers (via license plate recognition). Ticket issuance/payment for one-time visitors.
-* **Manual Mode:** Ability for operators to manually control entry/exit and calculate fees (in case of automation failure).
-* **Logging:** A log of all arrivals/departures, and an audit trail of operator/administrator actions.
-* **Security:** Role-based authentication and authorization (`ADMIN`, `OPERATOR`) using Spring Security.
+### Core Services
+1. **`client-service`**: Manages client database and subscriptions, verifies their validity
+2. **`gate-control-service`**: Receives events from scanners, decides on vehicle admission, manages barrier gates
+3. **`billing-service`**: Calculates parking session costs and records payments
+4. **`management-service`**: Tracks available parking spaces, provides API for information displays
+5. **`reporting-service`**: Collects system logs and generates reports
 
-## 🛠️ Running the Project (Docker Compose)
+### Functional Requirements
+* **Automatic Mode:** Free access for subscribers (license plate recognition). Ticket issuance/payment for one-time visitors
+* **Manual Mode:** Operator control of entry/exit and fee calculation (fallback for automation failure)
+* **Logging:** Complete log of arrivals/departures and audit trail of operator/administrator actions
+* **Security:** Role-based authentication and authorization (`ADMIN`, `OPERATOR`) using Spring Security
 
-Use Docker Compose for the quick deployment of the entire stack (PostgreSQL, all microservices, and Frontend).
+## 🛠️ Running the Project
 
-**Prerequisites:** Docker and Docker Compose must be installed.
+### Using Docker Compose
+Quick deployment of the entire stack (PostgreSQL, all microservices, and Frontend).
 
-1.  **Build the Images:**
-    ```bash
-    # Build all Java services and the React interface
-    ./mvnw clean install  # or the corresponding command for your build tool
-    docker-compose build
-    ```
-2.  **Start the Services:**
-    ```bash
-    docker-compose up -d
-    ```
+**Prerequisites:** Docker and Docker Compose installed.
 
-### Default Access Points:
+1. **Build the Images:**
+   ```bash
+   # Build all Java services
+   cd backend
+   mvn clean install
+   
+   # Build Docker images
+   cd ..
+   docker-compose build
+   ```
 
-| Service | Address |
-| :--- | :--- |
-| **Backend API Gateway** (if implemented) | `http://localhost:8080` |
-| **Frontend Web UI** | `http://localhost:3000` |
-| **PostgreSQL** | `localhost:5432` |
+2. **Start the Services:**
+   ```bash
+   docker-compose up -d
+   ```
 
-## 💻 Development and Testing
+3. **Verify Services:**
+   ```bash
+   # Check container status
+   docker-compose ps
+   
+   # Check logs
+   docker-compose logs -f api-gateway
+   ```
 
-### Folder Structure
+### Default Access Points
 
--   `backend/`: Spring Boot microservice code.
--   `frontend/`: React web interface code.
--   `devops/`: Dockerfiles and `docker-compose.yml`.
--   `database/`: Migration scripts (e.g., Flyway or Liquibase).
+| Service | Address | Credentials |
+| :--- | :--- | :--- |
+| **API Gateway** | `http://localhost:8086` | admin/parking123 |
+| **Eureka Server** | `http://localhost:8761` | - |
+| **Frontend Web UI** | `http://localhost:3000` | - |
+| **PostgreSQL** | `localhost:5433` | postgres/postgres |
+| **pgAdmin** | `http://localhost:5050` | admin@parking.com/admin |
+
+## 💻 Development
+
+### Project Structure
+
+```
+parking-system/
+├── backend/              # Spring Boot microservices
+│   ├── api-gateway/      # API Gateway with JWT auth
+│   ├── client-service/   # Client management
+│   ├── eureka-server/    # Service discovery
+│   └── ...               # Other services
+├── frontend/             # React web interface
+├── devops/               # Docker files and scripts
+│   ├── *.ps1             # PowerShell automation scripts
+│   └── observability/    # Prometheus, Grafana configs
+├── database/             # SQL scripts
+│   └── init.sql          # Database initialization
+└── docs/                 # Documentation
+```
+
+### Development Workflow
+
+1. **Start Infrastructure:**
+   ```bash
+   cd devops
+   docker-compose -f docker-compose.infrastructure.yml up -d
+   ```
+
+2. **Run Services Locally:**
+   ```bash
+   cd backend/api-gateway
+   mvn spring-boot:run
+   ```
+
+3. **Run Tests:**
+   ```bash
+   mvn test
+   ```
 
 ### Running Tests
 
@@ -303,8 +487,82 @@ To run all Unit and Integration tests:
 ```bash
 cd backend
 ./mvnw test
+```
 
-📝 Future Enhancements
-Integration with a message broker (Kafka/RabbitMQ) for asynchronous communication.
-Implementation of various subscription types (day/night, limited entry count).
-Cloud deployment (AWS/GCP/Azure).
+## 🔒 Production Security
+
+### Critical Environment Variables for Production:
+
+```bash
+# JWT Security (MUST be 64+ characters)
+JWT_SECRET=<GENERATE_STRONG_64_CHAR_SECRET>
+JWT_ACCESS_TOKEN_EXPIRATION=1800   # 30 minutes
+JWT_REFRESH_TOKEN_EXPIRATION=43200  # 12 hours
+
+# Database with strong credentials
+SPRING_DATASOURCE_PASSWORD=<STRONG_DB_PASSWORD_32_CHARS+>
+
+# Redis with authentication
+SPRING_REDIS_PASSWORD=<STRONG_REDIS_PASSWORD>
+
+# Production profile
+SPRING_PROFILES_ACTIVE=production
+
+# Rate limiting (more restrictive for production)
+RATE_LIMIT_MINUTE=30
+BRUTE_FORCE_THRESHOLD=5
+```
+
+**📖 Complete security documentation:** See "Production Readiness" section in `SESSION_DEVELOPMENT_2025-12-25_EN.md`
+
+### Security Best Practices
+- Use environment variables for all secrets
+- Enable HTTPS/TLS in production
+- Implement proper logging and monitoring
+- Regular security audits
+- Keep dependencies updated
+
+## 📝 Future Enhancements
+
+### Short-term
+- [ ] Integration with message broker (Kafka/RabbitMQ)
+- [ ] WebSocket support for real-time notifications
+- [ ] Frontend application (React/Angular)
+- [ ] Complete all microservices implementation
+
+### Mid-term
+- [ ] Multiple subscription types (day/night, limited entry)
+- [ ] Mobile application (iOS/Android)
+- [ ] Advanced reporting and analytics
+- [ ] CI/CD pipeline (GitHub Actions)
+
+### Long-term
+- [ ] Cloud deployment (AWS/GCP/Azure)
+- [ ] Kubernetes orchestration
+- [ ] Multi-language support (i18n)
+- [ ] AI-powered parking optimization
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📞 Support
+
+For questions and support:
+- 📧 Email: support@parking-system.com
+- 💬 Issues: [GitHub Issues](https://github.com/your-repo/parking-system/issues)
+- 📖 Documentation: See `/docs` folder
+
+---
+
+**Made with ❤️ using Spring Boot and Docker**

@@ -127,9 +127,13 @@ public class JwtTokenService {
                 .compact();
         
         // Store refresh token in Redis with expiration
-        String refreshKey = REFRESH_TOKEN_KEY_PREFIX + jti;
-        redisTemplate.opsForValue().set(refreshKey, user.getId(), refreshTokenExpiration, TimeUnit.SECONDS);
-        
+        try {
+            String refreshKey = REFRESH_TOKEN_KEY_PREFIX + jti;
+            redisTemplate.opsForValue().set(refreshKey, user.getId().toString(), refreshTokenExpiration, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.warn("Failed to store refresh token in Redis: {}", e.getMessage());
+        }
+
         auditService.logTokenCreated(user.getUsername(), "REFRESH", ipAddress);
         
         log.debug("Refresh token created for user {} with JTI {}", user.getUsername(), jti);
@@ -199,12 +203,22 @@ public class JwtTokenService {
                 
                 // Check if refresh token exists in Redis
                 String refreshKey = REFRESH_TOKEN_KEY_PREFIX + jti;
-                Long userId = (Long) redisTemplate.opsForValue().get(refreshKey);
-                
-                if (userId == null) {
+                Object userIdObj = redisTemplate.opsForValue().get(refreshKey);
+
+                if (userIdObj == null) {
                     throw new InvalidCredentialsException("Refresh token not found or expired");
                 }
                 
+                // Safely convert to Long
+                Long userId;
+                if (userIdObj instanceof String) {
+                    userId = Long.parseLong((String) userIdObj);
+                } else if (userIdObj instanceof Number) {
+                    userId = ((Number) userIdObj).longValue();
+                } else {
+                    throw new InvalidCredentialsException("Invalid refresh token data");
+                }
+
                 auditService.logTokenValidated(claims.getSubject(), "REFRESH", true);
                 
                 return userId;
@@ -234,10 +248,14 @@ public class JwtTokenService {
                 Date expiration = claims.getExpiration();
                 
                 // Add to Redis blacklist
-                String blacklistKey = BLACKLIST_KEY_PREFIX + jti;
-                long ttl = (expiration.getTime() - System.currentTimeMillis()) / 1000;
-                if (ttl > 0) {
-                    redisTemplate.opsForValue().set(blacklistKey, reason, ttl, TimeUnit.SECONDS);
+                try {
+                    String blacklistKey = BLACKLIST_KEY_PREFIX + jti;
+                    long ttl = (expiration.getTime() - System.currentTimeMillis()) / 1000;
+                    if (ttl > 0) {
+                        redisTemplate.opsForValue().set(blacklistKey, reason, ttl, TimeUnit.SECONDS);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to blacklist token in Redis: {}", e.getMessage());
                 }
                 
                 // Add to in-memory fallback
@@ -258,22 +276,27 @@ public class JwtTokenService {
      */
     public Mono<Void> invalidateAllUserSessions(Long userId, String reason) {
         return Mono.fromRunnable(() -> {
-            String sessionsKey = USER_SESSIONS_KEY_PREFIX + userId;
-            
-            @SuppressWarnings("unchecked")
-            Set<String> sessionJtis = (Set<String>) redisTemplate.opsForValue().get(sessionsKey);
-            
-            if (sessionJtis != null) {
-                for (String jti : sessionJtis) {
-                    String blacklistKey = BLACKLIST_KEY_PREFIX + jti;
-                    redisTemplate.opsForValue().set(blacklistKey, reason, accessTokenExpiration, TimeUnit.SECONDS);
+            try {
+                String sessionsKey = USER_SESSIONS_KEY_PREFIX + userId;
+
+                @SuppressWarnings("unchecked")
+                Set<Object> sessionJtis = redisTemplate.opsForSet().members(sessionsKey);
+
+                if (sessionJtis != null && !sessionJtis.isEmpty()) {
+                    for (Object jtiObj : sessionJtis) {
+                        String jti = jtiObj.toString();
+                        String blacklistKey = BLACKLIST_KEY_PREFIX + jti;
+                        redisTemplate.opsForValue().set(blacklistKey, reason, accessTokenExpiration, TimeUnit.SECONDS);
+                    }
+
+                    // Clear user sessions
+                    redisTemplate.delete(sessionsKey);
+
+                    log.info("Invalidated {} sessions for user {} - Reason: {}",
+                            sessionJtis.size(), userId, reason);
                 }
-                
-                // Clear user sessions
-                redisTemplate.delete(sessionsKey);
-                
-                log.info("Invalidated {} sessions for user {} - Reason: {}", 
-                        sessionJtis.size(), userId, reason);
+            } catch (Exception e) {
+                log.warn("Failed to invalidate user sessions in Redis for user {}: {}", userId, e.getMessage());
             }
         });
     }
@@ -283,9 +306,14 @@ public class JwtTokenService {
      */
     private boolean isTokenBlacklisted(String jti) {
         // Check Redis first
-        String blacklistKey = BLACKLIST_KEY_PREFIX + jti;
-        if (redisTemplate.hasKey(blacklistKey)) {
-            return true;
+        try {
+            String blacklistKey = BLACKLIST_KEY_PREFIX + jti;
+            Boolean hasKey = redisTemplate.hasKey(blacklistKey);
+            if (Boolean.TRUE.equals(hasKey)) {
+                return true;
+            }
+        } catch (Exception e) {
+            log.warn("Failed to check token blacklist in Redis: {}", e.getMessage());
         }
         
         // Check in-memory fallback
@@ -320,14 +348,20 @@ public class JwtTokenService {
      * Store user session information
      */
     private void storeUserSession(Long userId, String jti, String ipAddress, String userAgent, Date expiry) {
-        String sessionsKey = USER_SESSIONS_KEY_PREFIX + userId;
-        
-        // Add session JTI to user's session set
-        redisTemplate.opsForSet().add(sessionsKey, jti);
-        
-        // Set expiration for the session set
-        long ttl = (expiry.getTime() - System.currentTimeMillis()) / 1000;
-        redisTemplate.expire(sessionsKey, ttl, TimeUnit.SECONDS);
+        try {
+            String sessionsKey = USER_SESSIONS_KEY_PREFIX + userId;
+
+            // Add session JTI to user's session set
+            redisTemplate.opsForSet().add(sessionsKey, jti);
+
+            // Set expiration for the session set
+            long ttl = (expiry.getTime() - System.currentTimeMillis()) / 1000;
+            if (ttl > 0) {
+                redisTemplate.expire(sessionsKey, ttl, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to store user session in Redis for user {}: {}", userId, e.getMessage());
+        }
     }
     
     /**
