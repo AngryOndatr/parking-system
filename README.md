@@ -3,9 +3,19 @@ Markdown
 
 Modern parking lot management system built on microservices architecture using Spring Boot, Spring Cloud, and Docker.
 
-## 🆕 Latest Updates (2025-12-25)
+## 🆕 Latest Updates (2025-12-26)
 
-✅ **System fully deployed and operational!**
+✅ **Flyway Database Migrations Implemented!**
+
+- ✅ Flyway configured and integrated into API Gateway
+- ✅ 4 migrations created (V1-V4): initial schema, parking_lots, parking_spaces, bookings
+- ✅ Comprehensive database documentation created
+- ✅ Deployment guide with migration instructions
+- ✅ Test scripts for migration verification
+- 📖 **Migration Guide:** [Database README](./database/README.md)
+- 📖 **Deployment Guide:** [DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)
+
+**Previous Updates (2025-12-25):**
 
 - ✅ API Gateway with JWT authentication and security features
 - ✅ Complete microservices implementation (Eureka, API Gateway, Client Service)
@@ -14,17 +24,16 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ Docker Compose configuration optimized
 - ✅ Correct password hashes configured (BCrypt)
 - 📖 Complete development documentation: [SESSION_DEVELOPMENT_2025-12-25_EN.md](./SESSION_DEVELOPMENT_2025-12-25_EN.md)
-- 📋 Russian version: [SESSION_DEVELOPMENT_2025-12-25.md](./SESSION_DEVELOPMENT_2025-12-25.md)
 
 ## 📈 Project Status & Roadmap
 
-### Phase 0: Infrastructure & Foundation (85% Complete) 🟢
+### Phase 0: Infrastructure & Foundation (90% Complete) 🟢
 
 | Task | Description | Status | Completion |
 |------|-------------|--------|------------|
 | 0.1 | **GitHub Setup** | ✅ Complete | 100% |
 | 0.2 | **Docker Compose** | ✅ Complete | 100% |
-| 0.3 | **PostgreSQL DDL** | 🟡 Partial | 70% |
+| 0.3 | **PostgreSQL DDL** | ✅ Good | 90% |
 | 0.4 | **Spring Boot Services** | ✅ Good | 95% |
 
 **What's Done:**
@@ -33,13 +42,13 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ API Gateway with JWT authentication fully implemented
 - ✅ Client Service and Eureka Server fully operational
 - ✅ Observability stack (Prometheus, Grafana, Jaeger, OpenTelemetry)
-- ✅ PostgreSQL with Users, Clients, Vehicles tables
+- ✅ PostgreSQL with 11 tables (Users, Clients, Vehicles, Parking Lots, Spaces, Bookings, etc.)
+- ✅ **Flyway migrations configured and working** (V0-V4)
 - ✅ Security features (rate limiting, brute force protection)
 
 **What's Needed:**
-- ⚠️ GitHub Projects Kanban board
-- ⚠️ Flyway/Liquibase migration setup
-- ⚠️ Complete database schema (8 more tables needed)
+- ⚠️ GitHub Projects Kanban board setup
+- ⚠️ Complete remaining Flyway migrations (V5-V8)
 - ⚠️ Full implementation of remaining 8 microservices
 
 📖 **Detailed Report:** [PHASE_0_READINESS_REPORT.md](./PHASE_0_READINESS_REPORT.md)
@@ -192,6 +201,32 @@ docker-compose ps
 - **Password**: `postgres`
 - **Port**: `5433` (Docker), `5432` (local)
 
+### Flyway Migrations
+
+Database schema is managed using **Flyway** for version-controlled migrations.
+
+**Migration Files:** `backend/api-gateway/src/main/resources/db/migration/`
+
+| Version | File | Description | Tables |
+|---------|------|-------------|--------|
+| V0 | `V0__baseline.sql` | Baseline | - |
+| V1 | `V1__initial_schema.sql` | Core schema | 8 tables |
+| V2 | `V2__add_parking_lots.sql` | Parking facilities | parking_lots |
+| V3 | `V3__add_parking_spaces.sql` | Parking spaces | parking_spaces |
+| V4 | `V4__add_bookings.sql` | Reservations | bookings |
+
+**Quick Commands:**
+```powershell
+# Test migrations
+cd devops
+.\test-flyway-migrations.ps1
+
+# View migration history
+docker exec parking_db psql -U postgres -d parking_db -c "SELECT * FROM flyway_schema_history;"
+```
+
+📖 **Complete Guide:** [Database README](./database/README.md)
+
 ### Data Schema
 ```sql
 -- Users (for authentication)
@@ -319,6 +354,11 @@ services:
 - **[Authentication Architecture](./docs/AUTHENTICATION.md)** - JWT authentication system
 - **[Security Architecture](./docs/SECURITY_ARCHITECTURE.md)** - Security features and components
 - **[Observability Setup](./docs/OBSERVABILITY_SETUP.md)** - Monitoring and tracing
+
+### Database & Deployment
+- **[Database README](./database/README.md)** - Database schema and Flyway migrations guide
+- **[Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
+- **[Migration Tasks](./docs/DATABASE_MIGRATION_TASKS_EN.md)** - Database migration task breakdown
 
 ### Specialized Documentation
 - **[DevOps README](./devops/README.md)** - Deployment instructions and scripts
