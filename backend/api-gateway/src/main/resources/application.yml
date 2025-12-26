@@ -62,8 +62,8 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    baseline-version: 0
-    baseline-description: "Existing schema"
+    baseline-version: 1
+    baseline-description: "Existing schema from init.sql"
     locations: classpath:db/migration
     schemas: public
     validate-on-migrate: true
