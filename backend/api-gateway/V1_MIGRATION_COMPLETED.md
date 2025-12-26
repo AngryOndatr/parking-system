@@ -212,6 +212,25 @@ mvn flyway:validate
 
 ---
 
+## 🔧 Git Credentials Setup
+
+### Windows Credential Manager
+Git configured to use Windows Credential Manager (`wincred`) for storing credentials.
+This eliminates the need to enter username/password on every push.
+
+**Configuration:**
+```bash
+git config --global credential.helper wincred
+git config --global credential.https://github.com.useHttpPath false
+```
+
+**Benefits:**
+- ✅ Credentials stored securely in Windows Credential Manager
+- ✅ No need to re-enter password for each push
+- ✅ Works with HTTPS GitHub authentication
+
+---
+
 **Issue Status**: ✅ COMPLETED  
 **Estimated Time**: 20 minutes  
 **Actual Time**: ~20 minutes  
