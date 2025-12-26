@@ -180,12 +180,13 @@ spring:
 spring:
   flyway:
     enabled: true
-    baseline-on-migrate: true
+    baseline-on-migrate: true      # Allow baseline on existing schema
     baseline-version: 0
     baseline-description: "Existing schema"
     locations: classpath:db/migration
     schemas: public
     validate-on-migrate: true
+    out-of-order: false
 ```
 
 ### Production (application-production.yml)
@@ -193,11 +194,30 @@ spring:
 ```yaml
 spring:
   flyway:
+    # Core Settings
     enabled: true
-    baseline-on-migrate: false  # Stricter in production
-    validate-on-migrate: true
-    clean-disabled: true        # Never clean in production!
+    
+    # Safety Features - CRITICAL for production!
+    baseline-on-migrate: false     # Don't auto-baseline
+    validate-on-migrate: true      # Verify checksums
+    clean-disabled: true           # Prevent database wipe!
+    out-of-order: false            # Enforce sequential order
+    
+    # Validation
+    ignore-missing-migrations: false
+    ignore-pending-migrations: false
+    ignore-future-migrations: false
+    
+    # Configuration
+    locations: classpath:db/migration
+    schemas: public
+    batch: true
+    connect-retries: 3
 ```
+
+**📖 Complete Production Configuration:** See `application-production.yml`
+
+**📖 Production Deployment Process:** [PRODUCTION_MIGRATION_PROCESS.md](../docs/PRODUCTION_MIGRATION_PROCESS.md)
 
 ---
 

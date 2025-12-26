@@ -9,6 +9,8 @@
 - [Health Checks](#health-checks)
 - [Troubleshooting](#troubleshooting)
 
+> 📖 **For Production Migration Process:** See [PRODUCTION_MIGRATION_PROCESS.md](./PRODUCTION_MIGRATION_PROCESS.md)
+
 ---
 
 ## Prerequisites
