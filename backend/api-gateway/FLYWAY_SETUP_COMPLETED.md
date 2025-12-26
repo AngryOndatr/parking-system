@@ -113,6 +113,21 @@ Examples:
 
 ---
 
+## 🔄 GitHub Workflow Notes
+
+### Commit Message Strategy
+- **In develop branch**: Use `(#2)` for reference only (doesn't close issue)
+- **Issue closure**: Manual after testing, or via PR description when merging to main
+- **Why**: Allows testing and verification before marking as complete
+
+### Recommended Process
+1. Commit with reference: `git commit -m "Add feature (#2)"`
+2. Test functionality
+3. Move issue to "Done" on GitHub Projects
+4. Close issue manually OR via PR to main
+
+---
+
 **Issue Status**: ✅ COMPLETED
 **Estimated Time**: 15 minutes
 **Actual Time**: ~15 minutes
