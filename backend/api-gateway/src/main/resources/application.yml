@@ -58,6 +58,16 @@ spring:
     show-sql: false
     open-in-view: false
 
+  # Flyway Database Migration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    baseline-description: "Existing schema"
+    locations: classpath:db/migration
+    schemas: public
+    validate-on-migrate: true
+
 ---
 # Development Profile
 spring:
