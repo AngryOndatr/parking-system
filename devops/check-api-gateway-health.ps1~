@@ -1,60 +1,7 @@
-# Complete API Gateway Health Check
-
-Write-Host "`n========================================" -ForegroundColor Cyan
-Write-Host "  API GATEWAY COMPLETE HEALTH CHECK" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-
-$issues = 0
-$checks = 0
-
-# 1. Container Running
-Write-Host "[1/6] Container Status..." -ForegroundColor Yellow
-$checks++
-$containerStatus = docker ps --filter "name=api-gateway" --format "{{.Status}}" 2>&1
-if ($containerStatus -like "*Up*") {
-    Write-Host "  [OK] Container is running" -ForegroundColor Green
-    Write-Host "  Status: $containerStatus" -ForegroundColor Gray
-} else {
-    Write-Host "  [ERROR] Container is NOT running!" -ForegroundColor Red
-    $issues++
-}
-Write-Host ""
-
-# 2. Port Accessible
-Write-Host "[2/6] Port 8086 Accessibility..." -ForegroundColor Yellow
-$checks++
-try {
-    $health = Invoke-WebRequest -Uri "http://localhost:8086/actuator/health" -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
-    Write-Host "  [OK] Port 8086 is accessible" -ForegroundColor Green
-    Write-Host "  Health: $($health.Content)" -ForegroundColor Gray
-} catch {
-    Write-Host "  [ERROR] Port 8086 NOT accessible!" -ForegroundColor Red
-    Write-Host "  Error: $($_.Exception.Message)" -ForegroundColor Gray
-    $issues++
-}
-Write-Host ""
-
-# 3. Eureka Registration
-Write-Host "[3/6] Eureka Registration..." -ForegroundColor Yellow
-$checks++
-try {
-    $eureka = Invoke-WebRequest -Uri "http://localhost:8761/eureka/apps/API-GATEWAY" -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
-    if ($eureka.StatusCode -eq 200) {
-        Write-Host "  [OK] Registered in Eureka" -ForegroundColor Green
-        if ($eureka.Content -match "UP") {
-            Write-Host "  Status: UP" -ForegroundColor Green
-        } else {
-            Write-Host "  [WARNING] Status: NOT UP" -ForegroundColor Yellow
-            $issues++
-        }
-    }
-} catch {
-    Write-Host "  [ERROR] NOT registered in Eureka!" -ForegroundColor Red
-    $issues++
-}
-Write-Host ""
-
+# NOTE:
+# This file (`check-api-gateway-health.ps1~`) is an editor backup and should not be used or version-controlled.
+# The canonical script is `check-api-gateway-health.ps1` (without the trailing `~`).
+# Please remove this file from version control (e.g., via `git rm devops/check-api-gateway-health.ps1~`).
 # 4. Authentication Works
 Write-Host "[4/6] Authentication Endpoint..." -ForegroundColor Yellow
 $checks++
