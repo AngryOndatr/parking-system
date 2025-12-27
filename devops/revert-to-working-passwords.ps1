@@ -4,7 +4,7 @@
 Write-Host "`n=== Reverting Passwords to Working Versions ===" -ForegroundColor Cyan
 Write-Host ""
 
-$rootPath = "C:\Users\user\Projects\parking-system"
+$rootPath = Split-Path $PSScriptRoot -Parent
 $filesUpdated = 0
 
 # Define replacements (reverse the previous change)
