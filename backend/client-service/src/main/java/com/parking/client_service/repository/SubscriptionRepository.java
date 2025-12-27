@@ -1,0 +1,26 @@
+package com.parking.client_service.repository;
+
+import com.parking.common.entity.Subscription;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
+    
+    List<Subscription> findByClientId(Long clientId);
+    
+    @Query("SELECT s FROM Subscription s WHERE s.client.id = :clientId " +
+           "AND s.isActive = true " +
+           "AND s.startDate <= :now " +
+           "AND s.endDate >= :now")
+    Optional<Subscription> findActiveSubscriptionByClientId(
+        @Param("clientId") Long clientId, 
+        @Param("now") LocalDateTime now
+    );
+}

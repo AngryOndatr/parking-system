@@ -1,12 +1,53 @@
+server:
+  port: 8084
+
 spring:
   application:
-    name: Reporting Service
+    name: reporting-service
+  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/parking_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    enabled: true
+  instance:
+    preferIpAddress: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html # Path to swagger UI
+    path: /swagger-ui.html
   api-docs:
-    path: /v3/api-docs # Path to JSON documentation
+    path: /v3/api-docs
   info:
     title: Reporting Service API
     version: 1.0.0
-    description: API for parking reporting and analytics
+    description: API for parking system logging and reporting
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
