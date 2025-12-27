@@ -6,7 +6,7 @@ Write-Host "   PASSWORD FIX SCRIPT" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
 
-$projectRoot = "C:\Users\user\Projects\parking-system"
+$projectRoot = Split-Path $PSScriptRoot -Parent
 cd $projectRoot
 
 # Step 1: Stop containers
