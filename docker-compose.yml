@@ -252,45 +252,67 @@ services:
 #      - parking-network
 #    restart: unless-stopped
 #
-#  management-service:
-#    build:
-#      context: ./backend/management-service
-#    container_name: management-service
-#    ports:
-#      - "8084:8080"
-#    depends_on:
-#      - postgres
-#      - eureka-server
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
-#      SPRING_DATASOURCE_USERNAME: postgres
-#      SPRING_DATASOURCE_PASSWORD: postgres
-#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-#      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
-#      SPRING_APPLICATION_NAME: management-service
-#    networks:
-#      - parking-network
-#    restart: unless-stopped
-#
-#  reporting-service:
-#    build:
-#      context: ./backend/reporting-service
-#    container_name: reporting-service
-#    ports:
-#      - "8085:8080"
-#    depends_on:
-#      - postgres
-#      - eureka-server
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
-#      SPRING_DATASOURCE_USERNAME: postgres
-#      SPRING_DATASOURCE_PASSWORD: postgres
-#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-#      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
-#      SPRING_APPLICATION_NAME: reporting-service
-#    networks:
-#      - parking-network
-#    restart: unless-stopped
+
+  management-service:
+    build:
+      context: ./backend/management-service
+    container_name: management-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      SPRING_APPLICATION_NAME: management-service
+      # OpenTelemetry configuration
+      MANAGEMENT_TRACING_ENABLED: "true"
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
+      MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+    networks:
+      - parking-network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8083/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  reporting-service:
+    build:
+      context: ./backend/reporting-service
+    container_name: reporting-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      SPRING_APPLICATION_NAME: reporting-service
+      # OpenTelemetry configuration
+      MANAGEMENT_TRACING_ENABLED: "true"
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
+      MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+    networks:
+      - parking-network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8084/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
 
 volumes:
   parking_data:
