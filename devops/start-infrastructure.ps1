@@ -5,8 +5,8 @@ Write-Host "  Parking System Infrastructure Setup" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Переход в директорию devops
-Set-Location "C:\Users\user\Projects\parking-system\devops"
+# Переход в директорию, где расположен скрипт (devops)
+Set-Location $PSScriptRoot
 
 # Шаг 1: Остановка всех контейнеров
 Write-Host "[1/5] Остановка существующих контейнеров..." -ForegroundColor Yellow
