@@ -6,7 +6,7 @@ Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "   DATABASE RECREATION" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
-$projectRoot = "C:\Users\user\Projects\parking-system"
+$projectRoot = Split-Path $PSScriptRoot -Parent
 
 # Step 1: Stop and remove postgres container
 Write-Host "Step 1: Stopping and removing postgres container..." -ForegroundColor Yellow
