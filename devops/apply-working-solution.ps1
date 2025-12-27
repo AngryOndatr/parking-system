@@ -12,7 +12,8 @@ Write-Host "  manager -> manager123  ($2b$ hash)" -ForegroundColor White
 Write-Host ""
 
 Write-Host "[1/2] Applying hashes to database..." -ForegroundColor Yellow
-Get-Content "C:\Users\user\Projects\parking-system\database\apply_working_hashes.sql" | docker exec -i parking_db psql -U postgres -d parking_db 2>&1 | Out-Null
+$sqlFilePath = Join-Path (Split-Path $PSScriptRoot -Parent) "database\apply_working_hashes.sql"
+Get-Content $sqlFilePath | docker exec -i parking_db psql -U postgres -d parking_db 2>&1 | Out-Null
 Write-Host "  Done" -ForegroundColor Green
 
 Write-Host "[2/2] Testing login..." -ForegroundColor Yellow
