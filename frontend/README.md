@@ -1,6 +1,6 @@
-# Frontend
+# Backend
 
-This directory contains the React web interface code for the parking system.
+This directory contains the Spring Boot microservice code for the parking system.
 
 ## Structure
 
@@ -8,7 +8,8 @@ TBD - Will be organized as the application develops.
 
 ## Technologies
 
-- React
-- JavaScript/TypeScript
-- CSS/SCSS
-- npm/yarn
+- Java
+- Spring Boot
+- Spring Data JPA
+- Spring Security
+- Maven/Gradle

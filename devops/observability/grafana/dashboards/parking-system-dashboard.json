@@ -1,0 +1,160 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Parking System - Security & Performance",
+    "tags": ["parking", "security", "authentication"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Authentication Metrics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "auth_login_attempts_total",
+            "refId": "A",
+            "legendFormat": "Login Attempts"
+          },
+          {
+            "expr": "auth_login_success_total",
+            "refId": "B", 
+            "legendFormat": "Successful Logins"
+          },
+          {
+            "expr": "auth_login_failures_total",
+            "refId": "C",
+            "legendFormat": "Failed Logins"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Security Violations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(security_rate_limit_violations_total[5m])",
+            "refId": "A",
+            "legendFormat": "Rate Limit Violations/sec"
+          },
+          {
+            "expr": "rate(security_violations_total[5m])",
+            "refId": "B",
+            "legendFormat": "Security Violations/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Active Sessions",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "sessions_active",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Blocked IPs",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "security_blocked_ips",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "HTTP Requests",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "refId": "A",
+            "legendFormat": "{{method}} {{status}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "Response Times",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(auth_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(auth_duration_seconds_bucket[5m]))",
+            "refId": "B",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "JWT Validation Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(jwt_validation_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "JWT Validation 95th percentile"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 8,
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active",
+            "refId": "A",
+            "legendFormat": "Active Connections"
+          },
+          {
+            "expr": "hikaricp_connections_idle",
+            "refId": "B",
+            "legendFormat": "Idle Connections"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 9,
+        "title": "System Resources",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "process_cpu_usage",
+            "refId": "A",
+            "legendFormat": "CPU Usage"
+          },
+          {
+            "expr": "jvm_memory_used_bytes / jvm_memory_max_bytes",
+            "refId": "B",
+            "legendFormat": "Memory Usage"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}

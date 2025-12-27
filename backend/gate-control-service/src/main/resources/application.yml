@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: Gate Control Service
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html # Path to swagger UI
+  api-docs:
+    path: /v3/api-docs # Path to JSON documentation
+  info:
+    title: Gate Control Service API
+    version: 1.0.0
+    description: API for gate control and vehicle management

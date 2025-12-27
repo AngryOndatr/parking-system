@@ -1,0 +1,257 @@
+# Production Configuration for API Gateway
+# This file contains production-ready settings with security and safety features
+
+spring:
+  application:
+    name: api-gateway
+
+  # Production Profile
+  config:
+    activate:
+      on-profile: production
+
+  # Database Configuration - Use environment variables in production
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://parking_db:5432/parking_db?ApplicationName=API-Gateway-PROD}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD}  # MUST be set via environment variable!
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+      data-source-properties:
+        lc_messages: en_US.UTF-8
+
+  # JPA Configuration - Strict validation for production
+  jpa:
+    hibernate:
+      ddl-auto: validate  # NEVER use create, create-drop, or update in production!
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    show-sql: false  # Never log SQL in production
+    open-in-view: false
+
+  # Flyway Database Migration - Production Configuration
+  flyway:
+    # Core Settings
+    enabled: true
+
+    # Baseline Configuration
+    baseline-on-migrate: false  # CRITICAL: Disable for production!
+    baseline-version: 0
+    baseline-description: "Production baseline"
+
+    # Migration Settings
+    locations: classpath:db/migration
+    schemas: public
+    encoding: UTF-8
+
+    # Validation and Safety
+    validate-on-migrate: true  # Verify migration checksums
+    validate-migration-naming: true
+    out-of-order: false  # Do NOT allow out-of-order migrations
+    ignore-missing-migrations: false
+    ignore-ignored-migrations: false
+    ignore-pending-migrations: false
+    ignore-future-migrations: false
+
+    # Safety Features
+    clean-disabled: true  # CRITICAL: Prevent accidental database wipe!
+    clean-on-validation-error: false
+
+    # Performance
+    batch: true
+    mixed: false  # Don't mix transactional and non-transactional statements
+
+    # Logging
+    oracle-sqlplus: false
+    oracle-sqlplus-warn: false
+
+    # Placeholders (if needed)
+    placeholder-replacement: false
+
+    # Table Configuration
+    table: flyway_schema_history
+
+    # Connection Configuration
+    connect-retries: 3
+    connect-retries-interval: 10
+    init-sql: SELECT 1
+
+    # Lock Configuration
+    lock-retry-count: 50
+
+  # Redis Configuration for Production
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:parking_redis}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD}  # MUST be set via environment variable!
+      timeout: ${SPRING_REDIS_TIMEOUT:2000}
+      lettuce:
+        pool:
+          enabled: true
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: -1
+        shutdown-timeout: 100ms
+      database: 0
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+
+# Security Configuration for Production
+security:
+  jwt:
+    # CRITICAL: Use strong secret (64+ characters) from environment variable
+    secret: ${JWT_SECRET}  # MUST be set via environment variable!
+    issuer: parking-system-production
+    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:1800}    # 30 minutes (stricter than dev)
+    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:43200}  # 12 hours
+
+  # Rate Limiting - Stricter for production
+  rate-limit:
+    requests-per-minute: ${RATE_LIMIT_MINUTE:30}  # More restrictive
+
+  # Brute Force Protection
+  brute-force:
+    max-attempts: ${BRUTE_FORCE_THRESHOLD:5}
+    lock-duration-minutes: ${BRUTE_FORCE_LOCK_DURATION:30}
+
+  # IP Blocking
+  ip-blocking:
+    enabled: true
+    suspicious-threshold: ${SUSPICIOUS_IP_THRESHOLD:10}
+    block-duration-minutes: ${SUSPICIOUS_IP_BLOCK_DURATION:60}
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-server:8761/eureka/}
+    registry-fetch-interval-seconds: 30
+    instance-info-replication-interval-seconds: 30
+    initial-instance-info-replication-interval-seconds: 40
+    eureka-service-url-poll-interval-seconds: 300
+    eureka-server-connect-timeout-seconds: 10
+    eureka-server-read-timeout-seconds: 10
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+    metadata-map:
+      management.port: ${management.server.port:8080}
+      environment: production
+
+# Actuator Configuration - Restricted for production
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics  # Limited endpoints
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized  # Hide details from unauthorized users
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+# Server Configuration
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never  # Don't leak error messages
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    min-response-size: 1024
+  http2:
+    enabled: true
+  shutdown: graceful
+
+# Logging Configuration - Production
+logging:
+  level:
+    root: WARN
+    com.parking: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.springframework.boot.autoconfigure: WARN
+    org.hibernate: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    com.zaxxer.hikari: WARN
+    org.flywaydb: INFO  # Keep Flyway logs
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%t] %-40.40logger{39} : %m%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%t] %-40.40logger{39} : %m%n"
+  file:
+    name: ${LOG_FILE:/var/log/parking-system/api-gateway.log}
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# OpenTelemetry Configuration
+otel:
+  service:
+    name: ${spring.application.name}
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://parking_otel_collector:4317}
+  metrics:
+    exporter: otlp
+  traces:
+    exporter: otlp
+  logs:
+    exporter: otlp
+  resource:
+    attributes:
+      environment: production
+      service.version: ${BUILD_VERSION:1.0.0}
+
+# Spring Boot Configuration
+spring.main:
+  banner-mode: off
+  cloud-platform: kubernetes  # or 'none' if not using k8s
+
+# Thread Pool Configuration
+spring.task:
+  execution:
+    pool:
+      core-size: 10
+      max-size: 50
+      queue-capacity: 100
+  scheduling:
+    pool:
+      size: 5
+

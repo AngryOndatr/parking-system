@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: Reporting Service
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html # Path to swagger UI
+  api-docs:
+    path: /v3/api-docs # Path to JSON documentation
+  info:
+    title: Reporting Service API
+    version: 1.0.0
+    description: API for parking reporting and analytics

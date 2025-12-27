@@ -1,0 +1,16 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Parking System DB (Docker)",
+      "Group": "Parking System",
+      "Host": "parking_db",
+      "Port": 5432,
+      "MaintenanceDB": "parking_db",
+      "Username": "postgres",
+      "Password": "postgres",
+      "SSLMode": "prefer",
+      "Comment": "PostgreSQL база данных для Parking System"
+    }
+  }
+}
+
