@@ -9,7 +9,7 @@ Write-Host "========================================`n" -ForegroundColor Cyan
 # 1. Check Docker containers
 Write-Host "1. Docker Containers:" -ForegroundColor Yellow
 $containers = @(
-    @{Name="parking_db"; Port="5433"},
+    @{Name="parking_db"; Port="5432"},
     @{Name="parking_redis"; Port="6379"},
     @{Name="eureka-server"; Port="8761"},
     @{Name="api-gateway"; Port="8086"},
