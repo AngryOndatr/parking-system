@@ -8,7 +8,7 @@ Write-Host "============================================`n" -ForegroundColor Cya
 
 $ErrorActionPreference = "Continue"
 $startTime = Get-Date
-$projectRoot = "C:\Users\user\Projects\parking-system"
+$projectRoot = Split-Path $PSScriptRoot -Parent
 
 # ============================================
 # HELPER FUNCTIONS
