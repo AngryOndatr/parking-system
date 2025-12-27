@@ -5,7 +5,7 @@ Write-Host "  Parking System Full Startup" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-Set-Location "C:\Users\user\Projects\parking-system\devops"
+Set-Location $PSScriptRoot
 
 # Запуск инфраструктуры
 Write-Host "[1/3] Запуск инфраструктуры..." -ForegroundColor Yellow
