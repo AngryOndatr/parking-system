@@ -67,8 +67,13 @@ Modern parking lot management system built on microservices architecture using S
 - ⏳ Integration testing and API documentation
 
 📖 **Issue Templates:** 
-- [PHASE_1_ISSUES.md](./docs/PHASE_1_ISSUES.md) — Complete issue templates with all details
+- [PHASE_1_COMPLETE_GUIDE.md](./docs/PHASE_1_COMPLETE_GUIDE.md) — **Start here!** Complete implementation guide
+- [PHASE_1_ISSUES.md](./docs/PHASE_1_ISSUES.md) — Detailed issue templates
 - [PHASE_1_ISSUES_QUICK_REF.md](./docs/PHASE_1_ISSUES_QUICK_REF.md) — Quick reference guide
+
+**Automated Scripts:**
+- `devops/create-phase1-issues.sh` (Linux/Mac)
+- `devops/create-phase1-issues.ps1` (Windows)
 
 **Timeline:** 3 weeks | **Issues:** Epic + 9 implementation tasks
 
@@ -382,9 +387,11 @@ services:
 - **[Migration Tasks](./docs/DATABASE_MIGRATION_TASKS_EN.md)** - Database migration task breakdown
 
 ### Project Management & Issues
-- **[Phase 1 Issues](./docs/PHASE_1_ISSUES.md)** - Complete GitHub issue templates for Phase 1 backend implementation
+- **[Phase 1 Complete Guide](./docs/PHASE_1_COMPLETE_GUIDE.md)** - 📖 **Complete Phase 1 implementation guide** (start here!)
+- **[Phase 1 Issues](./docs/PHASE_1_ISSUES.md)** - Detailed GitHub issue templates for Phase 1 backend
 - **[Phase 1 Quick Reference](./docs/PHASE_1_ISSUES_QUICK_REF.md)** - Quick guide for creating Phase 1 issues
 - **[Issue Creation Guide](./docs/QUICK_GUIDE_ISSUES.md)** - General guide for creating GitHub issues
+- **Automated Scripts**: `devops/create-phase1-issues.sh` and `devops/create-phase1-issues.ps1`
 
 ### Specialized Documentation
 - **[DevOps README](./devops/README.md)** - Deployment instructions and scripts
