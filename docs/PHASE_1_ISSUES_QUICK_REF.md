@@ -18,11 +18,26 @@
 4. Paste content, add labels, create
 
 ### Option 2: GitHub CLI (5 minutes)
+**Automated Scripts Available! (Recommended)**
+
+**Linux/Mac:**
 ```bash
-gh auth login
-# Copy commands from PHASE_1_ISSUES.md (section: GitHub CLI Commands)
-# Run each command to create issues
+cd devops
+./create-phase1-issues.sh
 ```
+
+**Windows (PowerShell):**
+```powershell
+cd devops
+.\create-phase1-issues.ps1
+```
+
+These scripts will:
+- Create the Epic issue
+- Create all 9 implementation issues
+- Link dependencies automatically
+- Apply all labels
+- Set the milestone
 
 ### Option 3: GitHub Copilot (2 minutes)
 - Share PHASE_1_ISSUES.md with GitHub Copilot

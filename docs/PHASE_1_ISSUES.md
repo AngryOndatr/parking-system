@@ -17,11 +17,28 @@
 5. Link dependencies as noted
 
 ### Option B: Use GitHub CLI (Faster)
+**Automated Scripts Available!**
+
+We provide ready-to-use scripts that create all issues automatically:
+
+**Linux/Mac:**
+```bash
+cd devops
+./create-phase1-issues.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+cd devops
+.\create-phase1-issues.ps1
+```
+
+**Manual CLI commands:**
 ```bash
 # Authenticate if needed
 gh auth login
 
-# Create Epic and issues (see commands at end of document)
+# See individual commands at end of document
 ```
 
 ### Option C: Use GitHub Copilot
