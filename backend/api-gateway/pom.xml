@@ -199,9 +199,12 @@
 		</dependency>
 
 		<!-- OpenTelemetry dependencies are declared above in the monitoring block to avoid duplicates -->
+
+		<!-- In-memory DB for tests -->
 		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 

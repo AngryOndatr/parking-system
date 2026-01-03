@@ -12,19 +12,21 @@ servers:
     description: Client Service Docker Network
 
 tags:
-  - name: clients
+  - name: Client
     description: Operations with clients and subscribers
-  - name: vehicles
+    x-interface-name: ClientApi
+  - name: Vehicle
     description: Operations with vehicles
+    x-interface-name: VehicleApi
 
 paths:
   # =================================================================
   # CLIENTS
   # =================================================================
-  /api/v1/clients:
+  /api/clients:
     get:
       tags:
-        - Clients
+        - Client
       summary: Get a list of all registered clients
       operationId: getAllClients
       responses:
@@ -40,7 +42,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     post:
       tags:
-        - Clients
+        - Client
       summary: Register a new client
       operationId: createClient
       requestBody:
@@ -61,10 +63,10 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/clients/{id}:
+  /api/clients/{id}:
     get:
       tags:
-        - Clients
+        - Client
       summary: Get client by ID
       operationId: getClientById
       parameters:
@@ -87,7 +89,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     put:
       tags:
-        - Clients
+        - Client
       summary: Update client data by ID
       operationId: updateClient
       parameters:
@@ -115,10 +117,10 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError'
 
-  /api/v1/clients/search:
+  /api/clients/search:
     get:
       tags:
-        - Clients
+        - Client
       summary: Search client by phone number
       operationId: searchClientByPhone
       parameters:
@@ -141,10 +143,10 @@ paths:
   # =================================================================
   # VEHICLES
   # =================================================================
-  /api/v1/clients/{clientId}/vehicles:
+  /api/clients/{clientId}/vehicles:
     post:
       tags:
-        - Vehicles
+        - Vehicle
       summary: Add a new vehicle to a client
       operationId: addVehicleToClient
       parameters:
@@ -173,7 +175,7 @@ paths:
           $ref: '#/components/responses/BadRequestError'
     get:
       tags:
-        - Vehicles
+        - Vehicle
       summary: Get a list of all client's vehicles
       operationId: getVehiclesByClient
       parameters:
