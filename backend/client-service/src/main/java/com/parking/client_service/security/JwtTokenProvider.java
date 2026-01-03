@@ -35,9 +35,9 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(signingKey)
+                    .setSigningKey(signingKey)
                     .build()
-                    .parseSignedClaims(token);
+                    .parseClaimsJws(token);
             return true;
         } catch (Exception e) {
             log.error("Invalid JWT token: {}", e.getMessage());
@@ -50,10 +50,10 @@ public class JwtTokenProvider {
      */
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parser()
-                .verifyWith(signingKey)
+                .setSigningKey(signingKey)
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .parseClaimsJws(token)
+                .getBody();
         return claims.getSubject();
     }
 
@@ -62,11 +62,15 @@ public class JwtTokenProvider {
      */
     public Long getUserIdFromToken(String token) {
         Claims claims = Jwts.parser()
-                .verifyWith(signingKey)
+                .setSigningKey(signingKey)
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claims.get("userId", Long.class);
+                .parseClaimsJws(token)
+                .getBody();
+        Object uid = claims.get("userId");
+        if (uid == null) return null;
+        if (uid instanceof Integer) return ((Integer) uid).longValue();
+        if (uid instanceof Long) return (Long) uid;
+        try { return Long.valueOf(uid.toString()); } catch (Exception e) { return null; }
     }
 
     /**
@@ -74,11 +78,11 @@ public class JwtTokenProvider {
      */
     public String getRoleFromToken(String token) {
         Claims claims = Jwts.parser()
-                .verifyWith(signingKey)
+                .setSigningKey(signingKey)
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claims.get("role", String.class);
+                .parseClaimsJws(token)
+                .getBody();
+        Object role = claims.get("role");
+        return role != null ? role.toString() : null;
     }
 }
-
