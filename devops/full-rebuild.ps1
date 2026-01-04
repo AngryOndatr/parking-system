@@ -252,29 +252,226 @@ try {
         Write-Host "   OK - Authentication successful!" -ForegroundColor Green
         Write-Host "      Token length: $($authResponse.accessToken.Length) characters" -ForegroundColor Gray
 
-        # Test Client Service access
-        Write-Host "`nStep 13: Testing Client Service access via Gateway..." -ForegroundColor Yellow
-        try {
-            $headers = @{
-                "Authorization" = "Bearer $($authResponse.accessToken)"
-            }
-
-            $clientsResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients" `
-                -Method GET `
-                -Headers $headers `
-                -TimeoutSec 10
-
-            Write-Host "   OK - Client Service accessible via Gateway!" -ForegroundColor Green
-            if ($clientsResponse) {
-                $count = if ($clientsResponse.Count) { $clientsResponse.Count } else { 0 }
-                Write-Host "      Clients found: $count" -ForegroundColor Gray
-            } else {
-                Write-Host "      Response: Empty list (OK - no clients yet)" -ForegroundColor Gray
-            }
-        } catch {
-            Write-Host "   ERROR - Client Service access failed!" -ForegroundColor Red
-            Write-Host "      Error: $($_.Exception.Message)" -ForegroundColor Red
+        $headers = @{
+            "Authorization" = "Bearer $($authResponse.accessToken)"
+            "Content-Type" = "application/json"
         }
+
+        # ============================================
+        # TEST CLIENT API ENDPOINTS
+        # ============================================
+        Write-Host "`nStep 13: Testing Client API endpoints..." -ForegroundColor Yellow
+        $testsPassed = 0
+        $testsFailed = 0
+        $createdClientId = $null
+        $createdVehicleId = $null
+
+        # Test 1: GET /api/clients (list all)
+        Write-Host "   [1/11] GET /api/clients (list all): " -NoNewline -ForegroundColor White
+        try {
+            $clientsResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 2: POST /api/clients (create client)
+        Write-Host "   [2/11] POST /api/clients (create): " -NoNewline -ForegroundColor White
+        try {
+            $newClient = @{
+                firstName = "Test"
+                lastName = "User"
+                phoneNumber = "+380501234567"
+                email = "test.rebuild@parking.com"
+            } | ConvertTo-Json
+
+            $createResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients" `
+                -Method POST -Headers $headers -Body $newClient -TimeoutSec 10
+
+            $createdClientId = $createResponse.id
+            Write-Host "OK (ID: $createdClientId)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 3: GET /api/clients/{id} (get by ID)
+        if ($createdClientId) {
+            Write-Host "   [3/11] GET /api/clients/$createdClientId (get by ID): " -NoNewline -ForegroundColor White
+            try {
+                $clientResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/$createdClientId" `
+                    -Method GET -Headers $headers -TimeoutSec 10
+                Write-Host "OK" -ForegroundColor Green
+                $testsPassed++
+            } catch {
+                Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+                $testsFailed++
+            }
+        } else {
+            Write-Host "   [3/11] GET /api/clients/{id}: SKIPPED (no client created)" -ForegroundColor Yellow
+        }
+
+        # Test 4: PUT /api/clients/{id} (update)
+        if ($createdClientId) {
+            Write-Host "   [4/11] PUT /api/clients/$createdClientId (update): " -NoNewline -ForegroundColor White
+            try {
+                $updateClient = @{
+                    firstName = "Updated"
+                    lastName = "User"
+                    phoneNumber = "+380501234567"
+                    email = "updated.rebuild@parking.com"
+                } | ConvertTo-Json
+
+                $updateResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/$createdClientId" `
+                    -Method PUT -Headers $headers -Body $updateClient -TimeoutSec 10
+                Write-Host "OK" -ForegroundColor Green
+                $testsPassed++
+            } catch {
+                Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+                $testsFailed++
+            }
+        } else {
+            Write-Host "   [4/11] PUT /api/clients/{id}: SKIPPED (no client created)" -ForegroundColor Yellow
+        }
+
+        # Test 5: GET /api/clients/search?phone=... (search by phone)
+        Write-Host "   [5/11] GET /api/clients/search (by phone): " -NoNewline -ForegroundColor White
+        try {
+            $searchResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/search?phone=%2B380501234567" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # ============================================
+        # TEST VEHICLE API ENDPOINTS
+        # ============================================
+        Write-Host "`n   Testing Vehicle API endpoints..." -ForegroundColor Cyan
+
+        # Test 6: GET /api/vehicles (list all)
+        Write-Host "   [6/11] GET /api/vehicles (list all): " -NoNewline -ForegroundColor White
+        try {
+            $vehiclesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/vehicles" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 7: POST /api/vehicles (create vehicle)
+        if ($createdClientId) {
+            Write-Host "   [7/11] POST /api/vehicles (create): " -NoNewline -ForegroundColor White
+            try {
+                $newVehicle = @{
+                    licensePlate = "TEST1234"
+                    clientId = $createdClientId
+                    isAllowed = $true
+                } | ConvertTo-Json
+
+                $createVehicleResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/vehicles" `
+                    -Method POST -Headers $headers -Body $newVehicle -TimeoutSec 10
+
+                $createdVehicleId = $createVehicleResponse.id
+                Write-Host "OK (ID: $createdVehicleId)" -ForegroundColor Green
+                $testsPassed++
+            } catch {
+                Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+                $testsFailed++
+            }
+        } else {
+            Write-Host "   [7/11] POST /api/vehicles: SKIPPED (no client created)" -ForegroundColor Yellow
+        }
+
+        # Test 8: GET /api/vehicles/{id} (get by ID)
+        if ($createdVehicleId) {
+            Write-Host "   [8/11] GET /api/vehicles/$createdVehicleId (get by ID): " -NoNewline -ForegroundColor White
+            try {
+                $vehicleResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/vehicles/$createdVehicleId" `
+                    -Method GET -Headers $headers -TimeoutSec 10
+                Write-Host "OK" -ForegroundColor Green
+                $testsPassed++
+            } catch {
+                Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+                $testsFailed++
+            }
+        } else {
+            Write-Host "   [8/11] GET /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
+        }
+
+        # Test 9: PUT /api/vehicles/{id} (update)
+        if ($createdVehicleId) {
+            Write-Host "   [9/11] PUT /api/vehicles/$createdVehicleId (update): " -NoNewline -ForegroundColor White
+            try {
+                $updateVehicle = @{
+                    licensePlate = "TEST5678"
+                    isAllowed = $false
+                } | ConvertTo-Json
+
+                $updateVehicleResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/vehicles/$createdVehicleId" `
+                    -Method PUT -Headers $headers -Body $updateVehicle -TimeoutSec 10
+                Write-Host "OK" -ForegroundColor Green
+                $testsPassed++
+            } catch {
+                Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+                $testsFailed++
+            }
+        } else {
+            Write-Host "   [9/11] PUT /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
+        }
+
+        # Test 10: GET /api/clients/{clientId}/vehicles (get client's vehicles)
+        if ($createdClientId) {
+            Write-Host "   [10/11] GET /api/clients/$createdClientId/vehicles: " -NoNewline -ForegroundColor White
+            try {
+                $clientVehiclesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/$createdClientId/vehicles" `
+                    -Method GET -Headers $headers -TimeoutSec 10
+                Write-Host "OK" -ForegroundColor Green
+                $testsPassed++
+            } catch {
+                Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+                $testsFailed++
+            }
+        } else {
+            Write-Host "   [10/11] GET /api/clients/{clientId}/vehicles: SKIPPED" -ForegroundColor Yellow
+        }
+
+        # Test 11: DELETE /api/vehicles/{id} (cleanup)
+        if ($createdVehicleId) {
+            Write-Host "   [11/11] DELETE /api/vehicles/$createdVehicleId (cleanup): " -NoNewline -ForegroundColor White
+            try {
+                Invoke-RestMethod -Uri "http://localhost:8086/api/vehicles/$createdVehicleId" `
+                    -Method DELETE -Headers $headers -TimeoutSec 10
+                Write-Host "OK" -ForegroundColor Green
+                $testsPassed++
+            } catch {
+                Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+                $testsFailed++
+            }
+        } else {
+            Write-Host "   [11/11] DELETE /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
+        }
+
+        # Test summary
+        Write-Host "`n   API Tests Summary:" -ForegroundColor Cyan
+        Write-Host "      Passed: $testsPassed" -ForegroundColor Green
+        Write-Host "      Failed: $testsFailed" -ForegroundColor $(if ($testsFailed -gt 0) { "Red" } else { "Gray" })
+        Write-Host "      Total:  $($testsPassed + $testsFailed)" -ForegroundColor White
+
+        if ($testsFailed -eq 0) {
+            Write-Host "`n   OK - All API endpoints working correctly!" -ForegroundColor Green
+        } else {
+            Write-Host "`n   WARNING - Some API tests failed!" -ForegroundColor Yellow
+        }
+
     } else {
         Write-Host "   ERROR - No access token received" -ForegroundColor Red
     }

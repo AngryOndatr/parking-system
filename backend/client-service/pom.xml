@@ -208,6 +208,7 @@
                             <configOptions>
                                 <useJakartaEe>true</useJakartaEe>
                                 <interfaceOnly>true</interfaceOnly>
+                                <useTags>true</useTags>
                                 <useBeanValidation>true</useBeanValidation>
                                 <serializationLibrary>jackson</serializationLibrary>
                                 <skipDefaultInterface>true</skipDefaultInterface>

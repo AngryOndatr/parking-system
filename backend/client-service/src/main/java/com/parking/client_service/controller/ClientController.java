@@ -1,6 +1,6 @@
 package com.parking.client_service.controller;
 
-import com.parking.client_service.generated.controller.ApiApi;
+import com.parking.client_service.generated.controller.ClientApi;
 import com.parking.client_service.generated.model.ClientRequest;
 import com.parking.client_service.generated.model.ClientResponse;
 import com.parking.client_service.generated.model.VehicleRequest;
@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/clients")
 @Slf4j
-public class ClientController implements ApiApi {
+public class ClientController implements ClientApi {
 
     private final ClientService clientService;
 
@@ -72,37 +72,46 @@ public class ClientController implements ApiApi {
     }
 
     // --- 4. Vehicles: ---
-    @Override
-    @PostMapping(value = "/{clientId}/vehicles", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<VehicleResponse> addVehicleToClient(@PathVariable("clientId") Long clientId, @Valid @RequestBody VehicleRequest vehicleRequest) {
-        // Not implemented yet in client-service; return 501 Not Implemented.
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-    }
-
-    @Override
-    @GetMapping(value = "/{clientId}/vehicles", produces = "application/json")
-    public ResponseEntity<List<VehicleResponse>> getVehiclesByClient(@PathVariable("clientId") Long clientId) {
-        // Not implemented yet; return 501 Not Implemented.
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-    }
+    // Moved to VehicleController
 
     // --- 5. Search by phone (OpenAPI name: searchClientByPhone) ---
     @Override
     @GetMapping(value = "/search", produces = "application/json")
-    public ResponseEntity<ClientResponse> searchClientByPhone(@RequestParam(value = "phone", required = true) String phone) {
+    public ResponseEntity<ClientResponse> searchClientByPhone(@RequestParam(value = "phone", required = false) String phone) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         log.info("🚀 [CLIENT CONTROLLER] GET /api/clients/search?phone={} - User: {}", phone, auth != null ? auth.getName() : "anonymous");
+        log.info("📞 [CLIENT CONTROLLER] Phone parameter received (raw): '{}', length: {}, isEmpty: {}",
+                 phone, phone != null ? phone.length() : "null", phone != null ? phone.isEmpty() : "null");
 
-        return clientService.findClientByPhoneNumber(phone)
+        if (phone == null || phone.trim().isEmpty()) {
+            log.warn("❌ [CLIENT CONTROLLER] Phone parameter is empty or null");
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Decode URL-encoded parameter (in case it's still encoded)
+        String decodedPhone;
+        try {
+            decodedPhone = java.net.URLDecoder.decode(phone, java.nio.charset.StandardCharsets.UTF_8);
+            if (!decodedPhone.equals(phone)) {
+                log.info("📞 [CLIENT CONTROLLER] Phone decoded: '{}' → '{}'", phone, decodedPhone);
+            }
+        } catch (Exception e) {
+            log.warn("⚠️ [CLIENT CONTROLLER] Failed to decode phone, using as-is: {}", e.getMessage());
+            decodedPhone = phone;
+        }
+
+        final String finalPhone = decodedPhone;
+        return clientService.findClientByPhoneNumber(finalPhone.trim())
                 .map(client -> {
-                    log.info("✅ [CLIENT CONTROLLER] Client found with phone: {}", phone);
+                    log.info("✅ [CLIENT CONTROLLER] Client found with phone: {}", finalPhone);
                     return ResponseEntity.ok(client);
                 })
                 .orElseGet(() -> {
-                    log.warn("❌ [CLIENT CONTROLLER] Client not found with phone: {}", phone);
+                    log.warn("❌ [CLIENT CONTROLLER] Client not found with phone: {}", finalPhone);
                     return ResponseEntity.notFound().build();
                 });
     }
+
 
     // --- 6. Update ---
     @Override
