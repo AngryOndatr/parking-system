@@ -10,13 +10,36 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 
 ### Existing Migrations
 
-| Version | File | Description | Tables |
-|---------|------|-------------|--------|
-| V0 | `V0__baseline.sql` | Baseline migration | N/A |
-| V1 | `V1__initial_schema.sql` | Initial schema | users, user_backup_codes, clients, vehicles, subscriptions, parking_events, payments, logs |
-| V2 | `V2__add_parking_lots.sql` | Parking facilities management | parking_lots |
-| V3 | `V3__add_parking_spaces.sql` | Individual parking spaces | parking_spaces |
-| V4 | `V4__add_bookings.sql` | Reservation system | bookings |
+| Version | File | Description | Tables | Status |
+|---------|------|-------------|--------|--------|
+| V0 | `V0__baseline.sql` | Baseline migration | N/A | ✅ |
+| V1 | `V1__initial_schema.sql` | Initial schema | users, user_backup_codes, clients, vehicles, subscriptions, parking_events, payments, logs | ✅ |
+| V2 | `V2__add_parking_lots.sql` | Parking facilities management | parking_lots | ✅ |
+| V3 | `V3__add_parking_spaces.sql` | Individual parking spaces | parking_spaces | ✅ |
+| V4 | `V4__add_bookings.sql` | Reservation system | bookings | ✅ |
+| V5 | `V5__insert_test_parking_data.sql` | Test data for development | N/A (inserts) | ✅ |
+
+### Test Data (V5)
+
+**Parking Lot:**
+- Name: Downtown Parking
+- Total Capacity: 100 spaces
+- Available: 15 spaces (initially)
+- Location: Kyiv, Ukraine
+
+**Parking Spaces (23 total):**
+- Section A: 7 standard spaces (including 2 handicapped)
+- Section B: 4 electric charging spaces (Type 2, DC Fast, Tesla)
+- Section C: 3 VIP spaces (with rate overrides)
+- Section D: 4 compact spaces
+- Section E: 3 oversized spaces (underground -1)
+- Section F: 2 maintenance/out-of-service spaces
+
+**Space Distribution by Status:**
+- 15 AVAILABLE
+- 4 OCCUPIED
+- 2 RESERVED
+- 2 MAINTENANCE/OUT_OF_SERVICE
 
 ### Total Tables: 13
 

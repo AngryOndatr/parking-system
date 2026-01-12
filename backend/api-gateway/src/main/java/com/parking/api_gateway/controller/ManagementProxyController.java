@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class ManagementProxyController {
 
     private final RestTemplate restTemplate;
-    private static final String MANAGEMENT_SERVICE_URL = "http://management-service:8080";
+    private static final String MANAGEMENT_SERVICE_URL = "http://management-service:8083";
 
     /**
      * Proxy GET request to fetch all parking spots
@@ -69,12 +69,48 @@ public class ManagementProxyController {
     }
 
     /**
+     * Proxy GET request to fetch available spots count
+     */
+    @GetMapping("/spots/available/count")
+    public ResponseEntity<?> getAvailableSpotCount(HttpServletRequest request) {
+        log.info("Proxying GET request to Management Service: /api/management/spots/available/count");
+        return proxyRequest(HttpMethod.GET, "/api/management/spots/available/count", null, request);
+    }
+
+    /**
+     * Proxy GET request to fetch available spots by lot
+     */
+    @GetMapping("/spots/available/lot/{lotId}")
+    public ResponseEntity<?> getAvailableSpotsByLot(@PathVariable Long lotId, HttpServletRequest request) {
+        log.info("Proxying GET request to Management Service: /api/management/spots/available/lot/{}", lotId);
+        return proxyRequest(HttpMethod.GET, "/api/management/spots/available/lot/" + lotId, null, request);
+    }
+
+    /**
      * Proxy GET request to fetch available spots
      */
     @GetMapping("/spots/available")
     public ResponseEntity<?> getAvailableSpots(HttpServletRequest request) {
         log.info("Proxying GET request to Management Service: /api/management/spots/available");
         return proxyRequest(HttpMethod.GET, "/api/management/spots/available", null, request);
+    }
+
+    /**
+     * Proxy GET request to search spots by filters
+     */
+    @GetMapping("/spots/search")
+    public ResponseEntity<?> searchSpots(@RequestParam(required = false) String type,
+                                          @RequestParam(required = false) String status,
+                                          HttpServletRequest request) {
+        log.info("Proxying GET request to Management Service: /api/management/spots/search?type={}&status={}", type, status);
+        String query = "";
+        if (type != null || status != null) {
+            query = "?";
+            if (type != null) query += "type=" + type;
+            if (type != null && status != null) query += "&";
+            if (status != null) query += "status=" + status;
+        }
+        return proxyRequest(HttpMethod.GET, "/api/management/spots/search" + query, null, request);
     }
 
     /**

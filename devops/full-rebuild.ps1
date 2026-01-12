@@ -24,6 +24,7 @@ function Get-ContainerName {
         "eureka-server" = "eureka-server"
         "api-gateway" = "api-gateway"
         "client-service" = "client-service"
+        "management-service" = "management-service"
         "pgadmin" = "parking_pgadmin"
         "prometheus" = "parking_prometheus"
         "grafana" = "parking_grafana"
@@ -70,7 +71,8 @@ Write-Host "Step 2: Removing old Docker images..." -ForegroundColor Yellow
 $imagesToRemove = @(
     "parking-system-api-gateway:latest",
     "parking-system-eureka-server:latest",
-    "parking-system-client-service:latest"
+    "parking-system-client-service:latest",
+    "parking-system-management-service:latest"
 )
 foreach ($image in $imagesToRemove) {
     docker rmi $image -f 2>&1 | Out-Null
@@ -180,11 +182,18 @@ Write-Host "   Waiting for Client Service to register (20 seconds)..." -Foregrou
 Start-Sleep -Seconds 20
 Write-Host "   OK - Client Service started`n" -ForegroundColor Green
 
+# Step 11: Start Management Service
+Write-Host "Step 11: Starting Management Service..." -ForegroundColor Yellow
+docker-compose -f docker-compose.yml up -d --build management-service
+Write-Host "   Waiting for Management Service to register (20 seconds)..." -ForegroundColor Gray
+Start-Sleep -Seconds 20
+Write-Host "   OK - Management Service started`n" -ForegroundColor Green
+
 # ============================================
 # VERIFICATION
 # ============================================
 
-Write-Host "Step 11: Verifying all services..." -ForegroundColor Yellow
+Write-Host "Step 12: Verifying all services..." -ForegroundColor Yellow
 Write-Host ""
 
 # Get all services from docker-compose.yml
@@ -194,6 +203,7 @@ $allServices = @(
     @{Service="eureka-server"; Container="eureka-server"; Port="8761"},
     @{Service="api-gateway"; Container="api-gateway"; Port="8086"},
     @{Service="client-service"; Container="client-service"; Port="8081"},
+    @{Service="management-service"; Container="management-service"; Port="8083"},
     @{Service="pgadmin"; Container="parking_pgadmin"; Port="5050"},
     @{Service="prometheus"; Container="parking_prometheus"; Port="9090"},
     @{Service="grafana"; Container="parking_grafana"; Port="3000"},
@@ -446,7 +456,7 @@ try {
 
         # Test 11: DELETE /api/vehicles/{id} (cleanup)
         if ($createdVehicleId) {
-            Write-Host "   [11/11] DELETE /api/vehicles/$createdVehicleId (cleanup): " -NoNewline -ForegroundColor White
+            Write-Host "   [11/16] DELETE /api/vehicles/$createdVehicleId (cleanup): " -NoNewline -ForegroundColor White
             try {
                 Invoke-RestMethod -Uri "http://localhost:8086/api/vehicles/$createdVehicleId" `
                     -Method DELETE -Headers $headers -TimeoutSec 10
@@ -457,7 +467,67 @@ try {
                 $testsFailed++
             }
         } else {
-            Write-Host "   [11/11] DELETE /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
+            Write-Host "   [11/16] DELETE /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
+        }
+
+        # Test 12: GET /api/management/spots/available (get available parking spaces)
+        Write-Host "   [12/16] GET /api/management/spots/available: " -NoNewline -ForegroundColor White
+        try {
+            $availableSpacesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/management/spots/available" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK (Found: $($availableSpacesResponse.Count) spaces)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 13: GET /api/management/spots (get all parking spaces)
+        Write-Host "   [13/16] GET /api/management/spots: " -NoNewline -ForegroundColor White
+        try {
+            $allSpacesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/management/spots" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK (Total: $($allSpacesResponse.Count) spaces)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 14: GET /api/management/spots/available/count (count available spaces)
+        Write-Host "   [14/16] GET /api/management/spots/available/count: " -NoNewline -ForegroundColor White
+        try {
+            $countResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/management/spots/available/count" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK (Count: $countResponse)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 15: GET /api/management/spots/available/lot/{lotId} (get spaces by lot)
+        Write-Host "   [15/16] GET /api/management/spots/available/lot/1: " -NoNewline -ForegroundColor White
+        try {
+            $lotSpacesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/management/spots/available/lot/1" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK (Found: $($lotSpacesResponse.Count) spaces)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 16: GET /api/management/spots/search?type=STANDARD&status=AVAILABLE (search spaces)
+        Write-Host "   [16/16] GET /api/management/spots/search (type=STANDARD&status=AVAILABLE): " -NoNewline -ForegroundColor White
+        try {
+            $searchSpacesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/management/spots/search?type=STANDARD&status=AVAILABLE" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK (Found: $($searchSpacesResponse.Count) spaces)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
         }
 
         # Test summary
@@ -496,6 +566,7 @@ Write-Host "Services:" -ForegroundColor Cyan
 Write-Host "   Eureka Dashboard: http://localhost:8761" -ForegroundColor White
 Write-Host "   API Gateway:      http://localhost:8086" -ForegroundColor White
 Write-Host "   Client Service:   http://localhost:8081 (via Gateway: /api/clients)" -ForegroundColor White
+Write-Host "   Management Svc:   http://localhost:8083 (via Gateway: /api/management)" -ForegroundColor White
 Write-Host "   Grafana:          http://localhost:3000 (admin/admin123)" -ForegroundColor White
 Write-Host "   Prometheus:       http://localhost:9090" -ForegroundColor White
 Write-Host "   Jaeger:           http://localhost:16686" -ForegroundColor White

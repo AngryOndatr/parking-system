@@ -251,27 +251,36 @@ services:
 #    networks:
 #      - parking-network
 #    restart: unless-stopped
-#
-#  management-service:
-#    build:
-#      context: ./backend/management-service
-#    container_name: management-service
-#    ports:
-#      - "8084:8080"
-#    depends_on:
-#      - postgres
-#      - eureka-server
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
-#      SPRING_DATASOURCE_USERNAME: postgres
-#      SPRING_DATASOURCE_PASSWORD: postgres
-#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-#      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
-#      SPRING_APPLICATION_NAME: management-service
-#    networks:
-#      - parking-network
-#    restart: unless-stopped
-#
+
+  management-service:
+    build:
+      context: ./backend/management-service
+    image: parking-system-management-service:latest
+    container_name: management-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: management-service
+      SPRING_APPLICATION_NAME: management-service
+      SERVER_PORT: 8083
+    networks:
+      - parking-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
 #  reporting-service:
 #    build:
 #      context: ./backend/reporting-service
