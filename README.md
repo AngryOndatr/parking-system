@@ -13,14 +13,14 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ Comprehensive validation and error handling
 - ✅ Unit and integration tests
 - ✅ JWT-protected endpoints via API Gateway
-- 📖 **Details:** [COMMIT_MESSAGE_ISSUE_16.md](./COMMIT_MESSAGE_ISSUE_16.md)
+- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-16)
 
 ✅ **Client Service - Vehicles Management Complete** (Issue #17)
 - ✅ Full CRUD for Vehicles linked to Clients
 - ✅ License plate uniqueness enforcement
 - ✅ Client-Vehicle relationship management
 - ✅ Comprehensive test coverage
-- 📖 **Details:** [COMMIT_MESSAGE_ISSUE_17.md](./COMMIT_MESSAGE_ISSUE_17.md)
+- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-17)
 
 ✅ **Management Service - Parking Spaces API Complete** (Issue #18)
 - ✅ GET /available - List all available parking spaces
@@ -29,7 +29,7 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ GET /search - Search with filters (type, status)
 - ✅ Test data migration with 23 parking spaces
 - ✅ API Gateway proxy endpoints configured
-- 📖 **Details:** [ISSUE_18_SUMMARY.md](./ISSUE_18_SUMMARY.md)
+- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-18)
 
 ### 2025-12-26 - Flyway Database Migrations
 
@@ -51,7 +51,7 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ Observability stack integrated (Prometheus, Grafana, Jaeger, OpenTelemetry)
 - ✅ Docker Compose configuration optimized
 - ✅ Correct password hashes configured (BCrypt)
-- 📖 Complete development documentation: [SESSION_DEVELOPMENT_2025-12-25_EN.md](./SESSION_DEVELOPMENT_2025-12-25_EN.md)
+- 📖 Complete development documentation: [SESSION_DEVELOPMENT_2025-12-25_EN.md](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
 
 ## 📈 Project Status & Roadmap
 
@@ -64,7 +64,7 @@ Modern parking lot management system built on microservices architecture using S
 | 0.3 | **PostgreSQL DDL** | ✅ Complete | 100% |
 | 0.4 | **Spring Boot Services** | ✅ Complete | 100% |
 
-📖 **Phase 0 Summary:** [PHASE_0_SUMMARY.md](./PHASE_0_SUMMARY.md)
+📖 **Phase 0 Summary:** [PHASE_0_SUMMARY.md](./docs/reports/PHASE_0_SUMMARY.md)
 
 ### Phase 1: Basic Backend (In Progress - Week 1/3) 🔄
 
@@ -429,9 +429,19 @@ services:
 
 ## 📚 Documentation
 
+### Development History
+- **[Session Logs](./docs/sessions/)** - Detailed development session logs
+  - [2025-12-25 - Project Setup](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
+  - [2026-01-03 - Issue #16 Client CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-03_EN.md)
+  - [2026-01-04 - Issue #17 Vehicle CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-04_EN.md)
+  - [2026-01-11 - Issue #18 Management API (Day 1)](./docs/sessions/SESSION_DEVELOPMENT_2026-01-11_EN.md)
+  - [2026-01-12 - Issue #18 Finalization (Day 2)](./docs/sessions/SESSION_DEVELOPMENT_2026-01-12_EN.md)
+
+### Phase Reports
+- **[Phase 0 Summary](./docs/reports/PHASE_0_SUMMARY.md)** - Infrastructure foundation completion
+- **[Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md)** - Basic backend CRUD progress
+
 ### Architecture and Security
-- **[SESSION_DEVELOPMENT_2025-12-25_EN.md](./SESSION_DEVELOPMENT_2025-12-25_EN.md)** - Complete development session report
-- **[SESSION_DEVELOPMENT_2025-12-25.md](./SESSION_DEVELOPMENT_2025-12-25.md)** - Russian version
 - **[Authentication Architecture](./docs/AUTHENTICATION.md)** - JWT authentication system
 - **[Security Architecture](./docs/SECURITY_ARCHITECTURE.md)** - Security features and components
 - **[Observability Setup](./docs/OBSERVABILITY_SETUP.md)** - Monitoring and tracing
