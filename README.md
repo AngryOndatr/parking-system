@@ -150,6 +150,28 @@ Modern parking lot management system built on microservices architecture using S
 - Production-ready OpenAPI contracts
 - Database schema validated and documented
 
+### Phase 1: Basic Backend (Ready to Start) 🟡
+
+**Scope:** Implement core backend functionality for client management, parking space management, and basic reporting.
+
+**Key Deliverables:**
+- ✅ Issue templates prepared and ready for creation
+- ⏳ CLIENT-SVC: Full CRUD for clients and vehicles + subscription check
+- ⏳ MANAGEMENT-SVC: Parking space availability and status updates
+- ⏳ REPORTING-SVC: System logging endpoint
+- ⏳ Integration testing and API documentation
+
+📖 **Issue Templates:** 
+- [PHASE_1_COMPLETE_GUIDE.md](./docs/PHASE_1_COMPLETE_GUIDE.md) — **Start here!** Complete implementation guide
+- [PHASE_1_ISSUES.md](./docs/PHASE_1_ISSUES.md) — Detailed issue templates
+- [PHASE_1_ISSUES_QUICK_REF.md](./docs/PHASE_1_ISSUES_QUICK_REF.md) — Quick reference guide
+
+**Automated Scripts:**
+- `devops/create-phase1-issues.sh` (Linux/Mac)
+- `devops/create-phase1-issues.ps1` (Windows)
+
+**Timeline:** 3 weeks | **Issues:** Epic + 9 implementation tasks
+
 ## 🏗️ System Architecture
 
 ```
@@ -502,6 +524,13 @@ services:
 - **[Production Migration Process](./docs/PRODUCTION_MIGRATION_PROCESS.md)** - Safe migration deployment to production
 - **[Production Config Quick Ref](./docs/PRODUCTION_CONFIG_QUICK_REF.md)** - Production Flyway configuration
 - **[Migration Tasks](./docs/DATABASE_MIGRATION_TASKS_EN.md)** - Database migration task breakdown
+
+### Project Management & Issues
+- **[Phase 1 Complete Guide](./docs/PHASE_1_COMPLETE_GUIDE.md)** - 📖 **Complete Phase 1 implementation guide** (start here!)
+- **[Phase 1 Issues](./docs/PHASE_1_ISSUES.md)** - Detailed GitHub issue templates for Phase 1 backend
+- **[Phase 1 Quick Reference](./docs/PHASE_1_ISSUES_QUICK_REF.md)** - Quick guide for creating Phase 1 issues
+- **[Issue Creation Guide](./docs/QUICK_GUIDE_ISSUES.md)** - General guide for creating GitHub issues
+- **Automated Scripts**: `devops/create-phase1-issues.sh` and `devops/create-phase1-issues.ps1`
 
 ### Specialized Documentation
 - **[DevOps README](./devops/README.md)** - Deployment instructions and scripts
