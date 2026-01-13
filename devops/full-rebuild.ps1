@@ -25,6 +25,7 @@ function Get-ContainerName {
         "api-gateway" = "api-gateway"
         "client-service" = "client-service"
         "management-service" = "management-service"
+        "reporting-service" = "reporting-service"
         "pgadmin" = "parking_pgadmin"
         "prometheus" = "parking_prometheus"
         "grafana" = "parking_grafana"
@@ -141,7 +142,9 @@ try {
         $userCount = docker exec parking_db psql -U postgres -d parking_db -t -c "SELECT COUNT(*) FROM users;" 2>&1
     }
 
-    $count = [int]($userCount -replace '\D', '')
+    # Convert to string if it's an array, then extract number
+    $userCountStr = if ($userCount -is [array]) { $userCount[0] } else { $userCount }
+    $count = [int]($userCountStr -replace '\D', '')
 
     if ($count -gt 0) {
         Write-Host "   OK - Database initialized with $count user(s)" -ForegroundColor Green
@@ -189,11 +192,18 @@ Write-Host "   Waiting for Management Service to register (20 seconds)..." -Fore
 Start-Sleep -Seconds 20
 Write-Host "   OK - Management Service started`n" -ForegroundColor Green
 
+# Step 12: Start Reporting Service
+Write-Host "Step 12: Starting Reporting Service..." -ForegroundColor Yellow
+docker-compose -f docker-compose.yml up -d --build reporting-service
+Write-Host "   Waiting for Reporting Service to register (20 seconds)..." -ForegroundColor Gray
+Start-Sleep -Seconds 20
+Write-Host "   OK - Reporting Service started`n" -ForegroundColor Green
+
 # ============================================
 # VERIFICATION
 # ============================================
 
-Write-Host "Step 12: Verifying all services..." -ForegroundColor Yellow
+Write-Host "Step 13: Verifying all services..." -ForegroundColor Yellow
 Write-Host ""
 
 # Get all services from docker-compose.yml
@@ -204,6 +214,7 @@ $allServices = @(
     @{Service="api-gateway"; Container="api-gateway"; Port="8086"},
     @{Service="client-service"; Container="client-service"; Port="8081"},
     @{Service="management-service"; Container="management-service"; Port="8083"},
+    @{Service="reporting-service"; Container="reporting-service"; Port="8084"},
     @{Service="pgadmin"; Container="parking_pgadmin"; Port="5050"},
     @{Service="prometheus"; Container="parking_prometheus"; Port="9090"},
     @{Service="grafana"; Container="parking_grafana"; Port="3000"},
@@ -233,19 +244,27 @@ try {
 
     $apiGatewayRegistered = $eurekaResponse.Content -match "API-GATEWAY"
     $clientServiceRegistered = $eurekaResponse.Content -match "CLIENT-SERVICE"
+    $managementServiceRegistered = $eurekaResponse.Content -match "MANAGEMENT-SERVICE"
+    $reportingServiceRegistered = $eurekaResponse.Content -match "REPORTING-SERVICE"
 
     Write-Host "      API-GATEWAY: " -NoNewline -ForegroundColor White
     Write-Host $(if ($apiGatewayRegistered) { "REGISTERED" } else { "NOT REGISTERED" }) -ForegroundColor $(if ($apiGatewayRegistered) { "Green" } else { "Yellow" })
 
     Write-Host "      CLIENT-SERVICE: " -NoNewline -ForegroundColor White
     Write-Host $(if ($clientServiceRegistered) { "REGISTERED" } else { "NOT REGISTERED" }) -ForegroundColor $(if ($clientServiceRegistered) { "Green" } else { "Yellow" })
+
+    Write-Host "      MANAGEMENT-SERVICE: " -NoNewline -ForegroundColor White
+    Write-Host $(if ($managementServiceRegistered) { "REGISTERED" } else { "NOT REGISTERED" }) -ForegroundColor $(if ($managementServiceRegistered) { "Green" } else { "Yellow" })
+
+    Write-Host "      REPORTING-SERVICE: " -NoNewline -ForegroundColor White
+    Write-Host $(if ($reportingServiceRegistered) { "REGISTERED" } else { "NOT REGISTERED" }) -ForegroundColor $(if ($reportingServiceRegistered) { "Green" } else { "Yellow" })
 } catch {
     Write-Host "      Could not check Eureka - $($_.Exception.Message)" -ForegroundColor Yellow
 }
 Write-Host ""
 
-# Step 12: Test authentication
-Write-Host "Step 12: Testing authentication..." -ForegroundColor Yellow
+# Step 14: Test authentication
+Write-Host "Step 14: Testing authentication..." -ForegroundColor Yellow
 try {
     $body = @{
         username = "admin"
@@ -270,14 +289,14 @@ try {
         # ============================================
         # TEST CLIENT API ENDPOINTS
         # ============================================
-        Write-Host "`nStep 13: Testing Client API endpoints..." -ForegroundColor Yellow
+        Write-Host "`nStep 15: Testing All API endpoints (21 total)..." -ForegroundColor Yellow
         $testsPassed = 0
         $testsFailed = 0
         $createdClientId = $null
         $createdVehicleId = $null
 
         # Test 1: GET /api/clients (list all)
-        Write-Host "   [1/11] GET /api/clients (list all): " -NoNewline -ForegroundColor White
+        Write-Host "   [1/21] GET /api/clients (list all): " -NoNewline -ForegroundColor White
         try {
             $clientsResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients" `
                 -Method GET -Headers $headers -TimeoutSec 10
@@ -289,7 +308,7 @@ try {
         }
 
         # Test 2: POST /api/clients (create client)
-        Write-Host "   [2/11] POST /api/clients (create): " -NoNewline -ForegroundColor White
+        Write-Host "   [2/21] POST /api/clients (create): " -NoNewline -ForegroundColor White
         try {
             $newClient = @{
                 firstName = "Test"
@@ -311,7 +330,7 @@ try {
 
         # Test 3: GET /api/clients/{id} (get by ID)
         if ($createdClientId) {
-            Write-Host "   [3/11] GET /api/clients/$createdClientId (get by ID): " -NoNewline -ForegroundColor White
+            Write-Host "   [3/21] GET /api/clients/$createdClientId (get by ID): " -NoNewline -ForegroundColor White
             try {
                 $clientResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/$createdClientId" `
                     -Method GET -Headers $headers -TimeoutSec 10
@@ -322,12 +341,12 @@ try {
                 $testsFailed++
             }
         } else {
-            Write-Host "   [3/11] GET /api/clients/{id}: SKIPPED (no client created)" -ForegroundColor Yellow
+            Write-Host "   [3/21] GET /api/clients/{id}: SKIPPED (no client created)" -ForegroundColor Yellow
         }
 
         # Test 4: PUT /api/clients/{id} (update)
         if ($createdClientId) {
-            Write-Host "   [4/11] PUT /api/clients/$createdClientId (update): " -NoNewline -ForegroundColor White
+            Write-Host "   [4/21] PUT /api/clients/$createdClientId (update): " -NoNewline -ForegroundColor White
             try {
                 $updateClient = @{
                     firstName = "Updated"
@@ -345,11 +364,11 @@ try {
                 $testsFailed++
             }
         } else {
-            Write-Host "   [4/11] PUT /api/clients/{id}: SKIPPED (no client created)" -ForegroundColor Yellow
+            Write-Host "   [4/21] PUT /api/clients/{id}: SKIPPED (no client created)" -ForegroundColor Yellow
         }
 
         # Test 5: GET /api/clients/search?phone=... (search by phone)
-        Write-Host "   [5/11] GET /api/clients/search (by phone): " -NoNewline -ForegroundColor White
+        Write-Host "   [5/21] GET /api/clients/search (by phone): " -NoNewline -ForegroundColor White
         try {
             $searchResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/search?phone=%2B380501234567" `
                 -Method GET -Headers $headers -TimeoutSec 10
@@ -366,7 +385,7 @@ try {
         Write-Host "`n   Testing Vehicle API endpoints..." -ForegroundColor Cyan
 
         # Test 6: GET /api/vehicles (list all)
-        Write-Host "   [6/11] GET /api/vehicles (list all): " -NoNewline -ForegroundColor White
+        Write-Host "   [6/21] GET /api/vehicles (list all): " -NoNewline -ForegroundColor White
         try {
             $vehiclesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/vehicles" `
                 -Method GET -Headers $headers -TimeoutSec 10
@@ -379,7 +398,7 @@ try {
 
         # Test 7: POST /api/vehicles (create vehicle)
         if ($createdClientId) {
-            Write-Host "   [7/11] POST /api/vehicles (create): " -NoNewline -ForegroundColor White
+            Write-Host "   [7/21] POST /api/vehicles (create): " -NoNewline -ForegroundColor White
             try {
                 $newVehicle = @{
                     licensePlate = "TEST1234"
@@ -398,12 +417,12 @@ try {
                 $testsFailed++
             }
         } else {
-            Write-Host "   [7/11] POST /api/vehicles: SKIPPED (no client created)" -ForegroundColor Yellow
+            Write-Host "   [7/21] POST /api/vehicles: SKIPPED (no client created)" -ForegroundColor Yellow
         }
 
         # Test 8: GET /api/vehicles/{id} (get by ID)
         if ($createdVehicleId) {
-            Write-Host "   [8/11] GET /api/vehicles/$createdVehicleId (get by ID): " -NoNewline -ForegroundColor White
+            Write-Host "   [8/21] GET /api/vehicles/$createdVehicleId (get by ID): " -NoNewline -ForegroundColor White
             try {
                 $vehicleResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/vehicles/$createdVehicleId" `
                     -Method GET -Headers $headers -TimeoutSec 10
@@ -414,12 +433,12 @@ try {
                 $testsFailed++
             }
         } else {
-            Write-Host "   [8/11] GET /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
+            Write-Host "   [8/21] GET /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
         }
 
         # Test 9: PUT /api/vehicles/{id} (update)
         if ($createdVehicleId) {
-            Write-Host "   [9/11] PUT /api/vehicles/$createdVehicleId (update): " -NoNewline -ForegroundColor White
+            Write-Host "   [9/21] PUT /api/vehicles/$createdVehicleId (update): " -NoNewline -ForegroundColor White
             try {
                 $updateVehicle = @{
                     licensePlate = "TEST5678"
@@ -435,12 +454,12 @@ try {
                 $testsFailed++
             }
         } else {
-            Write-Host "   [9/11] PUT /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
+            Write-Host "   [9/21] PUT /api/vehicles/{id}: SKIPPED (no vehicle created)" -ForegroundColor Yellow
         }
 
         # Test 10: GET /api/clients/{clientId}/vehicles (get client's vehicles)
         if ($createdClientId) {
-            Write-Host "   [10/11] GET /api/clients/$createdClientId/vehicles: " -NoNewline -ForegroundColor White
+            Write-Host "   [10/21] GET /api/clients/$createdClientId/vehicles: " -NoNewline -ForegroundColor White
             try {
                 $clientVehiclesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/$createdClientId/vehicles" `
                     -Method GET -Headers $headers -TimeoutSec 10
@@ -451,7 +470,7 @@ try {
                 $testsFailed++
             }
         } else {
-            Write-Host "   [10/11] GET /api/clients/{clientId}/vehicles: SKIPPED" -ForegroundColor Yellow
+            Write-Host "   [10/21] GET /api/clients/{clientId}/vehicles: SKIPPED" -ForegroundColor Yellow
         }
 
         # Test 11: DELETE /api/vehicles/{id} (cleanup)
@@ -519,12 +538,95 @@ try {
         }
 
         # Test 16: GET /api/management/spots/search?type=STANDARD&status=AVAILABLE (search spaces)
-        Write-Host "   [16/16] GET /api/management/spots/search (type=STANDARD&status=AVAILABLE): " -NoNewline -ForegroundColor White
+        Write-Host "   [16/18] GET /api/management/spots/search (type=STANDARD&status=AVAILABLE): " -NoNewline -ForegroundColor White
         try {
             $searchSpacesResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/management/spots/search?type=STANDARD&status=AVAILABLE" `
                 -Method GET -Headers $headers -TimeoutSec 10
             Write-Host "OK (Found: $($searchSpacesResponse.Count) spaces)" -ForegroundColor Green
             $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # ============================================
+        # TEST REPORTING API ENDPOINTS
+        # ============================================
+        Write-Host "`n   Testing Reporting API endpoints..." -ForegroundColor Cyan
+
+        # Test 17: POST /api/reporting/log (create log entry)
+        Write-Host "   [17/21] POST /api/reporting/log (create): " -NoNewline -ForegroundColor White
+        try {
+            $newLog = @{
+                timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                level = "INFO"
+                service = "test-script"
+                message = "Full rebuild test log entry"
+                userId = 1
+                meta = @{
+                    action = "FULL_REBUILD_TEST"
+                    version = "1.0"
+                }
+            } | ConvertTo-Json
+
+            $createLogResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/reporting/log" `
+                -Method POST -Headers $headers -Body $newLog -TimeoutSec 10 -ContentType "application/json"
+            Write-Host "OK (ID: $($createLogResponse.id))" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 18: GET /api/reporting/logs (list all logs - REQUIRES AUTH)
+        Write-Host "   [18/21] GET /api/reporting/logs (with auth): " -NoNewline -ForegroundColor White
+        try {
+            # Test WITH token - endpoint requires authentication
+            $logsResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/reporting/logs" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK (Total: $($logsResponse.Count) logs)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 19: GET /api/reporting/logs?level=ERROR (filter by level - REQUIRES AUTH)
+        Write-Host "   [19/21] GET /api/reporting/logs?level=ERROR: " -NoNewline -ForegroundColor White
+        try {
+            $errorLogsResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/reporting/logs?level=ERROR" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK ($($errorLogsResponse.Count) errors)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 20: GET /api/reporting/logs?service=test-script (filter by service - REQUIRES AUTH)
+        Write-Host "   [20/21] GET /api/reporting/logs?service=test-script: " -NoNewline -ForegroundColor White
+        try {
+            $serviceLogsResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/reporting/logs?service=test-script" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK ($($serviceLogsResponse.Count) from test-script)" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 21: GET /api/reporting/logs?limit=5 (limit results - REQUIRES AUTH)
+        Write-Host "   [21/21] GET /api/reporting/logs?limit=5: " -NoNewline -ForegroundColor White
+        try {
+            $limitedLogsResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/reporting/logs?limit=5" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            if ($limitedLogsResponse.Count -le 5) {
+                Write-Host "OK ($($limitedLogsResponse.Count) logs, limit working)" -ForegroundColor Green
+                $testsPassed++
+            } else {
+                Write-Host "FAIL - Returned $($limitedLogsResponse.Count) logs, expected <= 5" -ForegroundColor Red
+                $testsFailed++
+            }
         } catch {
             Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
             $testsFailed++

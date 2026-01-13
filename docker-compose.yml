@@ -162,7 +162,8 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
       SPRING_APPLICATION_NAME: api-gateway
-      JWT_SECRET: "your-secret-key-min-64-characters-long-for-production-use-only-12345"
+      # JWT Configuration - Master key used by all services
+      JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
       # OpenTelemetry configuration
       MANAGEMENT_TRACING_ENABLED: "true"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
@@ -191,7 +192,8 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
       SPRING_APPLICATION_NAME: client-service
-      JWT_SECRET: "your-secret-key-min-64-characters-long-for-production-use-only-12345"
+      # JWT Configuration - MUST match api-gateway
+      JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
       # OpenTelemetry configuration
       MANAGEMENT_TRACING_ENABLED: "true"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
@@ -281,25 +283,41 @@ services:
       retries: 5
       start_period: 60s
 
-#  reporting-service:
-#    build:
-#      context: ./backend/reporting-service
-#    container_name: reporting-service
-#    ports:
-#      - "8085:8080"
-#    depends_on:
-#      - postgres
-#      - eureka-server
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
-#      SPRING_DATASOURCE_USERNAME: postgres
-#      SPRING_DATASOURCE_PASSWORD: postgres
-#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-#      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
-#      SPRING_APPLICATION_NAME: reporting-service
-#    networks:
-#      - parking-network
-#    restart: unless-stopped
+  reporting-service:
+    build:
+      context: ./backend/reporting-service
+    image: parking-system-reporting-service:latest
+    container_name: reporting-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - eureka-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: reporting-service
+      SPRING_APPLICATION_NAME: reporting-service
+      SERVER_PORT: 8084
+      # JWT Configuration - MUST match api-gateway
+      JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
+      # OpenTelemetry configuration
+      MANAGEMENT_TRACING_ENABLED: "true"
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
+      MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+    networks:
+      - parking-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
 volumes:
   parking_data:

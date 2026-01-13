@@ -17,7 +17,7 @@ spring:
   # JPA Configuration
   jpa:
     hibernate:
-      ddl-auto: validate  # Only validate schema, don't modify
+      ddl-auto: none  # Schema is managed by Flyway in api-gateway
     show-sql: false
     properties:
       hibernate:

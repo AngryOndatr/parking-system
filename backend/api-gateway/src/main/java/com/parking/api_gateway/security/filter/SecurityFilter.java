@@ -72,6 +72,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             "/api/management/spots/available/count",        // Count available spots
             "/api/management/spots/available/lot/",         // Available spots by lot (prefix)
             "/api/management/spots/search"                  // Search spots with filters
+            // Reporting Service endpoints require JWT authentication
     );
 
     @Override

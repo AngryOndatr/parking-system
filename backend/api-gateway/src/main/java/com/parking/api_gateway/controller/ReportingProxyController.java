@@ -8,159 +8,171 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Collections;
+import java.util.Enumeration;
 
 /**
  * Proxy controller for Reporting Service
- * Routes reporting requests from API Gateway to Reporting Service
+ * Routes requests from API Gateway to Reporting Service
  */
 @RestController
-@RequestMapping("/api/reports")
+@RequestMapping("/api/reporting")
 @RequiredArgsConstructor
 @Slf4j
 public class ReportingProxyController {
 
     private final RestTemplate restTemplate;
-    private static final String REPORTING_SERVICE_URL = "http://reporting-service:8080";
+    private static final String REPORTING_SERVICE_URL = "http://reporting-service:8084";
 
     /**
-     * Proxy GET request to fetch financial report
+     * Proxy POST request to create a log entry
      */
-    @GetMapping("/financial")
-    public ResponseEntity<?> getFinancialReport(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            HttpServletRequest request) {
-        log.info("Proxying GET request to Reporting Service: /api/reports/financial");
+    @PostMapping("/log")
+    public ResponseEntity<?> createLog(@RequestBody String body, HttpServletRequest request) {
+        log.info("🚀 [REPORTING PROXY] POST /api/reporting/log");
+        log.info("📦 [REPORTING PROXY] Request body length: {} bytes", body != null ? body.length() : 0);
 
-        String queryParams = buildQueryParams(startDate, endDate);
-        return proxyRequest(HttpMethod.GET, "/api/reports/financial" + queryParams, null, request);
-    }
-
-    /**
-     * Proxy GET request to fetch occupancy report
-     */
-    @GetMapping("/occupancy")
-    public ResponseEntity<?> getOccupancyReport(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            HttpServletRequest request) {
-        log.info("Proxying GET request to Reporting Service: /api/reports/occupancy");
-
-        String queryParams = buildQueryParams(startDate, endDate);
-        return proxyRequest(HttpMethod.GET, "/api/reports/occupancy" + queryParams, null, request);
-    }
-
-    /**
-     * Proxy GET request to fetch client usage report
-     */
-    @GetMapping("/clients/{clientId}/usage")
-    public ResponseEntity<?> getClientUsageReport(
-            @PathVariable Long clientId,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            HttpServletRequest request) {
-        log.info("Proxying GET request to Reporting Service: /api/reports/clients/{}/usage", clientId);
-
-        String queryParams = buildQueryParams(startDate, endDate);
-        return proxyRequest(HttpMethod.GET,
-                "/api/reports/clients/" + clientId + "/usage" + queryParams, null, request);
-    }
-
-    /**
-     * Proxy GET request to fetch revenue report
-     */
-    @GetMapping("/revenue")
-    public ResponseEntity<?> getRevenueReport(
-            @RequestParam(required = false) String period,
-            HttpServletRequest request) {
-        log.info("Proxying GET request to Reporting Service: /api/reports/revenue");
-
-        String queryParams = period != null ? "?period=" + period : "";
-        return proxyRequest(HttpMethod.GET, "/api/reports/revenue" + queryParams, null, request);
-    }
-
-    /**
-     * Proxy GET request to fetch parking duration statistics
-     */
-    @GetMapping("/parking-duration")
-    public ResponseEntity<?> getParkingDurationReport(HttpServletRequest request) {
-        log.info("Proxying GET request to Reporting Service: /api/reports/parking-duration");
-        return proxyRequest(HttpMethod.GET, "/api/reports/parking-duration", null, request);
-    }
-
-    /**
-     * Proxy POST request to generate custom report
-     */
-    @PostMapping("/custom")
-    public ResponseEntity<?> generateCustomReport(@RequestBody String reportConfig,
-                                                  HttpServletRequest request) {
-        log.info("Proxying POST request to Reporting Service: /api/reports/custom");
-        return proxyRequest(HttpMethod.POST, "/api/reports/custom", reportConfig, request);
-    }
-
-    /**
-     * Proxy GET request to export report
-     */
-    @GetMapping("/export/{reportId}")
-    public ResponseEntity<?> exportReport(@PathVariable Long reportId,
-                                         @RequestParam(defaultValue = "pdf") String format,
-                                         HttpServletRequest request) {
-        log.info("Proxying GET request to Reporting Service: /api/reports/export/{}?format={}",
-                reportId, format);
-        return proxyRequest(HttpMethod.GET,
-                "/api/reports/export/" + reportId + "?format=" + format, null, request);
-    }
-
-    /**
-     * Build query parameters string
-     */
-    private String buildQueryParams(String startDate, String endDate) {
-        StringBuilder params = new StringBuilder();
-        boolean hasParams = false;
-
-        if (startDate != null && !startDate.isEmpty()) {
-            params.append("?startDate=").append(startDate);
-            hasParams = true;
-        }
-
-        if (endDate != null && !endDate.isEmpty()) {
-            params.append(hasParams ? "&" : "?").append("endDate=").append(endDate);
-        }
-
-        return params.toString();
-    }
-
-    /**
-     * Generic proxy method for all HTTP methods
-     */
-    private ResponseEntity<?> proxyRequest(HttpMethod method, String path, String body,
-                                          HttpServletRequest request) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
+            HttpHeaders headers = extractHeaders(request);
             HttpEntity<String> entity = new HttpEntity<>(body, headers);
 
+            String targetUrl = REPORTING_SERVICE_URL + "/api/reporting/log";
+            log.info("🎯 [REPORTING PROXY] Proxying to: {}", targetUrl);
+
             ResponseEntity<String> response = restTemplate.exchange(
-                REPORTING_SERVICE_URL + path,
-                method,
+                targetUrl,
+                HttpMethod.POST,
                 entity,
                 String.class
             );
 
-            log.info("Reporting Service responded with status: {}", response.getStatusCode());
+            log.info("✅ [REPORTING PROXY] Reporting Service responded: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
                     .headers(response.getHeaders())
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("Reporting Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
+            log.error("❌ [REPORTING PROXY] Reporting Service error: {} - {}", e.getStatusCode(), e.getMessage());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("Error proxying request to Reporting Service", e);
+            log.error("💥 [REPORTING PROXY] Exception: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error communicating with Reporting Service: " + e.getMessage());
         }
+    }
+
+    /**
+     * Proxy GET request to fetch all log entries with optional filters
+     */
+    @GetMapping("/logs")
+    public ResponseEntity<?> getAllLogs(
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) String service,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate,
+            @RequestParam(required = false) Integer limit,
+            HttpServletRequest request) {
+
+        log.info("🚀 [REPORTING PROXY] GET /api/reporting/logs with filters: level={}, service={}, userId={}, limit={}",
+                level, service, userId, limit);
+
+        try {
+            HttpHeaders headers = extractHeaders(request);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            // Build URL with query parameters
+            StringBuilder urlBuilder = new StringBuilder(REPORTING_SERVICE_URL + "/api/reporting/logs");
+            boolean firstParam = true;
+
+            if (level != null) {
+                urlBuilder.append(firstParam ? "?" : "&").append("level=").append(level);
+                firstParam = false;
+            }
+            if (service != null) {
+                urlBuilder.append(firstParam ? "?" : "&").append("service=").append(service);
+                firstParam = false;
+            }
+            if (userId != null) {
+                urlBuilder.append(firstParam ? "?" : "&").append("userId=").append(userId);
+                firstParam = false;
+            }
+            if (fromDate != null) {
+                urlBuilder.append(firstParam ? "?" : "&").append("fromDate=").append(fromDate);
+                firstParam = false;
+            }
+            if (toDate != null) {
+                urlBuilder.append(firstParam ? "?" : "&").append("toDate=").append(toDate);
+                firstParam = false;
+            }
+            if (limit != null) {
+                urlBuilder.append(firstParam ? "?" : "&").append("limit=").append(limit);
+                firstParam = false;
+            }
+
+            String targetUrl = urlBuilder.toString();
+            log.info("🎯 [REPORTING PROXY] Proxying to: {}", targetUrl);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                targetUrl,
+                HttpMethod.GET,
+                entity,
+                String.class
+            );
+
+            log.info("✅ [REPORTING PROXY] Reporting Service responded: {}", response.getStatusCode());
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(response.getHeaders())
+                    .body(response.getBody());
+
+        } catch (HttpClientErrorException e) {
+            log.error("❌ [REPORTING PROXY] Reporting Service error: {} - {}", e.getStatusCode(), e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("💥 [REPORTING PROXY] Exception: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error communicating with Reporting Service: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Extract headers from incoming request
+     */
+    private HttpHeaders extractHeaders(HttpServletRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+
+        Enumeration<String> headerNames = request.getHeaderNames();
+        if (headerNames != null) {
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                String headerValue = request.getHeader(headerName);
+
+                // Forward all headers except Host
+                if (!"host".equalsIgnoreCase(headerName)) {
+                    headers.add(headerName, headerValue);
+                }
+            }
+        }
+
+        // Ensure Content-Type is set
+        if (!headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
+            headers.setContentType(MediaType.APPLICATION_JSON);
+        }
+
+        // Add username and roles from security context if available
+        Object username = request.getAttribute("username");
+        Object roles = request.getAttribute("roles");
+
+        if (username != null) {
+            headers.add("X-Username", username.toString());
+        }
+        if (roles != null) {
+            headers.add("X-Roles", roles.toString());
+        }
+
+        log.debug("📋 [REPORTING PROXY] Forwarding headers: {}", headers.keySet());
+
+        return headers;
     }
 }
 
