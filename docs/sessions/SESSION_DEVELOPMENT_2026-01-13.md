@@ -110,6 +110,36 @@ has been blocked by CORS policy
 
 ---
 
+### 5. ✅ Issue #20 Verification - Flyway Migrations
+
+#### Задача:
+Проверить наличие и корректность Flyway миграций для таблиц `parking_spaces` и `logs`.
+
+#### Проверка выполнена:
+
+**parking_spaces table:**
+- ✅ Миграция: `V3__add_parking_spaces.sql` (создана 2025-12-26)
+- ✅ Полная функциональность: 16 колонок, constraints, indexes, triggers
+- ✅ Entity соответствие: `ParkingSpace.java` - 100% match
+- ✅ Используется: Management Service (Issue #18)
+- ✅ Тестовые данные: 23 парковочных места (V5)
+
+**logs table:**
+- ✅ Миграция V1: `V1__initial_schema.sql` (базовая версия)
+- ✅ Миграция V6: `V6__extend_logs_table.sql` (расширение: service, meta)
+- ✅ Entity соответствие: `Log.java` - 100% match
+- ✅ Используется: Reporting Service (Issue #19)
+
+#### Критерии приемки:
+- [x] Migration files created - V1, V3, V6
+- [x] Idempotent - V6 использует IF NOT EXISTS
+- [x] Follow conventions - правильное именование, документация
+- [x] Schema matches entities - 100% соответствие
+
+**Вывод:** Issue #20 полностью выполнен, миграции существуют и работают.
+
+---
+
 ## Технические детали
 
 ### Файлы созданы/изменены:
@@ -200,7 +230,11 @@ has been blocked by CORS policy
 ### Тестирование:
 - Эндпойнтов протестировано: 5
 - Успешных тестов: 5/5 (100%)
-- Issues закрыто: 1 (#19)
+- Issues закрыто: 2 (#19, #20)
+
+### Верификация:
+- Flyway миграций проверено: 3 (V1, V3, V6)
+- Entity-Schema соответствие: 100%
 
 ---
 
@@ -208,7 +242,8 @@ has been blocked by CORS policy
 
 ### Ближайшие задачи:
 1. ⏭️ Закрыть Issue #19 (REPORTING-SVC — POST /log)
-2. ⏭️ Commit изменений с описанием
+2. ⏭️ Закрыть Issue #20 (DB Flyway migrations)
+3. ⏭️ Commit изменений с описанием
 3. ⏭️ Обновить документацию
 
 ### Фаза 1 - Оставшиеся задачи:

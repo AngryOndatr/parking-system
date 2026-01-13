@@ -18,6 +18,13 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 | V3 | `V3__add_parking_spaces.sql` | Individual parking spaces | parking_spaces | ✅ |
 | V4 | `V4__add_bookings.sql` | Reservation system | bookings | ✅ |
 | V5 | `V5__insert_test_parking_data.sql` | Test data for development | N/A (inserts) | ✅ |
+| V6 | `V6__extend_logs_table.sql` | Extend logs table | logs (service, meta columns) | ✅ |
+
+**Latest Migration (V6 - 2026-01-13):**
+- Added `service` column to logs table (VARCHAR(100)) - tracks originating microservice
+- Added `meta` column to logs table (TEXT/JSON) - stores additional metadata
+- Added indexes on `service` and `log_level` for query performance
+- Required for Reporting Service (Issue #19)
 
 ### Test Data (V5)
 

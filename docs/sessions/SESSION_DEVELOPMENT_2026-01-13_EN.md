@@ -110,6 +110,36 @@ has been blocked by CORS policy
 
 ---
 
+### 5. ✅ Issue #20 Verification - Flyway Migrations
+
+#### Task:
+Verify existence and correctness of Flyway migrations for `parking_spaces` and `logs` tables.
+
+#### Verification completed:
+
+**parking_spaces table:**
+- ✅ Migration: `V3__add_parking_spaces.sql` (created 2025-12-26)
+- ✅ Full functionality: 16 columns, constraints, indexes, triggers
+- ✅ Entity match: `ParkingSpace.java` - 100% match
+- ✅ Used by: Management Service (Issue #18)
+- ✅ Test data: 23 parking spaces (V5)
+
+**logs table:**
+- ✅ Migration V1: `V1__initial_schema.sql` (base version)
+- ✅ Migration V6: `V6__extend_logs_table.sql` (extension: service, meta)
+- ✅ Entity match: `Log.java` - 100% match
+- ✅ Used by: Reporting Service (Issue #19)
+
+#### Acceptance criteria:
+- [x] Migration files created - V1, V3, V6
+- [x] Idempotent - V6 uses IF NOT EXISTS
+- [x] Follow conventions - proper naming, documentation
+- [x] Schema matches entities - 100% match
+
+**Conclusion:** Issue #20 fully completed, migrations exist and work correctly.
+
+---
+
 ## Technical Details
 
 ### Files Created/Modified:
@@ -200,7 +230,11 @@ has been blocked by CORS policy
 ### Testing:
 - Endpoints tested: 5
 - Successful tests: 5/5 (100%)
-- Issues closed: 1 (#19)
+- Issues closed: 2 (#19, #20)
+
+### Verification:
+- Flyway migrations checked: 3 (V1, V3, V6)
+- Entity-Schema compatibility: 100%
 
 ---
 
@@ -208,7 +242,8 @@ has been blocked by CORS policy
 
 ### Immediate Tasks:
 1. ⏭️ Close Issue #19 (REPORTING-SVC — POST /log)
-2. ⏭️ Commit changes with description
+2. ⏭️ Close Issue #20 (DB Flyway migrations)
+3. ⏭️ Commit changes with description
 3. ⏭️ Update documentation
 
 ### Phase 1 - Remaining Tasks:
