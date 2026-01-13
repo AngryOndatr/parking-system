@@ -3,57 +3,152 @@ Markdown
 
 Modern parking lot management system built on microservices architecture using Spring Boot, Spring Cloud, and Docker.
 
-## 🆕 Latest Updates (2025-12-26)
+## 🆕 Latest Updates
 
-✅ **Flyway Database Migrations Implemented!**
+### 2026-01-13 - Phase 1 Complete: Tests & Documentation (Issue #22) ✅
 
+✅ **Tests & Documentation - Phase 1 Complete** (Issue #22)
+- ✅ Comprehensive test coverage (46+ test cases)
+  - Client Service: 20+ tests (unit + MockMvc integration)
+  - Management Service: 14+ tests (integration)
+  - Reporting Service: 12+ tests (unit + integration)
+- ✅ Service-level documentation complete
+  - **NEW**: Client Service README (630+ lines)
+  - Management Service README (307 lines)
+  - Reporting Service README (434 lines)
+- ✅ API examples for all endpoints (curl + PowerShell)
+- ✅ Happy path + negative case coverage
+- ✅ Local test scripts operational
+- 📖 **Status Report**: [ISSUE_22_STATUS_REPORT.md](./docs/reports/ISSUE_22_STATUS_REPORT.md)
+- 📖 **Client Service**: [README.md](./backend/client-service/README.md)
+
+### 2026-01-13 - API Gateway Proxy Testing Infrastructure (Issue #21) ✅
+
+✅ **API Gateway Proxy Verification Complete** (Issue #21)
+- ✅ PowerShell smoke test script (test-proxy.ps1, 269 lines)
+- ✅ Bash smoke test script (test-proxy.sh, 270 lines)
+- ✅ 11 automated tests across all services
+- ✅ Comprehensive API documentation (36 code examples)
+- ✅ Management Service proxy verified (4 endpoints)
+- ✅ Reporting Service proxy verified (5 endpoints)
+- ✅ Client Service proxy verified (2 endpoints)
+- ✅ JWT token forwarding tested
+- ✅ Cross-platform support (Windows/Linux/Mac)
+- 📖 **API Examples**: [API_GATEWAY_PROXY_EXAMPLES.md](./docs/API_GATEWAY_PROXY_EXAMPLES.md)
+- 📖 **Testing Guide**: [devops/README.md](./devops/README.md)
+
+### 2026-01-13 - Reporting Service JWT Authentication Complete (Issue #19) ✅
+
+✅ **Reporting Service - Complete with JWT Authentication** (Issue #19)
+- ✅ POST /api/reporting/log - Create log entries (JWT protected)
+- ✅ GET /api/reporting/logs - Retrieve logs with filters (JWT protected)
+- ✅ JWT Authentication integrated (JwtAuthenticationFilter, JwtTokenProvider, SecurityConfig)
+- ✅ Jackson JsonNullable support for OpenAPI models
+- ✅ Unified JWT secret across all microservices (768 bits, HS512 compliant)
+- ✅ JSON metadata support with proper deserialization
+- ✅ Comprehensive test coverage
+- 🔧 **FIXED**: JWT signature mismatch (unified secrets in docker-compose.yml)
+- 🔧 **FIXED**: JWT key too short (upgraded to 96 characters)
+- 🔧 **FIXED**: Jackson JsonNullable deserialization error (added module)
+- 📖 **Session Log**: [SESSION_DEVELOPMENT_2026-01-13.md](./docs/sessions/SESSION_DEVELOPMENT_2026-01-13.md)
+
+### 2026-01-12 - Phase 1: Backend CRUD Implementation Started 🚀
+
+✅ **Client Service - Full CRUD Complete** (Issue #16)
+- ✅ Complete CRUD endpoints for Clients entity
+- ✅ OpenAPI-first design with generated interfaces
+- ✅ Comprehensive validation and error handling
+- ✅ Unit and integration tests
+- ✅ JWT-protected endpoints via API Gateway
+- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-16)
+
+✅ **Client Service - Vehicles Management Complete** (Issue #17)
+- ✅ Full CRUD for Vehicles linked to Clients
+- ✅ License plate uniqueness enforcement
+- ✅ Client-Vehicle relationship management
+- ✅ Comprehensive test coverage
+- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-17)
+
+✅ **Management Service - Parking Spaces API Complete** (Issue #18)
+- ✅ GET /available - List all available parking spaces
+- ✅ GET /available/count - Count of available spaces
+- ✅ GET /available/lot/{id} - Available spaces by lot
+- ✅ GET /search - Search with filters (type, status)
+- ✅ Test data migration with 23 parking spaces
+- ✅ API Gateway proxy endpoints configured
+- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-18)
+
+### 2025-12-26 - Flyway Database Migrations
+
+✅ **Flyway Database Migrations Implemented**
 - ✅ Flyway configured and integrated into API Gateway
-- ✅ 4 migrations created (V1-V4): initial schema, parking_lots, parking_spaces, bookings
+- ✅ 5 migrations created (V1-V5): initial schema, parking_lots, parking_spaces, bookings, test data
 - ✅ Comprehensive database documentation created
 - ✅ Deployment guide with migration instructions
 - ✅ Test scripts for migration verification
 - 📖 **Migration Guide:** [Database README](./database/README.md)
 - 📖 **Deployment Guide:** [DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)
 
-**Previous Updates (2025-12-25):**
+### 2025-12-25 - Initial Setup
 
+✅ **Infrastructure & Foundation**
 - ✅ API Gateway with JWT authentication and security features
 - ✅ Complete microservices implementation (Eureka, API Gateway, Client Service)
 - ✅ PostgreSQL and Redis working and accessible
 - ✅ Observability stack integrated (Prometheus, Grafana, Jaeger, OpenTelemetry)
 - ✅ Docker Compose configuration optimized
 - ✅ Correct password hashes configured (BCrypt)
-- 📖 Complete development documentation: [SESSION_DEVELOPMENT_2025-12-25_EN.md](./SESSION_DEVELOPMENT_2025-12-25_EN.md)
+- 📖 Complete development documentation: [SESSION_DEVELOPMENT_2025-12-25_EN.md](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
 
 ## 📈 Project Status & Roadmap
 
-### Phase 0: Infrastructure & Foundation (95% Complete) 🟢
+### Phase 0: Infrastructure & Foundation ✅ COMPLETE
 
 | Task | Description | Status | Completion |
 |------|-------------|--------|------------|
 | 0.1 | **GitHub Setup** | ✅ Complete | 100% |
 | 0.2 | **Docker Compose** | ✅ Complete | 100% |
-| 0.3 | **PostgreSQL DDL** | ✅ Complete | 95% |
-| 0.4 | **Spring Boot Services** | ✅ Complete | 95% |
+| 0.3 | **PostgreSQL DDL** | ✅ Complete | 100% |
+| 0.4 | **Spring Boot Services** | ✅ Complete | 100% |
+
+📖 **Phase 0 Summary:** [PHASE_0_SUMMARY.md](./docs/reports/PHASE_0_SUMMARY.md)
+
+### Phase 1: Basic Backend (In Progress - Week 1/3) 🔄
+
+**Goal:** Implement CRUD operations and database connectivity for core services.
+
+| Service | Task | Status | Issue |
+|---------|------|--------|-------|
+| **Client Service** | ✅ CRUD for CLIENTS | Complete | #16 |
+| **Client Service** | ✅ CRUD for VEHICLES | Complete | #17 |
+| **Client Service** | ⏳ GET /check (subscription) | Pending | - |
+| **Management Service** | ✅ GET /available | Complete | #18 |
+| **Management Service** | ⏳ POST /update (status) | Pending | - |
+| **Reporting Service** | ✅ POST /log | Complete | #19 |
+| **Database** | ✅ Flyway migrations | Complete | #20 |
+
+**Progress:** 5/7 tasks complete (71%)
 
 **What's Done:**
-- ✅ Professional GitHub repository with comprehensive documentation
-- ✅ Complete Docker Compose setup (10 containers running)
-- ✅ API Gateway with JWT authentication fully implemented
-- ✅ Client Service and Eureka Server fully operational
-- ✅ Observability stack (Prometheus, Grafana, Jaeger, OpenTelemetry)
-- ✅ PostgreSQL with 11 tables (Users, Clients, Vehicles, Parking Lots, Spaces, Bookings, etc.)
-- ✅ **Flyway migrations configured and working** (V0-V4)
-- ✅ **Production-ready Flyway configuration** with safety features
-- ✅ **Production deployment process documented**
-- ✅ Security features (rate limiting, brute force protection)
-- [x] GitHub Projects Kanban board setup
+- ✅ Complete Client entity CRUD with validation
+- ✅ Complete Vehicle entity CRUD with client linking
+- ✅ Parking space availability queries (list, count, filter)
+- ✅ Reporting service with JWT authentication and logging
+- ✅ Database migrations verified (parking_spaces, logs tables)
+- ✅ OpenAPI-first design pattern established
+- ✅ Test data migrations (23 parking spaces)
+- ✅ Comprehensive test coverage
 
-**What's Needed:**
-- ⚠️ Complete remaining Flyway migrations (V5-V8)
-- ⚠️ Full implementation of remaining 8 microservices
+**Next Steps:**
+- ⏳ Implement subscription check endpoint
+- ⏳ Implement parking space status update
 
-📖 **Detailed Report:** [PHASE_0_READINESS_REPORT.md](./PHASE_0_READINESS_REPORT.md)
+**Week 1 Achievements:**
+- 5 major issues completed (#16, #17, #18, #19, #20)
+- 3 microservices enhanced (client-service, management-service, reporting-service)
+- 15+ endpoints implemented and tested
+- Production-ready OpenAPI contracts
+- Database schema validated and documented
 
 ## 🏗️ System Architecture
 
@@ -103,6 +198,8 @@ docker-compose ps
 - **API Gateway**: http://localhost:8086
 - **Eureka Server**: http://localhost:8761
 - **Client Service**: http://localhost:8081 (via Gateway)
+- **Management Service**: http://localhost:8083 (via Gateway)
+- **Test Interface**: [devops/test-login.html](./devops/test-login.html) - Browser-based API tester
 - **Grafana**: http://localhost:3000 (admin/admin123)
 - **Prometheus**: http://localhost:9090
 - **Jaeger**: http://localhost:16686
@@ -127,41 +224,73 @@ docker-compose ps
 
 ### 2. Client Service (Port 8081)
 - Client and vehicle management
-- CRUD operations for clients
+- CRUD operations for clients and vehicles
 - PostgreSQL database integration
 - JWT authentication via API Gateway
+- OpenAPI 3.0 specification
 
-**Endpoints** (via API Gateway):
-- `GET /api/clients` - List clients
+**Client Endpoints** (via API Gateway):
 - `POST /api/clients` - Create client
-- `GET /api/clients/{id}` - Get client
+- `GET /api/clients` - List all clients
+- `GET /api/clients/{id}` - Get client by ID
 - `PUT /api/clients/{id}` - Update client
 - `DELETE /api/clients/{id}` - Delete client
+- `GET /api/clients/search?phone={phone}` - Search by phone
 
-### 3. Service Registry (Port 8761)
+**Vehicle Endpoints** (via API Gateway):
+- `POST /api/clients/{clientId}/vehicles` - Create vehicle
+- `GET /api/vehicles` - List all vehicles
+- `GET /api/vehicles/{id}` - Get vehicle by ID
+- `PUT /api/vehicles/{id}` - Update vehicle
+- `DELETE /api/vehicles/{id}` - Delete vehicle
+
+📖 **Implementation:** Issues #16, #17
+
+### 3. Management Service (Port 8083)
+- Parking space management and monitoring
+- Real-time availability tracking
+- Search and filtering capabilities
+- PostgreSQL database integration
+- OpenAPI 3.0 specification
+
+**Parking Space Endpoints** (via API Gateway):
+- `GET /api/management/spots` - List all parking spaces
+- `GET /api/management/spots/available` - List available spaces
+- `GET /api/management/spots/available/count` - Count available spaces
+- `GET /api/management/spots/available/lot/{lotId}` - Available spaces by lot
+- `GET /api/management/spots/search?type={type}&status={status}` - Search with filters
+
+**Supported Space Types:**
+- STANDARD, HANDICAPPED, ELECTRIC, VIP, COMPACT, OVERSIZED
+
+**Supported Statuses:**
+- AVAILABLE, OCCUPIED, RESERVED, MAINTENANCE, OUT_OF_SERVICE
+
+📖 **Implementation:** Issue #18
+
+### 4. Service Registry (Port 8761)
 - Eureka Server for service discovery
 - Microservice registration and discovery
 - Health checks and monitoring
 
-### 4. Observability Stack
+### 5. Observability Stack
 - **Prometheus** (Port 9090) - Metrics collection
 - **Grafana** (Port 3000) - Dashboards and visualization
 - **Jaeger** (Port 16686) - Distributed tracing
 - **OpenTelemetry Collector** (Port 4317/4318) - Telemetry collection
 
-### 5. Database Management
+### 6. Database Management
 - **PostgreSQL 16** (Port 5433) - Main database
 - **pgAdmin 4** (Port 5050) - Database management UI
 - **Redis 7** (Port 6379) - Caching and session storage
 
-### 6. Planned Services
+### 7. Planned Services
 - **User Service** - System user management
-- **Parking Service** - Parking lot and space management
+- **Parking Service** - Extended parking lot management
 - **Booking Service** - Parking space reservations
 - **Payment Service** - Payment processing
 - **Billing Service** - Billing and tariff plans
 - **Gate Control Service** - Parking gate management
-- **Management Service** - Administrative functions
 - **Reporting Service** - Reports and analytics
 
 ## 📊 Technology Stack
@@ -350,9 +479,19 @@ services:
 
 ## 📚 Documentation
 
+### Development History
+- **[Session Logs](./docs/sessions/)** - Detailed development session logs
+  - [2025-12-25 - Project Setup](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
+  - [2026-01-03 - Issue #16 Client CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-03_EN.md)
+  - [2026-01-04 - Issue #17 Vehicle CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-04_EN.md)
+  - [2026-01-11 - Issue #18 Management API (Day 1)](./docs/sessions/SESSION_DEVELOPMENT_2026-01-11_EN.md)
+  - [2026-01-12 - Issue #18 Finalization (Day 2)](./docs/sessions/SESSION_DEVELOPMENT_2026-01-12_EN.md)
+
+### Phase Reports
+- **[Phase 0 Summary](./docs/reports/PHASE_0_SUMMARY.md)** - Infrastructure foundation completion
+- **[Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md)** - Basic backend CRUD progress
+
 ### Architecture and Security
-- **[SESSION_DEVELOPMENT_2025-12-25_EN.md](./SESSION_DEVELOPMENT_2025-12-25_EN.md)** - Complete development session report
-- **[SESSION_DEVELOPMENT_2025-12-25.md](./SESSION_DEVELOPMENT_2025-12-25.md)** - Russian version
 - **[Authentication Architecture](./docs/AUTHENTICATION.md)** - JWT authentication system
 - **[Security Architecture](./docs/SECURITY_ARCHITECTURE.md)** - Security features and components
 - **[Observability Setup](./docs/OBSERVABILITY_SETUP.md)** - Monitoring and tracing

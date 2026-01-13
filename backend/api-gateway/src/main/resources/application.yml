@@ -9,6 +9,11 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod-security}
   
+  # Disable Spring Cloud compatibility verifier for Spring Boot 3.5.x
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
   # Redis Configuration for Security
   data:
     redis:

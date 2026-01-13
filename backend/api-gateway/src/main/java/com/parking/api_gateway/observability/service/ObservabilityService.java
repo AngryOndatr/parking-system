@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,8 +25,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ObservabilityService {
     
     private final MeterRegistry meterRegistry;
-    private final Tracer tracer;
-    
+    @Autowired(required = false)
+    private Tracer tracer;
+
     // Metrics counters
     private final Counter loginAttempts;
     private final Counter loginSuccess;
@@ -40,10 +42,11 @@ public class ObservabilityService {
     private final AtomicInteger blockedIps = new AtomicInteger(0);
     private final AtomicLong totalRequests = new AtomicLong(0);
     
-    public ObservabilityService(MeterRegistry meterRegistry, Tracer tracer) {
+    public ObservabilityService(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
-        this.tracer = tracer;
-        
+        // tracer may be absent in test/non-observability environments
+        // this.tracer = tracer;
+
         // Initialize counters
         this.loginAttempts = Counter.builder("auth.login.attempts")
             .description("Total number of login attempts")
@@ -97,34 +100,39 @@ public class ObservabilityService {
         loginSuccess.increment();
         activeSessions.incrementAndGet();
         
-        Span span = tracer.spanBuilder("auth.login.success")
-            .setAttribute("user.name", username)
-            .setAttribute("client.ip", ipAddress)
-            .startSpan();
-        
-        try {
-            log.debug("Successful login recorded for user: {} from IP: {}", username, ipAddress);
-        } finally {
-            span.end();
+        if (tracer != null) {
+            Span span = tracer.spanBuilder("auth.login.success")
+                .setAttribute("user.name", username)
+                .setAttribute("client.ip", ipAddress)
+                .startSpan();
+            try {
+                log.debug("Successful login recorded for user: {} from IP: {}", username, ipAddress);
+            } finally {
+                span.end();
+            }
+        } else {
+            log.debug("Successful login recorded for user: {} from IP: {} (no tracer)", username, ipAddress);
         }
     }
-    
+
     public void recordLoginFailure(String username, String ipAddress, String reason) {
         loginFailures.increment();
 
-        Span span = tracer.spanBuilder("auth.login.failure")
-            .setAttribute("user.name", username)
-            .setAttribute("client.ip", ipAddress)
-            .setAttribute("failure.reason", reason)
-            .startSpan();
-        
-        span.setStatus(StatusCode.ERROR, "Login failed: " + reason);
-
-        try {
-            log.warn("Failed login recorded for user: {} from IP: {}, reason: {}", 
-                    username, ipAddress, reason);
-        } finally {
-            span.end();
+        if (tracer != null) {
+            Span span = tracer.spanBuilder("auth.login.failure")
+                .setAttribute("user.name", username)
+                .setAttribute("client.ip", ipAddress)
+                .setAttribute("failure.reason", reason)
+                .startSpan();
+            span.setStatus(StatusCode.ERROR, "Login failed: " + reason);
+            try {
+                log.warn("Failed login recorded for user: {} from IP: {}, reason: {}",
+                        username, ipAddress, reason);
+            } finally {
+                span.end();
+            }
+        } else {
+            log.warn("Failed login recorded for user: {} from IP: {}, reason: {} (no tracer)", username, ipAddress, reason);
         }
     }
     
@@ -132,35 +140,41 @@ public class ObservabilityService {
     public void recordRateLimitViolation(String ipAddress, String endpoint) {
         rateLimitViolations.increment();
 
-        Span span = tracer.spanBuilder("security.rate_limit_violation")
-            .setAttribute("client.ip", ipAddress)
-            .setAttribute("endpoint", endpoint)
-            .startSpan();
-        
-        span.setStatus(StatusCode.ERROR, "Rate limit exceeded");
+        if (tracer != null) {
+            Span span = tracer.spanBuilder("security.rate_limit_violation")
+                .setAttribute("client.ip", ipAddress)
+                .setAttribute("endpoint", endpoint)
+                .startSpan();
+            span.setStatus(StatusCode.ERROR, "Rate limit exceeded");
 
-        try {
-            log.warn("Rate limit violation from IP: {} on endpoint: {}", ipAddress, endpoint);
-        } finally {
-            span.end();
+            try {
+                log.warn("Rate limit violation from IP: {} on endpoint: {}", ipAddress, endpoint);
+            } finally {
+                span.end();
+            }
+        } else {
+            log.warn("Rate limit violation from IP: {} on endpoint: {} (no tracer)", ipAddress, endpoint);
         }
     }
     
     public void recordSecurityViolation(String type, String details, String ipAddress) {
         securityViolations.increment();
 
-        Span span = tracer.spanBuilder("security.violation")
-            .setAttribute("violation.type", type)
-            .setAttribute("violation.details", details)
-            .setAttribute("client.ip", ipAddress)
-            .startSpan();
-        
-        span.setStatus(StatusCode.ERROR, "Security violation: " + type);
+        if (tracer != null) {
+            Span span = tracer.spanBuilder("security.violation")
+                .setAttribute("violation.type", type)
+                .setAttribute("violation.details", details)
+                .setAttribute("client.ip", ipAddress)
+                .startSpan();
+            span.setStatus(StatusCode.ERROR, "Security violation: " + type);
 
-        try {
-            log.error("Security violation [{}] from IP: {} - {}", type, ipAddress, details);
-        } finally {
-            span.end();
+            try {
+                log.error("Security violation [{}] from IP: {} - {}", type, ipAddress, details);
+            } finally {
+                span.end();
+            }
+        } else {
+            log.error("Security violation [{}] from IP: {} - {} (no tracer)", type, ipAddress, details);
         }
     }
     
@@ -230,3 +244,4 @@ public class ObservabilityService {
             .increment();
     }
 }
+

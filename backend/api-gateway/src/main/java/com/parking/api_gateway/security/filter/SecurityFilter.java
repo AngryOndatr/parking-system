@@ -66,7 +66,13 @@ public class SecurityFilter extends OncePerRequestFilter {
             "/actuator/info",
             "/api/docs",
             "/api/swagger-ui",
-            "/api/v3/api-docs"
+            "/api/v3/api-docs",
+            // Management Service - Public endpoints for clients and info boards
+            "/api/management/spots/available",              // List available spots
+            "/api/management/spots/available/count",        // Count available spots
+            "/api/management/spots/available/lot/",         // Available spots by lot (prefix)
+            "/api/management/spots/search"                  // Search spots with filters
+            // Reporting Service endpoints require JWT authentication
     );
 
     @Override

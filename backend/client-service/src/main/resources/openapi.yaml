@@ -12,19 +12,21 @@ servers:
     description: Client Service Docker Network
 
 tags:
-  - name: clients
+  - name: Client
     description: Operations with clients and subscribers
-  - name: vehicles
+    x-interface-name: ClientApi
+  - name: Vehicle
     description: Operations with vehicles
+    x-interface-name: VehicleApi
 
 paths:
   # =================================================================
   # CLIENTS
   # =================================================================
-  /api/v1/clients:
+  /api/clients:
     get:
       tags:
-        - Clients
+        - Client
       summary: Get a list of all registered clients
       operationId: getAllClients
       responses:
@@ -40,7 +42,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     post:
       tags:
-        - Clients
+        - Client
       summary: Register a new client
       operationId: createClient
       requestBody:
@@ -61,10 +63,10 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/clients/{id}:
+  /api/clients/{id}:
     get:
       tags:
-        - Clients
+        - Client
       summary: Get client by ID
       operationId: getClientById
       parameters:
@@ -87,7 +89,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     put:
       tags:
-        - Clients
+        - Client
       summary: Update client data by ID
       operationId: updateClient
       parameters:
@@ -115,10 +117,10 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError'
 
-  /api/v1/clients/search:
+  /api/clients/search:
     get:
       tags:
-        - Clients
+        - Client
       summary: Search client by phone number
       operationId: searchClientByPhone
       parameters:
@@ -127,6 +129,8 @@ paths:
           required: true
           schema:
             type: string
+            minLength: 1
+            example: "+380501234567"
           description: Client phone number (used for quick identification)
       responses:
         '200':
@@ -135,16 +139,141 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClientResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
         '404':
           $ref: '#/components/responses/NotFoundError'
 
   # =================================================================
   # VEHICLES
   # =================================================================
-  /api/v1/clients/{clientId}/vehicles:
+  /api/vehicles:
+    get:
+      tags:
+        - Vehicle
+      summary: Get a list of all vehicles
+      operationId: getAllVehicles
+      responses:
+        '200':
+          description: Successful response. List of all vehicles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       tags:
-        - Vehicles
+        - Vehicle
+      summary: Register a new vehicle
+      operationId: createVehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleCreateRequest'
+      responses:
+        '201':
+          description: Vehicle successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          description: Conflict - license plate already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/vehicles/{id}:
+    get:
+      tags:
+        - Vehicle
+      summary: Get vehicle by ID
+      operationId: getVehicleById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Vehicle
+      summary: Update vehicle data by ID
+      operationId: updateVehicle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleUpdateRequest'
+      responses:
+        '200':
+          description: Vehicle successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          description: Conflict - license plate already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    delete:
+      tags:
+        - Vehicle
+      summary: Delete vehicle by ID
+      operationId: deleteVehicle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Vehicle successfully deleted
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /api/clients/{clientId}/vehicles:
+    post:
+      tags:
+        - Vehicle
       summary: Add a new vehicle to a client
       operationId: addVehicleToClient
       parameters:
@@ -173,7 +302,7 @@ paths:
           $ref: '#/components/responses/BadRequestError'
     get:
       tags:
-        - Vehicles
+        - Vehicle
       summary: Get a list of all client's vehicles
       operationId: getVehiclesByClient
       parameters:
@@ -232,6 +361,39 @@ components:
           example: 2025-11-20T10:00:00Z
 
     # --- Schemas for Vehicle (DTO) ---
+    VehicleCreateRequest:
+      type: object
+      properties:
+        licensePlate:
+          type: string
+          example: 'AA7777OO'
+        clientId:
+          type: integer
+          format: int64
+          example: 101
+          description: ID of the client who owns this vehicle
+        isAllowed:
+          type: boolean
+          example: true
+          description: Whether the vehicle is allowed to enter
+      required:
+        - licensePlate
+        - clientId
+
+    VehicleUpdateRequest:
+      type: object
+      properties:
+        licensePlate:
+          type: string
+          example: 'AA7777OO'
+        clientId:
+          type: integer
+          format: int64
+          example: 101
+        isAllowed:
+          type: boolean
+          example: true
+
     VehicleRequest:
       type: object
       properties:

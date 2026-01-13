@@ -1,12 +1,78 @@
+server:
+  port: 8084
+
 spring:
   application:
-    name: Reporting Service
+    name: reporting-service
+
+  # Disable Spring Cloud compatibility verifier for Spring Boot 3.5.x
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+  # Database configuration
+  datasource:
+    url: jdbc:postgresql://postgres:5432/parking_db
+    username: parking_user
+    password: parking_pass
+    driver-class-name: org.postgresql.Driver
+
+  # JPA/Hibernate configuration
+  jpa:
+    hibernate:
+      ddl-auto: none  # Schema is managed by Flyway in api-gateway
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# JWT Configuration (must match API Gateway)
+security:
+  jwt:
+    secret: ${JWT_SECRET:ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# OpenAPI/Swagger Configuration
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html # Path to swagger UI
+    path: /swagger-ui.html
   api-docs:
-    path: /v3/api-docs # Path to JSON documentation
+    path: /v3/api-docs
   info:
     title: Reporting Service API
     version: 1.0.0
     description: API for parking reporting and analytics
+
+# Logging Configuration
+logging:
+  level:
+    com.parking.reporting_service: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+

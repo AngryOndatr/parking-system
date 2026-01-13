@@ -1,0 +1,295 @@
+openapi: 3.0.3
+info:
+  title: Parking Management Service API
+  description: |
+    API for parking space management and monitoring.
+    Provides real-time information about parking space availability.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8083
+    description: Management Service Development Server
+  - url: http://management-service:8083
+    description: Management Service Docker Network
+
+tags:
+  - name: ParkingSpace
+    description: Operations for parking space management and monitoring
+    x-interface-name: ParkingSpaceApi
+
+paths:
+  # =================================================================
+  # PARKING SPACES
+  # =================================================================
+  /api/management/spots/available:
+    get:
+      tags:
+        - ParkingSpace
+      summary: Get all available parking spaces
+      description: Retrieve a list of all currently available parking spaces across all parking lots
+      operationId: getAvailableSpaces
+      responses:
+        '200':
+          description: Successfully retrieved available spaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParkingSpaceResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/management/spots/available/lot/{lotId}:
+    get:
+      tags:
+        - ParkingSpace
+      summary: Get available spaces by parking lot
+      description: Retrieve available parking spaces for a specific parking lot
+      operationId: getAvailableSpacesByLot
+      parameters:
+        - name: lotId
+          in: path
+          required: true
+          description: ID of the parking lot
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully retrieved available spaces for the lot
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParkingSpaceResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/management/spots:
+    get:
+      tags:
+        - ParkingSpace
+      summary: Get all parking spaces
+      description: Retrieve a list of all parking spaces regardless of their status
+      operationId: getAllSpaces
+      responses:
+        '200':
+          description: Successfully retrieved all spaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParkingSpaceResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/management/spots/available/count:
+    get:
+      tags:
+        - ParkingSpace
+      summary: Get count of available spaces
+      description: Get the total number of currently available parking spaces
+      operationId: getAvailableSpacesCount
+      responses:
+        '200':
+          description: Successfully retrieved count
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/management/spots/search:
+    get:
+      tags:
+        - ParkingSpace
+      summary: Search parking spaces by type and status
+      description: Find parking spaces matching specific type and status criteria
+      operationId: searchSpaces
+      parameters:
+        - name: type
+          in: query
+          required: false
+          description: Space type (STANDARD, HANDICAPPED, ELECTRIC, VIP, COMPACT, OVERSIZED)
+          schema:
+            type: string
+            enum:
+              - STANDARD
+              - HANDICAPPED
+              - ELECTRIC
+              - VIP
+              - COMPACT
+              - OVERSIZED
+        - name: status
+          in: query
+          required: false
+          description: Space status (AVAILABLE, OCCUPIED, RESERVED, MAINTENANCE, OUT_OF_SERVICE)
+          schema:
+            type: string
+            enum:
+              - AVAILABLE
+              - OCCUPIED
+              - RESERVED
+              - MAINTENANCE
+              - OUT_OF_SERVICE
+      responses:
+        '200':
+          description: Successfully retrieved matching spaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParkingSpaceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# =================================================================
+# COMPONENTS
+# =================================================================
+components:
+  schemas:
+    # -----------------------------------------------------------------
+    # PARKING SPACE RESPONSE
+    # -----------------------------------------------------------------
+    ParkingSpaceResponse:
+      type: object
+      properties:
+        spaceId:
+          type: integer
+          format: int64
+          description: Unique identifier of the parking space
+          example: 1
+        lotId:
+          type: integer
+          format: int64
+          description: ID of the parking lot this space belongs to
+          example: 1
+        spaceNumber:
+          type: string
+          description: Space identification number (e.g., A-01, B-15)
+          example: "A-01"
+        level:
+          type: integer
+          description: Floor level (0 = ground, negative = underground)
+          example: 0
+        section:
+          type: string
+          nullable: true
+          description: Section or zone identifier
+          example: "North"
+        type:
+          type: string
+          description: Type of parking space
+          enum:
+            - STANDARD
+            - HANDICAPPED
+            - ELECTRIC
+            - VIP
+            - COMPACT
+            - OVERSIZED
+          example: "STANDARD"
+        status:
+          type: string
+          description: Current status of the parking space
+          enum:
+            - AVAILABLE
+            - OCCUPIED
+            - RESERVED
+            - MAINTENANCE
+            - OUT_OF_SERVICE
+          example: "AVAILABLE"
+        hasCharger:
+          type: boolean
+          description: Whether the space has an EV charger
+          example: false
+        chargerType:
+          type: string
+          nullable: true
+          description: Type of EV charger (if available)
+          example: "Type 2"
+        lengthCm:
+          type: integer
+          nullable: true
+          description: Length of the space in centimeters
+          example: 500
+        widthCm:
+          type: integer
+          nullable: true
+          description: Width of the space in centimeters
+          example: 250
+        hourlyRateOverride:
+          type: number
+          format: double
+          nullable: true
+          description: Override hourly rate for this space (if different from lot default)
+          example: 5.00
+        dailyRateOverride:
+          type: number
+          format: double
+          nullable: true
+          description: Override daily rate for this space (if different from lot default)
+          example: 40.00
+        lastOccupiedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of when the space was last occupied
+          example: "2026-01-11T12:00:00Z"
+
+    # -----------------------------------------------------------------
+    # ERROR RESPONSE
+    # -----------------------------------------------------------------
+    ApiError:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: When the error occurred
+        status:
+          type: integer
+          description: HTTP status code
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Error message
+        path:
+          type: string
+          description: Request path
+
+  # -----------------------------------------------------------------
+  # COMMON RESPONSES
+  # -----------------------------------------------------------------
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+

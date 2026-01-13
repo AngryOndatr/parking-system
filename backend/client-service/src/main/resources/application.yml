@@ -11,7 +11,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none  # Schema is managed by Flyway in api-gateway
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
@@ -36,9 +36,10 @@ eureka:
     lease-expiration-duration-in-seconds: 30
 
 # JWT Configuration (must match API Gateway)
+# JWT Configuration (must match API Gateway)
 security:
   jwt:
-    secret: ${JWT_SECRET:ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789}
+    secret: ${JWT_SECRET:ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction}
 
 # Actuator Configuration
 management:

@@ -3,10 +3,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.8</version>
-		<relativePath/> <!-- lookup parent from a repository -->
+		<groupId>com.parking</groupId>
+		<artifactId>parking-system</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 	<groupId>com.parking</groupId>
 	<artifactId>api-gateway</artifactId>
@@ -84,68 +84,52 @@
 		</dependency>
 
 		<!-- Monitoring -->
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-actuator</artifactId>
-				<exclusions>
-					<exclusion>
-						<groupId>org.springframework.boot</groupId>
-						<artifactId>spring-boot-starter-data-redis</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.springframework.boot</groupId>
-						<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>io.lettuce</groupId>
-						<artifactId>lettuce-core</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-actuator</artifactId>
+					<exclusions>
+						<exclusion>
+							<groupId>org.springframework.boot</groupId>
+							<artifactId>spring-boot-starter-data-redis</artifactId>
+						</exclusion>
+						<exclusion>
+							<groupId>org.springframework.boot</groupId>
+							<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+						</exclusion>
+						<exclusion>
+							<groupId>io.lettuce</groupId>
+							<artifactId>lettuce-core</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
 
-			<!-- Micrometer Prometheus for metrics -->
-			<dependency>
-				<groupId>io.micrometer</groupId>
-				<artifactId>micrometer-registry-prometheus</artifactId>
-				<scope>runtime</scope>
-			</dependency>
 
-			<!-- Caffeine Cache for LoadBalancer (Production recommendation) -->
-			<dependency>
-				<groupId>com.github.ben-manes.caffeine</groupId>
-				<artifactId>caffeine</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-cache</artifactId>
-			</dependency>
+				<!-- Caffeine Cache for LoadBalancer (Production recommendation) -->
+				<dependency>
+					<groupId>com.github.ben-manes.caffeine</groupId>
+					<artifactId>caffeine</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-cache</artifactId>
+				</dependency>
 
-			<!-- Micrometer Tracing with OpenTelemetry -->
-			<dependency>
-				<groupId>io.micrometer</groupId>
-				<artifactId>micrometer-tracing-bridge-otel</artifactId>
-			</dependency>
+				<!-- Tracing and OTLP exporter declared later in file to avoid duplicates -->
 
-			<!-- OpenTelemetry Exporter for OTLP (HTTP) -->
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-exporter-otlp</artifactId>
-			</dependency>
+				<!-- Lombok -->
+				<dependency>
+					<groupId>org.projectlombok</groupId>
+					<artifactId>lombok</artifactId>
+					<optional>true</optional>
+				</dependency>
 
-			<!-- Lombok -->
-			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<optional>true</optional>
-			</dependency>
-
-			<!-- Testing -->
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-test</artifactId>
-				<scope>test</scope>
-			</dependency>
-			<!-- 
+				<!-- Testing -->
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-test</artifactId>
+					<scope>test</scope>
+				</dependency>
+			<!--
 			<dependency>
 				<groupId>org.springframework.security</groupId>
 				<artifactId>spring-security-test</artifactId>
@@ -214,30 +198,16 @@
 			<artifactId>opentelemetry-instrumentation-annotations</artifactId>
 		</dependency>
 
-		<!-- OpenTelemetry propagators -->
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
-		</dependency>
+		<!-- OpenTelemetry dependencies are declared above in the monitoring block to avoid duplicates -->
 
-		<!-- OpenTelemetry OTLP Exporter -->
+		<!-- In-memory DB for tests -->
 		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporter-otlp</artifactId>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 
-		<!-- Micrometer for metrics -->
-		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-registry-prometheus</artifactId>
-		</dependency>
-
-		<!-- OpenTelemetry Micrometer bridge -->
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
-		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -249,22 +219,7 @@
 				<scope>import</scope>
 			</dependency>
 			
-			<!-- OpenTelemetry BOM -->
-			<dependency>
-				<groupId>io.opentelemetry.instrumentation</groupId>
-				<artifactId>opentelemetry-instrumentation-bom</artifactId>
-				<version>2.9.0</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			
-			<dependency>
-				<groupId>io.opentelemetry</groupId>
-				<artifactId>opentelemetry-bom</artifactId>
-				<version>1.43.0</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+			<!-- OpenTelemetry BOMs are centralized in the root dependencyManagement -->
 		</dependencies>
 	</dependencyManagement>
 

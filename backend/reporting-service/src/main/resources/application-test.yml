@@ -1,0 +1,37 @@
+# Test profile configuration for Reporting Service
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  h2:
+    console:
+      enabled: true
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+# Disable Eureka for tests
+eureka:
+  client:
+    enabled: false
+
+# Logging for tests
+logging:
+  level:
+    com.parking.reporting_service: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.test: INFO
+
