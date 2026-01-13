@@ -29,6 +29,12 @@
 - **check-system.ps1** - Проверка статуса всех сервисов
 - **start-full-system.ps1** - Запуск полной системы со всеми сервисами
 
+### Тестовые скрипты
+
+- **test-proxy.ps1** - 🧪 **API GATEWAY PROXY TESTS** - smoke tests для всех proxy endpoints
+- **test-proxy.sh** - 🧪 Bash версия proxy smoke tests (Linux/Mac)
+- **test-login.html** - 🌐 Интерактивный веб-тестер API с UI
+
 ### Интерактивные инструменты
 
 - **test-login.html** - 🌐 **ИНТЕРАКТИВНЫЙ ТЕСТЕР** всех API эндпойнтов (веб-интерфейс)
@@ -171,6 +177,68 @@ docker logs api-gateway
 # Проверка маршрутов
 curl http://localhost:8086/actuator/gateway/routes
 ```
+
+---
+
+## 🧪 Тестирование API Gateway Proxy
+
+### Автоматические Smoke Tests
+
+Для быстрой проверки всех proxy endpoints используйте:
+
+**PowerShell (Windows):**
+```powershell
+.\test-proxy.ps1
+```
+
+**Bash (Linux/Mac):**
+```bash
+chmod +x test-proxy.sh
+./test-proxy.sh
+```
+
+**Что тестируется:**
+- ✅ Management Service proxy (4 endpoints)
+  - GET /api/management/spots/available
+  - GET /api/management/spots/available/count
+  - GET /api/management/spots
+  - GET /api/management/spots/search
+- ✅ Reporting Service proxy (5 endpoints)
+  - POST /api/reporting/log
+  - GET /api/reporting/logs (with various filters)
+- ✅ Client Service proxy (2 endpoints)
+  - GET /api/clients
+  - GET /api/vehicles
+
+**Вывод:**
+```
+🧪 API Gateway Proxy Smoke Tests
+============================================================
+🔐 Step 1: Authenticating...
+✅ Authentication successful
+
+📦 Step 2: Testing Management Service Proxy
+✅ Management Service Results: 4 passed, 0 failed
+
+📊 Step 3: Testing Reporting Service Proxy
+✅ Reporting Service Results: 5 passed, 0 failed
+
+👥 Step 4: Testing Client Service Proxy
+✅ Client Service Results: 2 passed, 0 failed
+
+📋 Test Summary
+Total: 11/11 passed
+
+✅ All proxy tests passed!
+```
+
+### Ручное тестирование
+
+Примеры curl и PowerShell команд для всех endpoints:
+
+📖 **См.:** [API_GATEWAY_PROXY_EXAMPLES.md](../docs/API_GATEWAY_PROXY_EXAMPLES.md)
+
+---
 
 ### Полная перезагрузка
 
