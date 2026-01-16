@@ -5,6 +5,20 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 🆕 Latest Updates
 
+### 2026-01-16 - Phase 2: OpenAPI Documentation for Billing & Gate Control (Issue #26) ✅
+
+✅ **API Contracts - Billing & Gate Control Services** (Issue #26)
+- ✅ OpenAPI 3.0.3 specification for Billing Service (3 endpoints)
+- ✅ OpenAPI 3.0.3 specification for Gate Control Service (3 endpoints)
+- ✅ Complete API contracts documentation created (`docs/api-contracts.md`)
+- ✅ Request/response examples for all endpoints
+- ✅ Error handling documentation with all status codes
+- ✅ PowerShell and curl testing examples
+- ✅ Swagger UI configuration ready (contract-first approach)
+- 📖 **API Contracts:** [docs/api-contracts.md](./docs/api-contracts.md)
+- 📖 **Billing Service OpenAPI:** [backend/billing-service/src/main/resources/openapi.yaml](./backend/billing-service/src/main/resources/openapi.yaml)
+- 📖 **Gate Control OpenAPI:** [backend/gate-control-service/src/main/resources/openapi.yaml](./backend/gate-control-service/src/main/resources/openapi.yaml)
+
 ### 2026-01-16 - Phase 2: Extended PARKING_EVENTS & PAYMENTS Tables (Issue #25) ✅
 
 ✅ **Database - PARKING_EVENTS & PAYMENTS Extended** (Issue #25)

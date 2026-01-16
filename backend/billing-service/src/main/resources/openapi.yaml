@@ -1,0 +1,565 @@
+openapi: 3.0.3
+info:
+  title: Parking Billing Service API
+  description: |
+    API for calculating parking fees and processing payments.
+    Integrates with parking events, tariffs, and payment systems.
+  version: 1.0.0
+  contact:
+    name: Parking System Team
+    email: support@parkingsystem.com
+
+servers:
+  - url: http://localhost:8082
+    description: Billing Service Development Server
+  - url: http://billing-service:8082
+    description: Billing Service Docker Network
+
+tags:
+  - name: Billing
+    description: Parking fee calculation and payment processing
+    x-interface-name: BillingApi
+
+paths:
+  # =================================================================
+  # CALCULATE PARKING FEE
+  # =================================================================
+  /api/v1/billing/calculate:
+    post:
+      tags:
+        - Billing
+      summary: Calculate parking fee for a parking event
+      description: |
+        Calculates the total parking fee based on:
+        - Entry and exit time
+        - Applicable tariff (ONE_TIME, DAILY, NIGHT, VIP)
+        - Subscription discounts (if applicable)
+        - Vehicle type considerations
+      operationId: calculateFee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeeCalculationRequest'
+            examples:
+              standardParking:
+                summary: Standard parking (2 hours)
+                value:
+                  parkingEventId: 12345
+                  entryTime: "2026-01-16T10:00:00Z"
+                  exitTime: "2026-01-16T12:00:00Z"
+                  tariffType: "ONE_TIME"
+                  isSubscriber: false
+              subscriberParking:
+                summary: Subscriber with discount
+                value:
+                  parkingEventId: 12346
+                  entryTime: "2026-01-16T08:00:00Z"
+                  exitTime: "2026-01-16T18:00:00Z"
+                  tariffType: "DAILY"
+                  isSubscriber: true
+                  subscriptionId: 789
+      responses:
+        '200':
+          description: Fee calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeCalculationResponse'
+              examples:
+                standardFee:
+                  summary: Standard fee calculation
+                  value:
+                    parkingEventId: 12345
+                    durationMinutes: 120
+                    baseFee: 100.00
+                    discount: 0.00
+                    totalFee: 100.00
+                    tariffApplied: "ONE_TIME"
+                    calculatedAt: "2026-01-16T12:00:00Z"
+                subscriberDiscount:
+                  summary: With subscriber discount (20% off)
+                  value:
+                    parkingEventId: 12346
+                    durationMinutes: 600
+                    baseFee: 500.00
+                    discount: 100.00
+                    totalFee: 400.00
+                    tariffApplied: "DAILY"
+                    calculatedAt: "2026-01-16T18:00:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Parking event or tariff not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T12:00:00Z"
+                status: 404
+                error: "Not Found"
+                message: "Parking event with ID 12345 not found"
+                path: "/api/v1/billing/calculate"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # =================================================================
+  # PROCESS PAYMENT
+  # =================================================================
+  /api/v1/billing/pay:
+    post:
+      tags:
+        - Billing
+      summary: Process payment for parking event
+      description: |
+        Creates a payment record and processes the payment transaction.
+        Supports multiple payment methods: CARD, CASH, MOBILE_PAY.
+        Updates parking event payment status.
+      operationId: processPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+            examples:
+              cardPayment:
+                summary: Card payment
+                value:
+                  parkingEventId: 12345
+                  amount: 100.00
+                  paymentMethod: "CARD"
+                  transactionId: "TXN-20260116-001"
+                  operatorId: null
+              cashPayment:
+                summary: Cash payment with operator
+                value:
+                  parkingEventId: 12346
+                  amount: 400.00
+                  paymentMethod: "CASH"
+                  transactionId: null
+                  operatorId: 5
+      responses:
+        '201':
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+              examples:
+                success:
+                  summary: Successful payment
+                  value:
+                    paymentId: 9876
+                    parkingEventId: 12345
+                    amount: 100.00
+                    status: "COMPLETED"
+                    paymentMethod: "CARD"
+                    transactionId: "TXN-20260116-001"
+                    paymentTime: "2026-01-16T12:05:00Z"
+        '400':
+          description: Invalid payment request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T12:05:00Z"
+                status: 400
+                error: "Bad Request"
+                message: "Amount must be greater than zero"
+                path: "/api/v1/billing/pay"
+        '404':
+          description: Parking event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Payment already exists for this parking event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T12:05:00Z"
+                status: 409
+                error: "Conflict"
+                message: "A completed payment already exists for parking event 12345"
+                path: "/api/v1/billing/pay"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # =================================================================
+  # GET PAYMENT STATUS
+  # =================================================================
+  /api/v1/billing/status:
+    get:
+      tags:
+        - Billing
+      summary: Get payment status for parking event
+      description: |
+        Retrieves payment status and details for a given parking event.
+        Returns all payment attempts (including failed/refunded).
+      operationId: getPaymentStatus
+      parameters:
+        - name: parkingEventId
+          in: query
+          required: true
+          description: ID of the parking event
+          schema:
+            type: integer
+            format: int64
+          example: 12345
+      responses:
+        '200':
+          description: Payment status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatusResponse'
+              examples:
+                paid:
+                  summary: Paid parking event
+                  value:
+                    parkingEventId: 12345
+                    isPaid: true
+                    payments:
+                      - paymentId: 9876
+                        amount: 100.00
+                        status: "COMPLETED"
+                        paymentMethod: "CARD"
+                        paymentTime: "2026-01-16T12:05:00Z"
+                unpaid:
+                  summary: Unpaid parking event
+                  value:
+                    parkingEventId: 12346
+                    isPaid: false
+                    payments: []
+                multipleAttempts:
+                  summary: Multiple payment attempts
+                  value:
+                    parkingEventId: 12347
+                    isPaid: true
+                    payments:
+                      - paymentId: 9877
+                        amount: 150.00
+                        status: "FAILED"
+                        paymentMethod: "CARD"
+                        paymentTime: "2026-01-16T13:00:00Z"
+                      - paymentId: 9878
+                        amount: 150.00
+                        status: "COMPLETED"
+                        paymentMethod: "CASH"
+                        paymentTime: "2026-01-16T13:10:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Parking event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# =================================================================
+# COMPONENTS
+# =================================================================
+components:
+  schemas:
+    # =================================================================
+    # REQUEST MODELS
+    # =================================================================
+    FeeCalculationRequest:
+      type: object
+      required:
+        - parkingEventId
+        - entryTime
+        - exitTime
+        - tariffType
+        - isSubscriber
+      properties:
+        parkingEventId:
+          type: integer
+          format: int64
+          description: ID of the parking event
+          example: 12345
+        entryTime:
+          type: string
+          format: date-time
+          description: Entry timestamp (ISO 8601)
+          example: "2026-01-16T10:00:00Z"
+        exitTime:
+          type: string
+          format: date-time
+          description: Exit timestamp (ISO 8601)
+          example: "2026-01-16T12:00:00Z"
+        tariffType:
+          type: string
+          enum: [ONE_TIME, DAILY, NIGHT, VIP]
+          description: Applicable tariff type
+          example: "ONE_TIME"
+        isSubscriber:
+          type: boolean
+          description: Whether the vehicle has an active subscription
+          example: false
+        subscriptionId:
+          type: integer
+          format: int64
+          description: Subscription ID (if isSubscriber is true)
+          example: 789
+          nullable: true
+
+    PaymentRequest:
+      type: object
+      required:
+        - parkingEventId
+        - amount
+        - paymentMethod
+      properties:
+        parkingEventId:
+          type: integer
+          format: int64
+          description: ID of the parking event
+          example: 12345
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          description: Payment amount
+          example: 100.00
+        paymentMethod:
+          type: string
+          enum: [CARD, CASH, MOBILE_PAY]
+          description: Payment method
+          example: "CARD"
+        transactionId:
+          type: string
+          maxLength: 100
+          description: External payment system transaction ID (for CARD/MOBILE_PAY)
+          example: "TXN-20260116-001"
+          nullable: true
+        operatorId:
+          type: integer
+          format: int64
+          description: Operator ID who processed the payment (for CASH/manual payments)
+          example: 5
+          nullable: true
+
+    # =================================================================
+    # RESPONSE MODELS
+    # =================================================================
+    FeeCalculationResponse:
+      type: object
+      required:
+        - parkingEventId
+        - durationMinutes
+        - baseFee
+        - discount
+        - totalFee
+        - tariffApplied
+        - calculatedAt
+      properties:
+        parkingEventId:
+          type: integer
+          format: int64
+          description: ID of the parking event
+          example: 12345
+        durationMinutes:
+          type: integer
+          description: Parking duration in minutes
+          example: 120
+        baseFee:
+          type: number
+          format: double
+          description: Base fee before discounts
+          example: 100.00
+        discount:
+          type: number
+          format: double
+          description: Discount amount applied
+          example: 0.00
+        totalFee:
+          type: number
+          format: double
+          description: Final fee to be paid
+          example: 100.00
+        tariffApplied:
+          type: string
+          description: Tariff type used for calculation
+          example: "ONE_TIME"
+        calculatedAt:
+          type: string
+          format: date-time
+          description: Calculation timestamp
+          example: "2026-01-16T12:00:00Z"
+
+    PaymentResponse:
+      type: object
+      required:
+        - paymentId
+        - parkingEventId
+        - amount
+        - status
+        - paymentMethod
+        - paymentTime
+      properties:
+        paymentId:
+          type: integer
+          format: int64
+          description: ID of the created payment record
+          example: 9876
+        parkingEventId:
+          type: integer
+          format: int64
+          description: ID of the parking event
+          example: 12345
+        amount:
+          type: number
+          format: double
+          description: Payment amount
+          example: 100.00
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REFUNDED]
+          description: Payment status
+          example: "COMPLETED"
+        paymentMethod:
+          type: string
+          enum: [CARD, CASH, MOBILE_PAY]
+          description: Payment method used
+          example: "CARD"
+        transactionId:
+          type: string
+          description: External transaction ID
+          example: "TXN-20260116-001"
+          nullable: true
+        paymentTime:
+          type: string
+          format: date-time
+          description: Payment timestamp
+          example: "2026-01-16T12:05:00Z"
+
+    PaymentStatusResponse:
+      type: object
+      required:
+        - parkingEventId
+        - isPaid
+        - payments
+      properties:
+        parkingEventId:
+          type: integer
+          format: int64
+          description: ID of the parking event
+          example: 12345
+        isPaid:
+          type: boolean
+          description: Whether the parking event has been paid
+          example: true
+        payments:
+          type: array
+          description: List of all payment attempts (chronological order)
+          items:
+            $ref: '#/components/schemas/PaymentInfo'
+
+    PaymentInfo:
+      type: object
+      required:
+        - paymentId
+        - amount
+        - status
+        - paymentMethod
+        - paymentTime
+      properties:
+        paymentId:
+          type: integer
+          format: int64
+          example: 9876
+        amount:
+          type: number
+          format: double
+          example: 100.00
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REFUNDED]
+          example: "COMPLETED"
+        paymentMethod:
+          type: string
+          enum: [CARD, CASH, MOBILE_PAY]
+          example: "CARD"
+        transactionId:
+          type: string
+          nullable: true
+          example: "TXN-20260116-001"
+        paymentTime:
+          type: string
+          format: date-time
+          example: "2026-01-16T12:05:00Z"
+
+    # =================================================================
+    # ERROR MODELS
+    # =================================================================
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2026-01-16T12:00:00Z"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        error:
+          type: string
+          description: Error type
+          example: "Bad Request"
+        message:
+          type: string
+          description: Error message
+          example: "Invalid request parameters"
+        path:
+          type: string
+          description: Request path where error occurred
+          example: "/api/v1/billing/calculate"
+
+  # =================================================================
+  # REUSABLE RESPONSES
+  # =================================================================
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            timestamp: "2026-01-16T12:00:00Z"
+            status: 400
+            error: "Bad Request"
+            message: "Invalid request parameters"
+            path: "/api/v1/billing/calculate"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            timestamp: "2026-01-16T12:00:00Z"
+            status: 500
+            error: "Internal Server Error"
+            message: "An unexpected error occurred"
+            path: "/api/v1/billing/calculate"
+
