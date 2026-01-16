@@ -24,7 +24,19 @@ Examples:
 ## Current Schema
 
 The baseline version is **V0** (existing schema).
-New migrations should start from **V1**.
+Current latest migration: **V7** (tariffs table, 2026-01-16).
+
+### Applied Migrations:
+- V0: Baseline
+- V1: Initial schema (users, clients, vehicles, subscriptions, parking_events, payments, logs)
+- V2: Parking lots
+- V3: Parking spaces
+- V4: Bookings
+- V5: Test data for parking spaces/lots
+- V6: Extended logs table (service, meta columns)
+- V7: Tariffs table with seed data (ONE_TIME, DAILY, NIGHT, VIP)
+
+For complete migration history, see [database/README.md](../../../../database/README.md).
 
 ## Useful Commands
 

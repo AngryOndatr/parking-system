@@ -78,10 +78,10 @@ database/migrations/
 
 ```sql
 ❌ 1. parking_lots        # Информация о парковках
-❌ 2. parking_spaces      # Парковочные места
-❌ 3. bookings            # Бронирования
+✅ 2. parking_spaces      # Парковочные места (V3)
+✅ 3. bookings            # Бронирования (V4)
 ❌ 4. parking_sessions    # Активные сессии парковки
-❌ 5. tariffs             # Тарифные планы
+✅ 5. tariffs             # Тарифные планы (V7 - 2026-01-16)
 ❌ 6. access_logs         # Логи доступа к воротам
 ❌ 7. operators           # Операторы системы
 ```
@@ -94,7 +94,7 @@ database/migrations/
 |---------------|-----------------|-------------|
 | ❌ parking_sessions | ✅ parking_events | По сути то же самое! |
 | ❌ access_logs | ✅ parking_events | События въезда/выезда |
-| ❌ tariffs | ✅ subscriptions | Подписки = тарифы |
+| ✅ tariffs | ✅ tariffs (V7) | Реализовано 2026-01-16 |
 | ❌ operators | ✅ users (role: OPERATOR) | Уже есть роль! |
 
 ### Что РЕАЛЬНО нужно добавить:
@@ -185,8 +185,10 @@ database/migrations/
 ├── V1__initial_schema.sql              # Все текущие таблицы
 ├── V2__add_parking_lots_spaces.sql     # Новые таблицы для Parking Service
 ├── V3__add_bookings.sql                # Таблицы для Booking Service
-├── V4__add_tariffs.sql                 # Тарифы для Billing Service
-└── V5__performance_indexes.sql         # Оптимизация
+├── V4__add_tariffs.sql                 # Тарифы для Billing Service (устарело, см. V7)
+├── V5__performance_indexes.sql         # Оптимизация
+├── V6__extend_logs_table.sql           # Расширение логов (service, meta)
+└── V7__create_tariffs_table.sql        # Тарифы (реализовано 2026-01-16)
 ```
 
 ### Подход 2: Database per Service (сложнее, правильнее) 🎓
@@ -212,10 +214,7 @@ booking_service_db:
 └── bookings
 
 billing_service_db:
-└── subscriptions, tariffs
-
-payment_service_db:
-└── payments
+└── subscriptions, payments, tariffs
 ```
 
 **Каждая БД имеет свой Flyway:**

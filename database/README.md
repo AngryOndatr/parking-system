@@ -13,18 +13,21 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 | Version | File | Description | Tables | Status |
 |---------|------|-------------|--------|--------|
 | V0 | `V0__baseline.sql` | Baseline migration | N/A | ✅ |
-| V1 | `V1__initial_schema.sql` | Initial schema | users, user_backup_codes, clients, vehicles, subscriptions, parking_events, payments, logs | ✅ |
+| V1 | `V1__initial_schema.sql` | Initial schema with security | users, user_backup_codes, clients, vehicles, subscriptions, parking_events, payments, logs | ✅ |
 | V2 | `V2__add_parking_lots.sql` | Parking facilities management | parking_lots | ✅ |
 | V3 | `V3__add_parking_spaces.sql` | Individual parking spaces | parking_spaces | ✅ |
 | V4 | `V4__add_bookings.sql` | Reservation system | bookings | ✅ |
 | V5 | `V5__insert_test_parking_data.sql` | Test data for development | N/A (inserts) | ✅ |
 | V6 | `V6__extend_logs_table.sql` | Extend logs table | logs (service, meta columns) | ✅ |
+| V7 | `V7__create_tariffs_table.sql` | Tariffs and pricing | tariffs | ✅ |
 
-**Latest Migration (V6 - 2026-01-13):**
-- Added `service` column to logs table (VARCHAR(100)) - tracks originating microservice
-- Added `meta` column to logs table (TEXT/JSON) - stores additional metadata
-- Added indexes on `service` and `log_level` for query performance
-- Required for Reporting Service (Issue #19)
+**Latest Migration (V7 - 2026-01-16):**
+- Added `tariffs` table with pricing structure (hourly/daily rates)
+- Seed data: ONE_TIME, DAILY, NIGHT, VIP tariffs
+- Index on (tariff_type, is_active) for fast lookups
+- Required for Phase 2 / Issue #24
+
+**Note:** V1 already includes comprehensive user security features (2FA, brute-force protection, soft delete, etc.). The legacy file `users_security_migration.sql` was removed as duplicate (2026-01-16).
 
 ### Test Data (V5)
 
@@ -48,7 +51,7 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 - 2 RESERVED
 - 2 MAINTENANCE/OUT_OF_SERVICE
 
-### Total Tables: 13
+### Total Tables: 14
 
 **Core Tables:**
 - `users` - User authentication and security (38 fields)

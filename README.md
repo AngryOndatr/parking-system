@@ -5,6 +5,18 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 🆕 Latest Updates
 
+### 2026-01-16 - Phase 2: Tariffs Table Migration (Issue #24) ✅
+
+✅ **Database - TARIFFS Table Complete** (Issue #24)
+- ✅ Flyway migration V7 created and applied
+- ✅ Tariffs table with pricing structure (hourly/daily rates)
+- ✅ 4 base tariff types seeded: ONE_TIME, DAILY, NIGHT, VIP
+- ✅ Index on (tariff_type, is_active) for performance
+- ✅ Idempotent migration with proper constraints
+- ✅ Database cleanup (removed duplicate users_security_migration.sql)
+- 📖 **Migration Details**: [database/README.md](./database/README.md)
+- 📖 **Session Log**: [SESSION_DEVELOPMENT_2026-01-16.md](./docs/sessions/SESSION_DEVELOPMENT_2026-01-16.md)
+
 ### 2026-01-13 - Phase 1 Complete: Tests & Documentation (Issue #22) ✅
 
 ✅ **Tests & Documentation - Phase 1 Complete** (Issue #22)
