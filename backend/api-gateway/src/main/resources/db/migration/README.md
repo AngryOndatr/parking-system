@@ -24,7 +24,7 @@ Examples:
 ## Current Schema
 
 The baseline version is **V0** (existing schema).
-Current latest migration: **V7** (tariffs table, 2026-01-16).
+Current latest migration: **V8** (parking_events and payments extended, 2026-01-16).
 
 ### Applied Migrations:
 - V0: Baseline
@@ -35,6 +35,7 @@ Current latest migration: **V7** (tariffs table, 2026-01-16).
 - V5: Test data for parking spaces/lots
 - V6: Extended logs table (service, meta columns)
 - V7: Tariffs table with seed data (ONE_TIME, DAILY, NIGHT, VIP)
+- V8: Extended parking_events and payments (license_plate, entry/exit methods, payment status, transaction tracking)
 
 For complete migration history, see [database/README.md](../../../../database/README.md).
 

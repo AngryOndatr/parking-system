@@ -20,12 +20,16 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 | V5 | `V5__insert_test_parking_data.sql` | Test data for development | N/A (inserts) | ✅ |
 | V6 | `V6__extend_logs_table.sql` | Extend logs table | logs (service, meta columns) | ✅ |
 | V7 | `V7__create_tariffs_table.sql` | Tariffs and pricing | tariffs | ✅ |
+| V8 | `V8__extend_parking_events_and_payments.sql` | Extend parking events and payments | parking_events, payments (extended) | ✅ |
 
-**Latest Migration (V7 - 2026-01-16):**
-- Added `tariffs` table with pricing structure (hourly/daily rates)
-- Seed data: ONE_TIME, DAILY, NIGHT, VIP tariffs
-- Index on (tariff_type, is_active) for fast lookups
-- Required for Phase 2 / Issue #24
+**Latest Migration (V8 - 2026-01-16):**
+- Extended `parking_events` table: added license_plate, entry_method, exit_method, is_subscriber, created_at
+- Extended `payments` table: added status, transaction_id, operator_id, created_at
+- Added CHECK constraints for entry/exit methods, payment methods, and status values
+- Added indexes for performance: ticket_code, entry_time, license_plate, transaction_id
+- Added FK constraints with proper ON DELETE behavior
+- Added UNIQUE constraint: only one COMPLETED payment per parking_event_id
+- Required for Phase 2 / Issue #25
 
 **Note:** V1 already includes comprehensive user security features (2FA, brute-force protection, soft delete, etc.). The legacy file `users_security_migration.sql` was removed as duplicate (2026-01-16).
 

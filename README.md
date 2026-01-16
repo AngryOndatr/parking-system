@@ -5,6 +5,20 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 🆕 Latest Updates
 
+### 2026-01-16 - Phase 2: Extended PARKING_EVENTS & PAYMENTS Tables (Issue #25) ✅
+
+✅ **Database - PARKING_EVENTS & PAYMENTS Extended** (Issue #25)
+- ✅ Flyway migration V8 created and applied
+- ✅ PARKING_EVENTS extended: license_plate, entry_method, exit_method, is_subscriber, created_at
+- ✅ PAYMENTS extended: status, transaction_id, operator_id, created_at
+- ✅ CHECK constraints for entry/exit methods, payment methods, and status values
+- ✅ 9 new indexes for performance optimization
+- ✅ FK constraints with proper ON DELETE behavior (SET NULL, CASCADE)
+- ✅ Partial unique index: only one COMPLETED payment per parking event
+- ✅ Data migration: existing parking_events backfilled with license_plate
+- 📖 **Migration Details**: [database/README.md](./database/README.md)
+- 📖 **Verification Script**: [devops/verify-v8-migration.ps1](./devops/verify-v8-migration.ps1)
+
 ### 2026-01-16 - Phase 2: Tariffs Table Migration (Issue #24) ✅
 
 ✅ **Database - TARIFFS Table Complete** (Issue #24)
