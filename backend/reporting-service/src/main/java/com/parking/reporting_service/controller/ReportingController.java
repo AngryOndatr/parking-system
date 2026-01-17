@@ -41,11 +41,26 @@ public class ReportingController implements ReportingApi {
             // Map DTO to domain
             LogDomain logDomain = logMapper.toDomain(logRequest);
 
+            if (logDomain == null) {
+                logger.error("❌ [REPORTING CONTROLLER] Mapper returned null domain");
+                throw new IllegalArgumentException("Failed to map log request to domain");
+            }
+
             // Create log entry
             LogDomain createdLog = reportingService.createLog(logDomain);
 
+            if (createdLog == null) {
+                logger.error("❌ [REPORTING CONTROLLER] Service returned null domain");
+                throw new RuntimeException("Service failed to create log entry");
+            }
+
             // Map domain back to response DTO
             LogResponse response = logMapper.toResponse(createdLog);
+
+            if (response == null) {
+                logger.error("❌ [REPORTING CONTROLLER] Mapper returned null response");
+                throw new RuntimeException("Failed to map domain to response");
+            }
 
             logger.info("✅ [REPORTING CONTROLLER] Log created successfully with ID: {}", response.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);

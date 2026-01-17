@@ -1,0 +1,44 @@
+# Test configuration for reporting-service
+# Overrides default application.yml settings for tests
+
+spring:
+  application:
+    name: reporting-service-test
+
+  # Configure in-memory H2 for @DataJpaTest and integration tests
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  cloud:
+    # Completely disable Spring Cloud in tests
+    discovery:
+      enabled: false
+    service-registry:
+      auto-registration:
+        enabled: false
+
+eureka:
+  client:
+    enabled: false
+    registerWithEureka: false
+    fetchRegistry: false
+  instance:
+    enabled: false
+
+# Disable security for tests
+management:
+  security:
+    enabled: false
+
+logging:
+  level:
+    com.parking.reporting_service: DEBUG
