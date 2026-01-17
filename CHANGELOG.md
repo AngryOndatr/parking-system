@@ -1,0 +1,282 @@
+# Changelog
+
+All notable changes to the Parking System project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [Unreleased]
+
+### In Progress
+- Phase 1: Subscription check endpoint (Client Service)
+- Phase 1: Parking space status update (Management Service)
+- Phase 2: Billing Service business logic implementation
+
+---
+
+## [0.3.0] - 2026-01-17
+
+### Added - Billing Service Entity Layer (Issue #31)
+- **Entity:** Tariff JPA entity with complete validation
+  - `@NotNull` constraints on required fields
+  - `@DecimalMin("0.0")` on rates
+  - Lombok annotations for boilerplate reduction
+  - `@PrePersist` for automatic timestamp management
+- **Repository:** TariffRepository with custom queries
+  - `findByTariffTypeAndIsActiveTrue(String)` - active tariff lookup
+  - `existsByTariffType(String)` - uniqueness check
+- **Tests:** Repository integration tests (`@DataJpaTest`)
+  - Test save and find by ID
+  - Test findByTariffTypeAndIsActiveTrue
+  - All tests passing (green)
+- **Build:** OpenAPI code generation configured
+  - billing-service: DTO generation enabled
+  - gate-control-service: DTO generation enabled
+  - Maven compilation successful
+
+### Fixed
+- Gate Control Service OpenAPI code generation issues
+- Maven compilation errors in billing-service
+
+---
+
+## [0.2.0] - 2026-01-16
+
+### Added - Phase 2: Database Extensions & API Contracts (Issues #24-26)
+
+#### Database - TARIFFS Table (Issue #24)
+- **Migration V7:** `V7__create_tariffs_table.sql`
+  - Table structure: id, tariff_type (UNIQUE), hourly_rate, daily_rate, description, is_active, timestamps
+  - Index: `idx_tariffs_type_active` on (tariff_type, is_active)
+  - Seed data: 4 base tariffs (ONE_TIME, DAILY, NIGHT, VIP)
+  - Idempotent migration with proper constraints
+- **Documentation:** Database README updated with tariffs schema
+- **Cleanup:** Removed duplicate `users_security_migration.sql`
+
+#### Database - Extended PARKING_EVENTS & PAYMENTS (Issue #25)
+- **Migration V8:** `V8__extend_parking_events_and_payments.sql`
+  - **PARKING_EVENTS extended:**
+    - `license_plate VARCHAR(20) NOT NULL`
+    - `entry_method VARCHAR(20) CHECK IN ('SCAN', 'MANUAL')`
+    - `exit_method VARCHAR(20) CHECK IN ('SCAN', 'MANUAL', 'AUTO')`
+    - `is_subscriber BOOLEAN DEFAULT FALSE`
+    - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+  - **PAYMENTS extended:**
+    - `status VARCHAR(20) DEFAULT 'COMPLETED' CHECK IN ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED')`
+    - `transaction_id VARCHAR(100) UNIQUE`
+    - `operator_id BIGINT FK to users ON DELETE SET NULL`
+    - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+  - **Indexes:** 9 new indexes for performance
+    - `idx_parking_events_ticket`, `idx_parking_events_entry_time`, `idx_parking_events_license`
+    - `idx_payments_parking_event`, `idx_payments_transaction`
+  - **Constraints:** Partial unique index - only one COMPLETED payment per parking event
+  - **Data Migration:** Existing parking_events backfilled with license_plate from vehicles table
+- **Verification:** PowerShell script `devops/verify-v8-migration.ps1`
+
+#### API Contracts - Billing & Gate Control (Issue #26)
+- **OpenAPI Specs:** Created OpenAPI 3.0.3 specifications
+  - `backend/billing-service/src/main/resources/openapi.yaml` (3 endpoints)
+  - `backend/gate-control-service/src/main/resources/openapi.yaml` (3 endpoints)
+- **Documentation:** Complete API contracts guide
+  - `docs/api-contracts.md` with 36+ code examples
+  - Request/response examples for all endpoints
+  - Error handling documentation (all status codes)
+  - PowerShell and curl testing examples
+- **Configuration:** Swagger UI ready (contract-first approach)
+
+### Changed
+- Database schema extended for Phase 2 business logic
+- OpenAPI code generation enabled in billing-service and gate-control-service
+
+---
+
+## [0.1.0] - 2026-01-13
+
+### Added - Phase 1: Tests, Documentation & Proxy Verification (Issues #21-22)
+
+#### API Gateway Proxy Verification (Issue #21)
+- **Scripts:** Cross-platform smoke test scripts
+  - `devops/test-proxy.ps1` (PowerShell, 269 lines)
+  - `devops/test-proxy.sh` (Bash, 270 lines)
+- **Tests:** 11 automated proxy tests across all services
+  - Management Service: 4 endpoint tests
+  - Reporting Service: 5 endpoint tests
+  - Client Service: 2 endpoint tests
+- **Verification:** JWT token forwarding tested and verified
+- **Documentation:**
+  - `docs/API_GATEWAY_PROXY_EXAMPLES.md` (36 code examples)
+  - `devops/README.md` updated with testing guide
+
+#### Tests & Documentation Complete (Issue #22)
+- **Tests:** Comprehensive test coverage (46+ test cases)
+  - Client Service: 20+ tests (unit + MockMvc integration)
+  - Management Service: 14+ tests (integration)
+  - Reporting Service: 12+ tests (unit + integration)
+  - Happy path + negative case coverage
+- **Documentation:** Service-level README files (1,371 lines total)
+  - `backend/client-service/README.md` (630 lines)
+  - `backend/management-service/README.md` (307 lines)
+  - `backend/reporting-service/README.md` (434 lines)
+- **Examples:** API examples for all endpoints (curl + PowerShell)
+- **Scripts:** Local test scripts operational
+- **Report:** `docs/reports/ISSUE_22_STATUS_REPORT.md`
+
+#### Reporting Service JWT Authentication (Issue #19)
+- **Endpoints:**
+  - `POST /api/reporting/log` - Create log entries (JWT protected)
+  - `GET /api/reporting/logs` - Retrieve logs with filters (JWT protected)
+- **Security:** JWT Authentication integrated
+  - `JwtAuthenticationFilter`, `JwtTokenProvider`, `SecurityConfig`
+  - Unified JWT secret across all microservices (768 bits, HS512 compliant)
+- **Dependencies:** Jackson JsonNullable support for OpenAPI models
+- **Tests:** Comprehensive test coverage
+
+### Fixed
+- JWT signature mismatch (unified secrets in docker-compose.yml)
+- JWT key too short (upgraded to 96 characters, 768 bits)
+- Jackson JsonNullable deserialization error (added jackson-databind-nullable module)
+
+---
+
+## [0.0.5] - 2026-01-12
+
+### Added - Phase 1: Backend CRUD Implementation (Issues #16-18)
+
+#### Client Service - Full CRUD (Issue #16)
+- **Endpoints:** Complete CRUD for Clients entity
+  - `POST /api/v1/clients` - Create client
+  - `GET /api/v1/clients` - List all clients
+  - `GET /api/v1/clients/{id}` - Get client by ID
+  - `PUT /api/v1/clients/{id}` - Update client
+  - `DELETE /api/v1/clients/{id}` - Delete client
+- **Design:** OpenAPI-first with generated interfaces
+- **Validation:** Comprehensive validation and error handling
+- **Tests:** Unit and integration tests
+- **Security:** JWT-protected endpoints via API Gateway
+
+#### Client Service - Vehicles Management (Issue #17)
+- **Endpoints:** Full CRUD for Vehicles linked to Clients
+  - `POST /api/v1/clients/{id}/vehicles` - Add vehicle to client
+  - `GET /api/v1/clients/{id}/vehicles` - List client's vehicles
+  - `GET /api/v1/clients/{id}/vehicles/{vehicleId}` - Get vehicle details
+  - `PUT /api/v1/clients/{id}/vehicles/{vehicleId}` - Update vehicle
+  - `DELETE /api/v1/clients/{id}/vehicles/{vehicleId}` - Remove vehicle
+- **Features:**
+  - License plate uniqueness enforcement
+  - Client-Vehicle relationship management
+- **Tests:** Comprehensive test coverage
+
+#### Management Service - Parking Spaces API (Issue #18)
+- **Endpoints:**
+  - `GET /api/v1/management/spots/available` - List available spaces
+  - `GET /api/v1/management/spots/available/count` - Count available spaces
+  - `GET /api/v1/management/spots/available/lot/{id}` - Available spaces by lot
+  - `GET /api/v1/management/spots/search` - Search with filters (type, status)
+- **Data:** Test data migration with 23 parking spaces
+- **Integration:** API Gateway proxy endpoints configured
+
+---
+
+## [0.0.4] - 2025-12-26
+
+### Added - Flyway Database Migrations
+- **Configuration:** Flyway integrated into API Gateway
+- **Migrations:** 5 migrations created (V1-V5)
+  - V1: Initial schema (users, roles, clients)
+  - V2: Parking lots table
+  - V3: Parking spaces table
+  - V4: Bookings table
+  - V5: Test data
+- **Documentation:**
+  - `database/README.md` - Comprehensive database documentation
+  - `docs/DEPLOYMENT_GUIDE.md` - Deployment guide with migration instructions
+- **Scripts:** Test scripts for migration verification
+
+---
+
+## [0.0.3] - 2025-12-25
+
+### Added - Infrastructure & Foundation (Phase 0 Complete)
+- **API Gateway:**
+  - JWT authentication and security features
+  - Route mapping and load balancing
+  - CORS handling
+  - Rate limiting and brute force protection
+- **Microservices:**
+  - Eureka Server for service discovery
+  - Client Service (basic structure)
+  - Management Service (basic structure)
+  - Reporting Service (basic structure)
+  - Billing Service (basic structure)
+  - Gate Control Service (basic structure)
+- **Database:**
+  - PostgreSQL setup and configuration
+  - Redis for caching and sessions
+- **Observability:**
+  - Prometheus for metrics
+  - Grafana for dashboards
+  - Jaeger for distributed tracing
+  - OpenTelemetry integration
+- **Docker:**
+  - docker-compose.yml for all services
+  - docker-compose.infrastructure.yml for infrastructure
+  - docker-compose.services.yml for microservices
+  - docker-compose.observability.yml for monitoring
+- **Security:**
+  - BCrypt password hashing
+  - JWT token generation and validation
+  - Role-based access control (ADMIN, OPERATOR, USER)
+
+### Documentation
+- `docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md` - Complete development log
+- `docs/SECURITY_ARCHITECTURE.md` - Security architecture documentation
+- `docs/OBSERVABILITY_SETUP.md` - Observability setup guide
+- `devops/README.md` - DevOps scripts documentation
+
+---
+
+## [0.0.2] - 2025-12-20
+
+### Added - Initial Setup
+- **Repository:** GitHub repository created
+- **Project Structure:**
+  - Backend services directory structure
+  - Frontend directory structure
+  - DevOps scripts directory
+  - Documentation directory
+- **Build Configuration:**
+  - Maven parent POM
+  - Service-level POMs
+  - Spring Boot dependencies
+- **GitHub:**
+  - GitHub Projects Kanban board setup
+  - Branch protection rules (main, develop)
+  - Issue templates
+
+---
+
+## [0.0.1] - 2025-12-15
+
+### Added - Project Initialization
+- **Planning:** Project roadmap defined
+- **Architecture:** Microservices architecture designed
+- **Database:** ER diagram created
+- **Documentation:** Initial README.md
+
+---
+
+## Legend
+
+- **Added:** New features
+- **Changed:** Changes in existing functionality
+- **Deprecated:** Soon-to-be removed features
+- **Removed:** Removed features
+- **Fixed:** Bug fixes
+- **Security:** Security improvements
+
+---
+
+**[View Current Status](./docs/PROJECT_PHASES.md)** | **[Session Logs](./docs/sessions/)** | **[Reports](./docs/reports/)**
+

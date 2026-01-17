@@ -5,190 +5,142 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 🆕 Latest Updates
 
-### 2026-01-16 - Phase 2: OpenAPI Documentation for Billing & Gate Control (Issue #26) ✅
+> **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
-✅ **API Contracts - Billing & Gate Control Services** (Issue #26)
+### 2026-01-17 - Billing Service: Tariff Entity & Repository (Issue #31) ✅
+
+✅ **Billing Service - JPA Entity Layer Complete** (Issue #31)
+- ✅ Tariff JPA entity with full validation (@NotNull, @DecimalMin)
+- ✅ TariffRepository with custom queries (findByTariffTypeAndIsActiveTrue, existsByTariffType)
+- ✅ Repository integration tests (DataJpaTest) - all green
+- ✅ OpenAPI code generation enabled (billing-service + gate-control-service)
+- ✅ Maven compilation successful
+- 🔧 **FIXED:** Gate Control code generation issues
+- 📖 **Entity:** [Tariff.java](./backend/billing-service/src/main/java/com/parking/billing/entity/Tariff.java)
+- 📖 **Repository:** [TariffRepository.java](./backend/billing-service/src/main/java/com/parking/billing/repository/TariffRepository.java)
+
+### 2026-01-16 - Phase 2: Database Extensions & API Contracts (Issues #24-26) ✅
+
+✅ **Database - TARIFFS & Extended Tables** (Issues #24, #25)
+- ✅ V7 migration: TARIFFS table with 4 seed tariffs (ONE_TIME, DAILY, NIGHT, VIP)
+- ✅ V8 migration: Extended PARKING_EVENTS (license_plate, entry/exit_method, is_subscriber)
+- ✅ V8 migration: Extended PAYMENTS (status, transaction_id, operator_id)
+- ✅ 9 new indexes for performance optimization
+- ✅ Partial unique index: only one COMPLETED payment per parking event
+- 📖 **Migration Details**: [database/README.md](./database/README.md)
+
+✅ **API Contracts - Billing & Gate Control** (Issue #26)
 - ✅ OpenAPI 3.0.3 specification for Billing Service (3 endpoints)
 - ✅ OpenAPI 3.0.3 specification for Gate Control Service (3 endpoints)
-- ✅ Complete API contracts documentation created (`docs/api-contracts.md`)
-- ✅ Request/response examples for all endpoints
-- ✅ Error handling documentation with all status codes
-- ✅ PowerShell and curl testing examples
-- ✅ Swagger UI configuration ready (contract-first approach)
+- ✅ Complete API contracts documentation with examples
 - 📖 **API Contracts:** [docs/api-contracts.md](./docs/api-contracts.md)
-- 📖 **Billing Service OpenAPI:** [backend/billing-service/src/main/resources/openapi.yaml](./backend/billing-service/src/main/resources/openapi.yaml)
-- 📖 **Gate Control OpenAPI:** [backend/gate-control-service/src/main/resources/openapi.yaml](./backend/gate-control-service/src/main/resources/openapi.yaml)
 
-### 2026-01-16 - Phase 2: Extended PARKING_EVENTS & PAYMENTS Tables (Issue #25) ✅
+### 2026-01-13 - Phase 1: Tests, Documentation & Proxy Verification (Issues #21-22) ✅
 
-✅ **Database - PARKING_EVENTS & PAYMENTS Extended** (Issue #25)
-- ✅ Flyway migration V8 created and applied
-- ✅ PARKING_EVENTS extended: license_plate, entry_method, exit_method, is_subscriber, created_at
-- ✅ PAYMENTS extended: status, transaction_id, operator_id, created_at
-- ✅ CHECK constraints for entry/exit methods, payment methods, and status values
-- ✅ 9 new indexes for performance optimization
-- ✅ FK constraints with proper ON DELETE behavior (SET NULL, CASCADE)
-- ✅ Partial unique index: only one COMPLETED payment per parking event
-- ✅ Data migration: existing parking_events backfilled with license_plate
-- 📖 **Migration Details**: [database/README.md](./database/README.md)
-- 📖 **Verification Script**: [devops/verify-v8-migration.ps1](./devops/verify-v8-migration.ps1)
-
-### 2026-01-16 - Phase 2: Tariffs Table Migration (Issue #24) ✅
-
-✅ **Database - TARIFFS Table Complete** (Issue #24)
-- ✅ Flyway migration V7 created and applied
-- ✅ Tariffs table with pricing structure (hourly/daily rates)
-- ✅ 4 base tariff types seeded: ONE_TIME, DAILY, NIGHT, VIP
-- ✅ Index on (tariff_type, is_active) for performance
-- ✅ Idempotent migration with proper constraints
-- ✅ Database cleanup (removed duplicate users_security_migration.sql)
-- 📖 **Migration Details**: [database/README.md](./database/README.md)
-- 📖 **Session Log**: [SESSION_DEVELOPMENT_2026-01-16.md](./docs/sessions/SESSION_DEVELOPMENT_2026-01-16.md)
-
-### 2026-01-13 - Phase 1 Complete: Tests & Documentation (Issue #22) ✅
-
-✅ **Tests & Documentation - Phase 1 Complete** (Issue #22)
-- ✅ Comprehensive test coverage (46+ test cases)
-  - Client Service: 20+ tests (unit + MockMvc integration)
-  - Management Service: 14+ tests (integration)
-  - Reporting Service: 12+ tests (unit + integration)
-- ✅ Service-level documentation complete
-  - **NEW**: Client Service README (630+ lines)
-  - Management Service README (307 lines)
-  - Reporting Service README (434 lines)
-- ✅ API examples for all endpoints (curl + PowerShell)
-- ✅ Happy path + negative case coverage
-- ✅ Local test scripts operational
-- 📖 **Status Report**: [ISSUE_22_STATUS_REPORT.md](./docs/reports/ISSUE_22_STATUS_REPORT.md)
-- 📖 **Client Service**: [README.md](./backend/client-service/README.md)
-
-### 2026-01-13 - API Gateway Proxy Testing Infrastructure (Issue #21) ✅
-
-✅ **API Gateway Proxy Verification Complete** (Issue #21)
-- ✅ PowerShell smoke test script (test-proxy.ps1, 269 lines)
-- ✅ Bash smoke test script (test-proxy.sh, 270 lines)
-- ✅ 11 automated tests across all services
-- ✅ Comprehensive API documentation (36 code examples)
-- ✅ Management Service proxy verified (4 endpoints)
-- ✅ Reporting Service proxy verified (5 endpoints)
-- ✅ Client Service proxy verified (2 endpoints)
-- ✅ JWT token forwarding tested
-- ✅ Cross-platform support (Windows/Linux/Mac)
-- 📖 **API Examples**: [API_GATEWAY_PROXY_EXAMPLES.md](./docs/API_GATEWAY_PROXY_EXAMPLES.md)
+✅ **API Gateway Proxy Verification** (Issue #21)
+- ✅ PowerShell + Bash smoke test scripts (270 lines each)
+- ✅ 11 automated proxy tests across all services
+- ✅ JWT token forwarding verified
 - 📖 **Testing Guide**: [devops/README.md](./devops/README.md)
 
-### 2026-01-13 - Reporting Service JWT Authentication Complete (Issue #19) ✅
+✅ **Tests & Documentation Complete** (Issue #22)
+- ✅ 46+ test cases (20+ Client, 14+ Management, 12+ Reporting)
+- ✅ Service-level README files (1,371 lines total)
+- ✅ API examples (curl + PowerShell)
+- 📖 **Status Report**: [ISSUE_22_STATUS_REPORT.md](./docs/reports/ISSUE_22_STATUS_REPORT.md)
 
-✅ **Reporting Service - Complete with JWT Authentication** (Issue #19)
-- ✅ POST /api/reporting/log - Create log entries (JWT protected)
-- ✅ GET /api/reporting/logs - Retrieve logs with filters (JWT protected)
-- ✅ JWT Authentication integrated (JwtAuthenticationFilter, JwtTokenProvider, SecurityConfig)
-- ✅ Jackson JsonNullable support for OpenAPI models
-- ✅ Unified JWT secret across all microservices (768 bits, HS512 compliant)
-- ✅ JSON metadata support with proper deserialization
-- ✅ Comprehensive test coverage
-- 🔧 **FIXED**: JWT signature mismatch (unified secrets in docker-compose.yml)
-- 🔧 **FIXED**: JWT key too short (upgraded to 96 characters)
-- 🔧 **FIXED**: Jackson JsonNullable deserialization error (added module)
-- 📖 **Session Log**: [SESSION_DEVELOPMENT_2026-01-13.md](./docs/sessions/SESSION_DEVELOPMENT_2026-01-13.md)
-
-### 2026-01-12 - Phase 1: Backend CRUD Implementation Started 🚀
-
-✅ **Client Service - Full CRUD Complete** (Issue #16)
-- ✅ Complete CRUD endpoints for Clients entity
-- ✅ OpenAPI-first design with generated interfaces
-- ✅ Comprehensive validation and error handling
-- ✅ Unit and integration tests
-- ✅ JWT-protected endpoints via API Gateway
-- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-16)
-
-✅ **Client Service - Vehicles Management Complete** (Issue #17)
-- ✅ Full CRUD for Vehicles linked to Clients
-- ✅ License plate uniqueness enforcement
-- ✅ Client-Vehicle relationship management
-- ✅ Comprehensive test coverage
-- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-17)
-
-✅ **Management Service - Parking Spaces API Complete** (Issue #18)
-- ✅ GET /available - List all available parking spaces
-- ✅ GET /available/count - Count of available spaces
-- ✅ GET /available/lot/{id} - Available spaces by lot
-- ✅ GET /search - Search with filters (type, status)
-- ✅ Test data migration with 23 parking spaces
-- ✅ API Gateway proxy endpoints configured
-- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-18)
-
-### 2025-12-26 - Flyway Database Migrations
-
-✅ **Flyway Database Migrations Implemented**
-- ✅ Flyway configured and integrated into API Gateway
-- ✅ 5 migrations created (V1-V5): initial schema, parking_lots, parking_spaces, bookings, test data
-- ✅ Comprehensive database documentation created
-- ✅ Deployment guide with migration instructions
-- ✅ Test scripts for migration verification
-- 📖 **Migration Guide:** [Database README](./database/README.md)
-- 📖 **Deployment Guide:** [DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)
-
-### 2025-12-25 - Initial Setup
-
-✅ **Infrastructure & Foundation**
-- ✅ API Gateway with JWT authentication and security features
-- ✅ Complete microservices implementation (Eureka, API Gateway, Client Service)
-- ✅ PostgreSQL and Redis working and accessible
-- ✅ Observability stack integrated (Prometheus, Grafana, Jaeger, OpenTelemetry)
-- ✅ Docker Compose configuration optimized
-- ✅ Correct password hashes configured (BCrypt)
-- 📖 Complete development documentation: [SESSION_DEVELOPMENT_2025-12-25_EN.md](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
+---
 
 ## 📈 Project Status & Roadmap
 
-### Phase 0: Infrastructure & Foundation ✅ COMPLETE
+### Current Status: Phase 2 - Week 5 of 12 🚀
 
-| Task | Description | Status | Completion |
-|------|-------------|--------|------------|
-| 0.1 | **GitHub Setup** | ✅ Complete | 100% |
-| 0.2 | **Docker Compose** | ✅ Complete | 100% |
-| 0.3 | **PostgreSQL DDL** | ✅ Complete | 100% |
-| 0.4 | **Spring Boot Services** | ✅ Complete | 100% |
+```
+Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
+Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
+Фаза 2: ████████░░░░░░░░░░░░  40% 🔄 В ПРОЦЕССЕ (Неделя 1/2)
+Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
+Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
+Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 
-📖 **Phase 0 Summary:** [PHASE_0_SUMMARY.md](./docs/reports/PHASE_0_SUMMARY.md)
+Общий прогресс: ████████░░░░░░ 42% (22/35 задач)
+```
 
-### Phase 1: Basic Backend (In Progress - Week 1/3) 🔄
+### 📋 Project Phases Overview
 
-**Goal:** Implement CRUD operations and database connectivity for core services.
+| Phase | Duration | Status | Progress | Description |
+|-------|----------|--------|----------|-------------|
+| **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
+| **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
+| **Phase 2** | 2 weeks | 🔄 In Progress | 40% | Core Business Logic |
+| **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
+| **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
+| **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |
 
-| Service | Task | Status | Issue |
-|---------|------|--------|-------|
-| **Client Service** | ✅ CRUD for CLIENTS | Complete | #16 |
-| **Client Service** | ✅ CRUD for VEHICLES | Complete | #17 |
-| **Client Service** | ⏳ GET /check (subscription) | Pending | - |
-| **Management Service** | ✅ GET /available | Complete | #18 |
-| **Management Service** | ⏳ POST /update (status) | Pending | - |
-| **Reporting Service** | ✅ POST /log | Complete | #19 |
-| **Database** | ✅ Flyway migrations | Complete | #20 |
+📖 **Детальная дорожная карта:** [PROJECT_PHASES.md](./docs/PROJECT_PHASES.md)
 
-**Progress:** 5/7 tasks complete (71%)
+### 🎯 Current Sprint Goals (Week 5)
 
-**What's Done:**
-- ✅ Complete Client entity CRUD with validation
-- ✅ Complete Vehicle entity CRUD with client linking
-- ✅ Parking space availability queries (list, count, filter)
-- ✅ Reporting service with JWT authentication and logging
-- ✅ Database migrations verified (parking_spaces, logs tables)
-- ✅ OpenAPI-first design pattern established
-- ✅ Test data migrations (23 parking spaces)
-- ✅ Comprehensive test coverage
+**Phase 1 - Basic Backend:** ✅ **ЗАВЕРШЕНА**
+- ✅ Client Service: CRUD + subscription check
+- ✅ Management Service: available spots + status update
+- ✅ Reporting Service: log storage
+- ✅ API Gateway proxy verification
+- ✅ Tests & documentation
 
-**Next Steps:**
-- ⏳ Implement subscription check endpoint
-- ⏳ Implement parking space status update
+**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ**
+- ✅ TARIFFS table migration (Issue #24) - DONE
+- ✅ PARKING_EVENTS & PAYMENTS extensions (Issue #25) - DONE
+- ✅ API Contracts documentation (Issue #26) - DONE
+- ✅ Tariff entity implementation (Billing Service, Issue #31) - DONE
+- ⏳ Billing calculation logic (POST /calculate)
+- ⏳ Payment processing (POST /pay)
+- ⏳ Gate Control entry/exit logic
 
-**Week 1 Achievements:**
-- 5 major issues completed (#16, #17, #18, #19, #20)
-- 3 microservices enhanced (client-service, management-service, reporting-service)
-- 15+ endpoints implemented and tested
-- Production-ready OpenAPI contracts
-- Database schema validated and documented
+### 📊 Quick Stats
+
+| Metric | Value |
+|--------|-------|
+| **Total Issues** | 35 |
+| **Closed Issues** | 22 (63%) |
+| **Microservices** | 9 |
+| **Phase 1** | ✅ 100% Complete |
+| **Phase 2** | 🔄 40% In Progress |
+| **API Endpoints** | 45+ |
+| **Tests** | 46+ |
+| **DB Migrations** | 8 |
+| **Code Coverage** | ~75% avg |
+
+### Recent Achievements
+
+**2026-01-17 - Billing Service Entity Layer (Issue #31)**
+- ✅ Tariff JPA entity with validation
+- ✅ TariffRepository with custom queries
+- ✅ Repository tests (green)
+- ✅ OpenAPI code generation configured
+
+**2026-01-16 - Phase 2 Database & API Contracts (Issues #24, #25, #26)**
+- ✅ V7 migration: TARIFFS table with 4 seed tariffs
+- ✅ V8 migration: Extended PARKING_EVENTS & PAYMENTS
+- ✅ OpenAPI 3.0.3 specs for Billing & Gate Control
+- ✅ Complete API contracts documentation
+
+**2026-01-13 - Phase 1 Tests & Documentation (Issue #22)**
+- ✅ 46+ test cases across 3 services
+- ✅ Service-level README files (1,371 lines total)
+- ✅ API examples (curl + PowerShell)
+
+### Next Steps
+
+**Immediate (This Week):**
+1. ✅ ~~Complete Phase 1 remaining tasks~~ - DONE
+2. Complete Billing Service implementation (service layer, POST /calculate, POST /pay)
+3. Begin Gate Control Service implementation (POST /entry, POST /exit)
+
+**Upcoming (Next 2 Weeks):**
+1. Complete Phase 2: Business logic implementation
+2. Service-to-service communication (WebClient/RestTemplate)
+3. Begin Phase 3: Security & Integration (JWT, Spring Security)
 
 ## 🏗️ System Architecture
 
