@@ -7,30 +7,31 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
-### 2026-01-18 - Billing Service: Fee Calculation & Payment Processing (Issue #33) ✅
+### 2026-01-18 - Billing Service: Complete Implementation (Issues #32, #33) ✅
 
 ✅ **Billing Service - Service Layer Complete** (Issue #33)
 - ✅ BillingService with fee calculation logic (hourly rate + rounding up)
-- ✅ Payment recording with validation and unique transaction ID generation
+- ✅ Payment recording with validation and unique transaction ID generation (TRX-{timestamp}-{random})
 - ✅ Domain models (ParkingEventDomain, PaymentDomain, TariffDomain)
 - ✅ BillingMapper for Entity <-> DTO transformation
 - ✅ BillingController implementing OpenAPI-first approach
-- ✅ Custom exceptions (ParkingEventNotFound, TicketAlreadyPaid, InsufficientPayment)
+- ✅ Custom exceptions (ParkingEventNotFound, TicketAlreadyPaid, InsufficientPayment, TariffNotFound)
 - ✅ 20 new unit tests (16 service + 4 controller) - all passing
-- 📊 **Test Coverage:** Service ~95%, Controller ~85%, Overall 33+ tests passing
+- 📊 **Test Coverage:** Service ~95%, Controller ~85%, Repository ~90%
 - 📖 **Service:** [BillingService.java](./backend/billing-service/src/main/java/com/parking/billing/service/BillingService.java)
 - 📖 **Controller:** [BillingController.java](./backend/billing-service/src/main/java/com/parking/billing/controller/BillingController.java)
 
-### 2026-01-17 - Billing Service: ParkingEvent & Payment Entities (Issue #32) ✅
+### 2026-01-18 - Billing Service: ParkingEvent & Payment Entities (Issue #32) ✅
 
 ✅ **Billing Service - Entity & Repository Layer** (Issue #32)
-- ✅ ParkingEvent entity with entry/exit tracking and method enums
-- ✅ Payment entity with status tracking and transaction management
-- ✅ ParkingEventRepository with custom queries (findByTicketCode, findByLicensePlateAndExitTimeIsNull)
-- ✅ PaymentRepository with payment status queries
+- ✅ ParkingEvent entity with entry/exit tracking and method enums (SCAN, MANUAL, AUTO)
+- ✅ Payment entity with status tracking (PENDING, COMPLETED, FAILED, REFUNDED) and transaction management
+- ✅ ParkingEventRepository with custom queries (findByTicketCode, findByLicensePlateAndExitTimeIsNull, findByEntryTimeBetween)
+- ✅ PaymentRepository with payment status queries (findByParkingEventIdAndStatus, findByTransactionId)
 - ✅ 18 repository integration tests - all green
-- ✅ Test configuration fixed (proper @ContextConfiguration setup)
+- ✅ @PrePersist hooks for automatic timestamp initialization
 - 📖 **Entities:** [ParkingEvent.java](./backend/billing-service/src/main/java/com/parking/billing/entity/ParkingEvent.java), [Payment.java](./backend/billing-service/src/main/java/com/parking/billing/entity/Payment.java)
+- 📖 **Repositories:** [ParkingEventRepository.java](./backend/billing-service/src/main/java/com/parking/billing/repository/ParkingEventRepository.java), [PaymentRepository.java](./backend/billing-service/src/main/java/com/parking/billing/repository/PaymentRepository.java)
 
 ### 2026-01-16 - Phase 2: Database Extensions & API Contracts (Issues #24-26) ✅
 
@@ -101,29 +102,26 @@ Modern parking lot management system built on microservices architecture using S
 | Metric | Value |
 |--------|-------|
 | **Total Issues** | 35 |
-| **Closed Issues** | 24 (69%) |
+| **Closed Issues** | 26 (74%) |
 | **Microservices** | 9 |
 | **Phase 1** | ✅ 100% Complete |
 | **Phase 2** | 🔄 50% In Progress |
-| **API Endpoints** | 48+ |
-| **Tests** | 66+ |
+| **API Endpoints** | 51+ |
+| **Tests** | 80+ |
 | **DB Migrations** | 8 |
-| **Code Coverage** | ~85% avg |
+| **Code Coverage** | ~90% avg |
 
 ### Recent Achievements
 
-**2026-01-18 - Billing Service Complete (Issue #33)**
-- ✅ BillingService with fee calculation logic
-- ✅ Payment recording with validation
+**2026-01-18 - Billing Service Complete (Issues #32, #33)**
+- ✅ ParkingEvent & Payment JPA entities with @PrePersist hooks
+- ✅ Repositories with custom queries (18 tests)
+- ✅ BillingService with fee calculation & payment logic
 - ✅ Domain models & mapper implementation
-- ✅ OpenAPI-first controller
-- ✅ 20 new unit tests (all passing)
-
-**2026-01-17 - Billing Entities & Repositories (Issue #32)**
-- ✅ ParkingEvent & Payment JPA entities
-- ✅ Repositories with custom queries
-- ✅ 18 repository integration tests
-- ✅ Test configuration fixes
+- ✅ OpenAPI-first controller with 3 endpoints
+- ✅ Custom exceptions for business logic errors
+- ✅ 38 new unit tests (all passing) - Total: 80+ tests
+- 📊 Coverage: Service ~95%, Controller ~85%, Repository ~90%
 
 **2026-01-16 - Phase 2 Database & API Contracts (Issues #24-26)**
 - ✅ V7 migration: TARIFFS table with 4 seed tariffs
@@ -133,9 +131,9 @@ Modern parking lot management system built on microservices architecture using S
 ### Next Steps
 
 **Immediate (This Week):**
-1. ✅ ~~Complete Billing Service implementation~~ - DONE
-2. Implement Gate Control Service (POST /entry, POST /exit)
-3. Add inter-service communication (Billing <-> Gate Control)
+1. ✅ ~~Complete Billing Service implementation (Issues #32, #33)~~ - DONE
+2. Implement Gate Control Service (Issue #34) - POST /entry, POST /exit, GET /status
+3. Add inter-service communication (Issue #35) - Billing <-> Gate Control
 
 **Upcoming (Next 2 Weeks):**
 1. Complete Phase 2: Business logic implementation

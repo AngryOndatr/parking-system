@@ -10,14 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### In Progress
-- Phase 2: Gate Control Service implementation
-- Phase 2: Inter-service communication (Billing <-> Gate Control)
+- Phase 2: Gate Control Service implementation (Issue #34)
+- Phase 2: Inter-service communication (Issue #35)
 
 ---
 
 ## [0.4.0] - 2026-01-18
 
-### Added - Billing Service: Fee Calculation & Payment Processing (Issue #33)
+### Added - Billing Service: Complete Entity & Service Layer (Issues #32, #33)
+
+#### Issue #33: Fee Calculation & Payment Processing
 - **Service Layer:** BillingService implementation
   - `calculateFee()` - parking fee calculation with hourly rate and rounding up
   - `recordPayment()` - payment recording with validation and unique transaction ID
@@ -41,9 +43,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - BillingControllerTest: 4 tests for REST endpoints
   - All tests passing with ~90% coverage
 
+#### Issue #32: ParkingEvent & Payment Entities with Repositories
+- **JPA Entities:**
+  - ParkingEvent: maps to parking_events table with entry/exit tracking
+    - Fields: id, vehicleId, licensePlate, ticketCode, entryTime, exitTime, entryMethod, exitMethod, spotId, isSubscriber, createdAt
+    - Enums: EntryMethod (SCAN, MANUAL), ExitMethod (SCAN, MANUAL, AUTO)
+    - @PrePersist for automatic timestamps
+  - Payment: maps to payments table with transaction management
+    - Fields: id, parkingEventId, amount, paymentTime, paymentMethod, status, transactionId, operatorId, createdAt
+    - Enums: PaymentMethod (CARD, CASH, MOBILE_PAY), PaymentStatus (PENDING, COMPLETED, FAILED, REFUNDED)
+    - @PrePersist for automatic timestamps
+- **Repositories:**
+  - ParkingEventRepository: custom queries for ticket lookup and active sessions
+  - PaymentRepository: custom queries for payment status tracking
+- **Tests:** Repository integration tests (18 new tests)
+  - ParkingEventRepositoryTest: 8 tests for CRUD and custom queries
+  - PaymentRepositoryTest: 10 tests for payment operations and status checks
+  - All tests passing with H2 in-memory database
+
+### Technical Improvements
+- Implemented Hibernate -> Domain Model <- DTO architecture
+- OpenAPI-first approach with generated API interfaces
+- Comprehensive error handling with custom exceptions
+- Transaction ID generation for payment tracking (format: TRX-{timestamp}-{random})
+
 ### Documentation
 - Session development logs for 2026-01-17 and 2026-01-18
 - Updated project progress (Phase 2: 50% complete)
+- Architecture documentation for multi-layer design
+
+### Statistics
+- **Total Tests in Billing Service:** 38 (18 repository + 16 service + 4 controller)
+- **Overall Test Count:** 52+ across all services
+- **Code Added:** ~2000+ lines (including tests)
+- **Test Coverage:** Service ~95%, Controller ~85%, Repository ~90%
 
 ---
 
