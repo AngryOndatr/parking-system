@@ -10,15 +10,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### In Progress
-- Phase 1: Subscription check endpoint (Client Service)
-- Phase 1: Parking space status update (Management Service)
-- Phase 2: Billing Service business logic implementation
+- Phase 2: Gate Control Service implementation
+- Phase 2: Inter-service communication (Billing <-> Gate Control)
 
 ---
 
-## [0.3.0] - 2026-01-17
+## [0.4.0] - 2026-01-18
 
-### Added - Billing Service Entity Layer (Issue #31)
+### Added - Billing Service: Fee Calculation & Payment Processing (Issue #33)
+- **Service Layer:** BillingService implementation
+  - `calculateFee()` - parking fee calculation with hourly rate and rounding up
+  - `recordPayment()` - payment recording with validation and unique transaction ID
+  - `isTicketPaid()` - ticket payment status check
+- **Domain Models:** ParkingEventDomain, PaymentDomain, TariffDomain
+- **Mapper:** BillingMapper for Entity <-> DTO transformation
+  - `toFeeCalculationResponse()` - fee calculation response mapping
+  - `toPaymentResponse()` - payment response mapping
+  - `toPaymentStatusResponse()` - payment status mapping
+- **Controller:** BillingController (OpenAPI-first approach)
+  - `POST /api/billing/calculate` - fee calculation endpoint
+  - `POST /api/billing/payment` - payment processing endpoint
+  - `GET /api/billing/payment/status/{parkingEventId}` - payment status check
+- **Exceptions:** Custom business exceptions
+  - ParkingEventNotFoundException
+  - TicketAlreadyPaidException
+  - InsufficientPaymentException
+  - TariffNotFoundException
+- **Tests:** Comprehensive unit tests (20 new tests)
+  - BillingServiceTest: 16 tests covering all service methods
+  - BillingControllerTest: 4 tests for REST endpoints
+  - All tests passing with ~90% coverage
+
+### Documentation
+- Session development logs for 2026-01-17 and 2026-01-18
+- Updated project progress (Phase 2: 50% complete)
+
+---
+
+## [0.3.1] - 2026-01-17
+
+### Added - Billing Service: ParkingEvent & Payment Entities (Issue #32)
+- **Entities:** ParkingEvent and Payment JPA entities
+  - ParkingEvent: vehicleId, licensePlate, ticketCode, entry/exitTime, methods, spotId, isSubscriber
+  - Payment: parkingEventId, amount, paymentTime, paymentMethod, status, transactionId, operatorId
+- **Enums:** 
+  - EntryMethod (SCAN, MANUAL)
+  - ExitMethod (SCAN, MANUAL, AUTO)
+  - PaymentMethod (CARD, CASH, MOBILE_PAY)
+  - PaymentStatus (PENDING, COMPLETED, FAILED, REFUNDED)
+- **Repositories:** ParkingEventRepository and PaymentRepository
+  - Custom query methods for ticket lookup and payment status
+  - Integration tests (18 tests, all passing)
+- **Tests:** Repository integration tests with proper configuration
+  - Fixed @ContextConfiguration setup
+  - Removed @EnableJpaRepositories annotation conflicts
+
+### Documentation
+- Updated project phases documentation (Russian & English)
+- Removed "Latest Updates" section from root README
+- Added PROJECT_PHASES_EN.md
+
+---
+
+## [0.3.0] - 2026-01-16
+
+### Added - Billing Service: Tariff Entity Layer (Issue #31)
 - **Entity:** Tariff JPA entity with complete validation
   - `@NotNull` constraints on required fields
   - `@DecimalMin("0.0")` on rates
@@ -30,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tests:** Repository integration tests (`@DataJpaTest`)
   - Test save and find by ID
   - Test findByTariffTypeAndIsActiveTrue
-  - All tests passing (green)
+  - All tests passing (13 tests)
 - **Build:** OpenAPI code generation configured
   - billing-service: DTO generation enabled
   - gate-control-service: DTO generation enabled

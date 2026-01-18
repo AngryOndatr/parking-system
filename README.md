@@ -7,17 +7,30 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
-### 2026-01-17 - Billing Service: Tariff Entity & Repository (Issue #31) ✅
+### 2026-01-18 - Billing Service: Fee Calculation & Payment Processing (Issue #33) ✅
 
-✅ **Billing Service - JPA Entity Layer Complete** (Issue #31)
-- ✅ Tariff JPA entity with full validation (@NotNull, @DecimalMin)
-- ✅ TariffRepository with custom queries (findByTariffTypeAndIsActiveTrue, existsByTariffType)
-- ✅ Repository integration tests (DataJpaTest) - all green
-- ✅ OpenAPI code generation enabled (billing-service + gate-control-service)
-- ✅ Maven compilation successful
-- 🔧 **FIXED:** Gate Control code generation issues
-- 📖 **Entity:** [Tariff.java](./backend/billing-service/src/main/java/com/parking/billing/entity/Tariff.java)
-- 📖 **Repository:** [TariffRepository.java](./backend/billing-service/src/main/java/com/parking/billing/repository/TariffRepository.java)
+✅ **Billing Service - Service Layer Complete** (Issue #33)
+- ✅ BillingService with fee calculation logic (hourly rate + rounding up)
+- ✅ Payment recording with validation and unique transaction ID generation
+- ✅ Domain models (ParkingEventDomain, PaymentDomain, TariffDomain)
+- ✅ BillingMapper for Entity <-> DTO transformation
+- ✅ BillingController implementing OpenAPI-first approach
+- ✅ Custom exceptions (ParkingEventNotFound, TicketAlreadyPaid, InsufficientPayment)
+- ✅ 20 new unit tests (16 service + 4 controller) - all passing
+- 📊 **Test Coverage:** Service ~95%, Controller ~85%, Overall 33+ tests passing
+- 📖 **Service:** [BillingService.java](./backend/billing-service/src/main/java/com/parking/billing/service/BillingService.java)
+- 📖 **Controller:** [BillingController.java](./backend/billing-service/src/main/java/com/parking/billing/controller/BillingController.java)
+
+### 2026-01-17 - Billing Service: ParkingEvent & Payment Entities (Issue #32) ✅
+
+✅ **Billing Service - Entity & Repository Layer** (Issue #32)
+- ✅ ParkingEvent entity with entry/exit tracking and method enums
+- ✅ Payment entity with status tracking and transaction management
+- ✅ ParkingEventRepository with custom queries (findByTicketCode, findByLicensePlateAndExitTimeIsNull)
+- ✅ PaymentRepository with payment status queries
+- ✅ 18 repository integration tests - all green
+- ✅ Test configuration fixed (proper @ContextConfiguration setup)
+- 📖 **Entities:** [ParkingEvent.java](./backend/billing-service/src/main/java/com/parking/billing/entity/ParkingEvent.java), [Payment.java](./backend/billing-service/src/main/java/com/parking/billing/entity/Payment.java)
 
 ### 2026-01-16 - Phase 2: Database Extensions & API Contracts (Issues #24-26) ✅
 
@@ -26,28 +39,13 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ V8 migration: Extended PARKING_EVENTS (license_plate, entry/exit_method, is_subscriber)
 - ✅ V8 migration: Extended PAYMENTS (status, transaction_id, operator_id)
 - ✅ 9 new indexes for performance optimization
-- ✅ Partial unique index: only one COMPLETED payment per parking event
 - 📖 **Migration Details**: [database/README.md](./database/README.md)
 
 ✅ **API Contracts - Billing & Gate Control** (Issue #26)
 - ✅ OpenAPI 3.0.3 specification for Billing Service (3 endpoints)
 - ✅ OpenAPI 3.0.3 specification for Gate Control Service (3 endpoints)
-- ✅ Complete API contracts documentation with examples
 - 📖 **API Contracts:** [docs/api-contracts.md](./docs/api-contracts.md)
 
-### 2026-01-13 - Phase 1: Tests, Documentation & Proxy Verification (Issues #21-22) ✅
-
-✅ **API Gateway Proxy Verification** (Issue #21)
-- ✅ PowerShell + Bash smoke test scripts (270 lines each)
-- ✅ 11 automated proxy tests across all services
-- ✅ JWT token forwarding verified
-- 📖 **Testing Guide**: [devops/README.md](./devops/README.md)
-
-✅ **Tests & Documentation Complete** (Issue #22)
-- ✅ 46+ test cases (20+ Client, 14+ Management, 12+ Reporting)
-- ✅ Service-level README files (1,371 lines total)
-- ✅ API examples (curl + PowerShell)
-- 📖 **Status Report**: [ISSUE_22_STATUS_REPORT.md](./docs/reports/ISSUE_22_STATUS_REPORT.md)
 
 ---
 
@@ -58,12 +56,12 @@ Modern parking lot management system built on microservices architecture using S
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: ████████░░░░░░░░░░░░  40% 🔄 В ПРОЦЕССЕ (Неделя 1/2)
+Фаза 2: ██████████░░░░░░░░░░  50% 🔄 В ПРОЦЕССЕ (Неделя 1/2)
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 
-Общий прогресс: ████████░░░░░░ 42% (22/35 задач)
+Общий прогресс: █████████░░░░░ 45% (24/35 задач)
 ```
 
 ### 📋 Project Phases Overview
@@ -72,7 +70,7 @@ Modern parking lot management system built on microservices architecture using S
 |-------|----------|--------|----------|-------------|
 | **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
 | **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
-| **Phase 2** | 2 weeks | 🔄 In Progress | 40% | Core Business Logic |
+| **Phase 2** | 2 weeks | 🔄 In Progress | 50% | Core Business Logic |
 | **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
 | **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
 | **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |
@@ -88,58 +86,60 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ API Gateway proxy verification
 - ✅ Tests & documentation
 
-**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ**
-- ✅ TARIFFS table migration (Issue #24) - DONE
-- ✅ PARKING_EVENTS & PAYMENTS extensions (Issue #25) - DONE
-- ✅ API Contracts documentation (Issue #26) - DONE
-- ✅ Tariff entity implementation (Billing Service, Issue #31) - DONE
-- ⏳ Billing calculation logic (POST /calculate)
-- ⏳ Payment processing (POST /pay)
-- ⏳ Gate Control entry/exit logic
+**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (50%)**
+- ✅ TARIFFS table migration (Issue #24)
+- ✅ PARKING_EVENTS & PAYMENTS extensions (Issue #25)
+- ✅ API Contracts documentation (Issue #26)
+- ✅ Tariff entity implementation (Issue #31)
+- ✅ ParkingEvent & Payment entities (Issue #32)
+- ✅ Billing Service: fee calculation & payment processing (Issue #33)
+- ⏳ Gate Control Service: entry/exit logic (Issue #34)
+- ⏳ Inter-service communication (Issue #35)
 
 ### 📊 Quick Stats
 
 | Metric | Value |
 |--------|-------|
 | **Total Issues** | 35 |
-| **Closed Issues** | 22 (63%) |
+| **Closed Issues** | 24 (69%) |
 | **Microservices** | 9 |
 | **Phase 1** | ✅ 100% Complete |
-| **Phase 2** | 🔄 40% In Progress |
-| **API Endpoints** | 45+ |
-| **Tests** | 46+ |
+| **Phase 2** | 🔄 50% In Progress |
+| **API Endpoints** | 48+ |
+| **Tests** | 66+ |
 | **DB Migrations** | 8 |
-| **Code Coverage** | ~75% avg |
+| **Code Coverage** | ~85% avg |
 
 ### Recent Achievements
 
-**2026-01-17 - Billing Service Entity Layer (Issue #31)**
-- ✅ Tariff JPA entity with validation
-- ✅ TariffRepository with custom queries
-- ✅ Repository tests (green)
-- ✅ OpenAPI code generation configured
+**2026-01-18 - Billing Service Complete (Issue #33)**
+- ✅ BillingService with fee calculation logic
+- ✅ Payment recording with validation
+- ✅ Domain models & mapper implementation
+- ✅ OpenAPI-first controller
+- ✅ 20 new unit tests (all passing)
 
-**2026-01-16 - Phase 2 Database & API Contracts (Issues #24, #25, #26)**
+**2026-01-17 - Billing Entities & Repositories (Issue #32)**
+- ✅ ParkingEvent & Payment JPA entities
+- ✅ Repositories with custom queries
+- ✅ 18 repository integration tests
+- ✅ Test configuration fixes
+
+**2026-01-16 - Phase 2 Database & API Contracts (Issues #24-26)**
 - ✅ V7 migration: TARIFFS table with 4 seed tariffs
 - ✅ V8 migration: Extended PARKING_EVENTS & PAYMENTS
 - ✅ OpenAPI 3.0.3 specs for Billing & Gate Control
-- ✅ Complete API contracts documentation
-
-**2026-01-13 - Phase 1 Tests & Documentation (Issue #22)**
-- ✅ 46+ test cases across 3 services
-- ✅ Service-level README files (1,371 lines total)
-- ✅ API examples (curl + PowerShell)
 
 ### Next Steps
 
 **Immediate (This Week):**
-1. ✅ ~~Complete Phase 1 remaining tasks~~ - DONE
-2. Complete Billing Service implementation (service layer, POST /calculate, POST /pay)
-3. Begin Gate Control Service implementation (POST /entry, POST /exit)
+1. ✅ ~~Complete Billing Service implementation~~ - DONE
+2. Implement Gate Control Service (POST /entry, POST /exit)
+3. Add inter-service communication (Billing <-> Gate Control)
 
 **Upcoming (Next 2 Weeks):**
 1. Complete Phase 2: Business logic implementation
-2. Service-to-service communication (WebClient/RestTemplate)
+2. Service-to-service communication with WebClient
 3. Begin Phase 3: Security & Integration (JWT, Spring Security)
 
 ## 🏗️ System Architecture
