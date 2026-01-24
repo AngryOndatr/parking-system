@@ -35,15 +35,19 @@ public class BillingController implements BillingApi {
                 feeCalculationRequest.getParkingEventId());
 
         try {
-            // For now, we use a simple ticket code pattern based on parking event ID
-            // In real implementation, this should come from the parking event lookup
-            String ticketCode = "TICKET-" + feeCalculationRequest.getParkingEventId();
+            LocalDateTime entryTime = feeCalculationRequest.getEntryTime()
+                    .atZoneSameInstant(ZoneOffset.systemDefault())
+                    .toLocalDateTime();
 
             LocalDateTime exitTime = feeCalculationRequest.getExitTime()
                     .atZoneSameInstant(ZoneOffset.systemDefault())
                     .toLocalDateTime();
 
-            BigDecimal calculatedFee = billingService.calculateFee(ticketCode, exitTime);
+            BigDecimal calculatedFee = billingService.calculateFeeByEventIdWithTimes(
+                    feeCalculationRequest.getParkingEventId(),
+                    entryTime,
+                    exitTime
+            );
 
             FeeCalculationResponse response = billingMapper.toFeeCalculationResponse(
                     feeCalculationRequest.getParkingEventId(),
@@ -78,14 +82,16 @@ public class BillingController implements BillingApi {
                 paymentRequest.getPaymentMethod());
 
         try {
-            // For now, we use a simple ticket code pattern based on parking event ID
-            String ticketCode = "TICKET-" + paymentRequest.getParkingEventId();
-
             BigDecimal amount = BigDecimal.valueOf(paymentRequest.getAmount());
             Payment.PaymentMethod method = billingMapper.toPaymentMethod(paymentRequest.getPaymentMethod());
             Long operatorId = paymentRequest.getOperatorId().orElse(null);
 
-            Payment payment = billingService.recordPayment(ticketCode, amount, method, operatorId);
+            Payment payment = billingService.recordPaymentByEventId(
+                    paymentRequest.getParkingEventId(),
+                    amount,
+                    method,
+                    operatorId
+            );
 
             PaymentResponse response = billingMapper.toPaymentResponse(payment);
 
@@ -98,6 +104,9 @@ public class BillingController implements BillingApi {
             throw e;
         } catch (TicketAlreadyPaidException e) {
             log.error("Ticket already paid: {}", e.getMessage());
+            throw e;
+        } catch (com.parking.billing.exception.InsufficientPaymentException e) {
+            log.error("Insufficient payment: {}", e.getMessage());
             throw e;
         } catch (IllegalArgumentException e) {
             log.error("Invalid payment request: {}", e.getMessage());
@@ -113,8 +122,7 @@ public class BillingController implements BillingApi {
         log.info("Received payment status request for parking event: {}", parkingEventId);
 
         try {
-            String ticketCode = "TICKET-" + parkingEventId;
-            boolean isPaid = billingService.isTicketPaid(ticketCode);
+            boolean isPaid = billingService.isEventPaid(parkingEventId);
 
             PaymentStatusResponse response = billingMapper.toPaymentStatusResponse(
                     parkingEventId,

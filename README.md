@@ -7,6 +7,21 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
+### 2026-01-24 - Billing Service: REST API & Integration Tests (Issue #34) ✅
+
+✅ **Billing Service - REST API Complete** (Issue #34)
+- ✅ OpenAPI-first REST controller implementing BillingApi interface
+- ✅ 3 endpoints: POST /calculate, POST /process-payment, GET /payment-status/{eventId}
+- ✅ FeeCalculationRequest/Response DTOs with full OpenAPI annotations
+- ✅ PaymentRequest/Response DTOs with validation and enum mappings
+- ✅ BillingMapper for comprehensive DTO <-> Entity <-> Domain transformations
+- ✅ Global exception handler with proper HTTP status codes (404, 400, 500)
+- ✅ 7 integration tests covering success and error scenarios - all passing
+- ✅ Full OpenAPI documentation available via Swagger UI
+- 📊 **Total Test Coverage:** 53 tests (18 repository + 28 service + 7 integration) - 100% passing
+- 📖 **Controller:** [BillingController.java](./backend/billing-service/src/main/java/com/parking/billing/controller/BillingController.java)
+- 📖 **Tests:** [BillingControllerIntegrationTest.java](./backend/billing-service/src/test/java/com/parking/billing/controller/BillingControllerIntegrationTest.java)
+
 ### 2026-01-18 - Billing Service: Complete Implementation (Issues #32, #33) ✅
 
 ✅ **Billing Service - Service Layer Complete** (Issue #33)
@@ -14,12 +29,10 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ Payment recording with validation and unique transaction ID generation (TRX-{timestamp}-{random})
 - ✅ Domain models (ParkingEventDomain, PaymentDomain, TariffDomain)
 - ✅ BillingMapper for Entity <-> DTO transformation
-- ✅ BillingController implementing OpenAPI-first approach
 - ✅ Custom exceptions (ParkingEventNotFound, TicketAlreadyPaid, InsufficientPayment, TariffNotFound)
-- ✅ 20 new unit tests (16 service + 4 controller) - all passing
-- 📊 **Test Coverage:** Service ~95%, Controller ~85%, Repository ~90%
+- ✅ 28 unit tests (BillingService + mapper) - all passing
+- 📊 **Test Coverage:** Service ~95%, Repository ~90%
 - 📖 **Service:** [BillingService.java](./backend/billing-service/src/main/java/com/parking/billing/service/BillingService.java)
-- 📖 **Controller:** [BillingController.java](./backend/billing-service/src/main/java/com/parking/billing/controller/BillingController.java)
 
 ### 2026-01-18 - Billing Service: ParkingEvent & Payment Entities (Issue #32) ✅
 
@@ -57,12 +70,12 @@ Modern parking lot management system built on microservices architecture using S
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: ██████████░░░░░░░░░░  50% 🔄 В ПРОЦЕССЕ (Неделя 1/2)
+Фаза 2: █████████████░░░░░░░  67% 🔄 В ПРОЦЕССЕ (Неделя 2/2)
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 
-Общий прогресс: █████████░░░░░ 45% (24/35 задач)
+Общий прогресс: ██████████░░░░ 50% (26/35 задач)
 ```
 
 ### 📋 Project Phases Overview
@@ -71,7 +84,7 @@ Modern parking lot management system built on microservices architecture using S
 |-------|----------|--------|----------|-------------|
 | **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
 | **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
-| **Phase 2** | 2 weeks | 🔄 In Progress | 50% | Core Business Logic |
+| **Phase 2** | 2 weeks | 🔄 In Progress | 67% | Core Business Logic |
 | **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
 | **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
 | **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |
@@ -87,15 +100,16 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ API Gateway proxy verification
 - ✅ Tests & documentation
 
-**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (50%)**
+**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (67%)**
 - ✅ TARIFFS table migration (Issue #24)
 - ✅ PARKING_EVENTS & PAYMENTS extensions (Issue #25)
 - ✅ API Contracts documentation (Issue #26)
 - ✅ Tariff entity implementation (Issue #31)
 - ✅ ParkingEvent & Payment entities (Issue #32)
 - ✅ Billing Service: fee calculation & payment processing (Issue #33)
-- ⏳ Gate Control Service: entry/exit logic (Issue #34)
-- ⏳ Inter-service communication (Issue #35)
+- ✅ Billing Service: REST API & Integration Tests (Issue #34)
+- ⏳ Gate Control Service: entry/exit logic (Issue #35)
+- ⏳ Inter-service communication (Issue #36)
 
 ### 📊 Quick Stats
 

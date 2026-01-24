@@ -2,6 +2,7 @@ package com.parking.billing.service;
 
 import com.parking.billing.entity.Payment;
 import com.parking.billing.entity.ParkingEvent;
+import com.parking.billing.exception.InsufficientPaymentException;
 import com.parking.billing.exception.ParkingEventNotFoundException;
 import com.parking.billing.exception.TariffNotFoundException;
 import com.parking.billing.exception.TicketAlreadyPaidException;
@@ -307,7 +308,7 @@ class BillingServiceTest {
         // When / Then
         assertThatThrownBy(() -> billingService.recordPayment(
                 ticketCode, insufficientAmount, Payment.PaymentMethod.CARD, 100L))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InsufficientPaymentException.class)
                 .hasMessageContaining("Insufficient payment amount");
 
         verify(paymentRepository, never()).save(any());
