@@ -7,23 +7,24 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
-### 2026-01-24 - Billing Service: Payment Recording Endpoint (Issues #34, #35) ✅
+### 2026-01-24 - Billing Service: Payment Status & Recording Endpoints (Issues #34, #35, #36) ✅
 
-✅ **Billing Service - Payment Processing API Complete** (Issues #34, #35)
+✅ **Billing Service - Complete REST API Implementation** (Issues #34, #35, #36)
 - ✅ POST /api/v1/billing/calculate endpoint - fee calculation with OpenAPI validation
 - ✅ POST /api/v1/billing/pay endpoint - payment recording with transaction ID generation
-- ✅ GET /api/v1/billing/status endpoint - payment status check by parking event ID
+- ✅ GET /api/v1/billing/status endpoint - comprehensive payment status check with remaining fee calculation ⭐ **NEW**
 - ✅ OpenAPI-first REST controller implementing BillingApi interface
 - ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
 - ✅ BillingMapper for comprehensive DTO <-> Entity <-> Domain transformations
 - ✅ Global exception handler with proper HTTP status codes (400, 404, 409, 500)
 - ✅ Payment validation: insufficient amount detection, duplicate payment prevention
-- ✅ 6 integration tests covering all success/error scenarios - **ALL PASSING** ✅
+- ✅ Payment status tracking: support for paid/unpaid tickets with history of all payment attempts
+- ✅ 10 integration tests covering all success/error scenarios - **ALL PASSING** ✅
 - ✅ Full OpenAPI documentation available via Swagger UI
-- 📊 **Total Test Coverage:** 53 tests (18 repository + 28 service + 6 integration + 1 smoke) - **100% passing**
+- 📊 **Total Test Coverage:** 57 tests (19 repository + 28 service + 10 integration) - **100% passing**
 - 📖 **Controller:** [BillingController.java](./backend/billing-service/src/main/java/com/parking/billing/controller/BillingController.java)
 - 📖 **Tests:** [BillingControllerIntegrationTest.java](./backend/billing-service/src/test/java/com/parking/billing/controller/BillingControllerIntegrationTest.java)
-- 🎉 **Status:** Phase 2 Billing Service **COMPLETE** - Ready for Phase 3 integration!
+- 🎉 **Status:** Phase 2 Billing Service **100% COMPLETE** - Ready for Gate Control Service integration!
 
 ### 2026-01-18 - Billing Service: Complete Implementation (Issues #32, #33) ✅
 
@@ -103,7 +104,7 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ API Gateway proxy verification
 - ✅ Tests & documentation
 
-**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (85%)**
+**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (90%)**
 - ✅ TARIFFS table migration (Issue #24)
 - ✅ PARKING_EVENTS & PAYMENTS extensions (Issue #25)
 - ✅ API Contracts documentation (Issue #26)
@@ -111,9 +112,10 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ ParkingEvent & Payment entities (Issue #32)
 - ✅ Billing Service: fee calculation & payment processing (Issue #33)
 - ✅ Billing Service: fee calculation endpoint /calculate (Issue #34)
-- ✅ Billing Service: payment recording endpoint /pay (Issue #35) ⭐ **NEW**
-- ⏳ Gate Control Service: entry/exit logic (Issue #36)
-- ⏳ Inter-service communication (Issue #37)
+- ✅ Billing Service: payment recording endpoint /pay (Issue #35)
+- ✅ Billing Service: payment status endpoint /status (Issue #36) ⭐ **NEW**
+- ⏳ Gate Control Service: entry/exit logic (Issue #37)
+- ⏳ Inter-service communication (Issue #38)
 
 ### 📊 Quick Stats
 
@@ -131,17 +133,18 @@ Modern parking lot management system built on microservices architecture using S
 
 ### Recent Achievements
 
-**2026-01-24 - Billing Service REST API Complete (Issues #34, #35)**
+**2026-01-24 - Billing Service REST API Complete (Issues #34, #35, #36)**
 - ✅ OpenAPI-first BillingController implementing BillingApi interface
 - ✅ POST /api/v1/billing/calculate - fee calculation endpoint
 - ✅ POST /api/v1/billing/pay - payment recording endpoint
-- ✅ GET /api/v1/billing/status - payment status check endpoint
+- ✅ GET /api/v1/billing/status - comprehensive payment status endpoint with remaining fee ⭐ **NEW**
 - ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
 - ✅ BillingMapper enhancements for comprehensive transformations
 - ✅ GlobalExceptionHandler with proper HTTP status codes (400, 404, 409, 500)
-- ✅ 6 integration tests - all passing
-- 📊 **Total Test Coverage:** 53 tests (100% passing)
-- 🎉 **Billing Service COMPLETE** - Ready for Gate Control integration!
+- ✅ 10 integration tests - all passing (7 core + 3 for status)
+- ✅ Payment status tracking with history of all payment attempts
+- 📊 **Total Test Coverage:** 57 tests (100% passing)
+- 🎉 **Billing Service 100% COMPLETE** - Ready for Gate Control integration!
 
 **2026-01-18 - Billing Service Complete (Issues #32, #33)**
 - ✅ ParkingEvent & Payment JPA entities with @PrePersist hooks
@@ -160,9 +163,9 @@ Modern parking lot management system built on microservices architecture using S
 ### Next Steps
 
 **Immediate (This Week):**
-1. ✅ ~~Complete Billing Service implementation (Issues #32, #33, #34, #35)~~ - DONE
-2. Implement Gate Control Service (Issue #36) - POST /entry, POST /exit, GET /status
-3. Add inter-service communication (Issue #37) - Billing <-> Gate Control
+1. ✅ ~~Complete Billing Service implementation (Issues #32, #33, #34, #35, #36)~~ - DONE
+2. Implement Gate Control Service (Issue #37) - POST /entry, POST /exit, GET /status
+3. Add inter-service communication (Issue #38) - Billing <-> Gate Control
 
 **Upcoming (Next 2 Weeks):**
 1. Complete Phase 2: Business logic implementation

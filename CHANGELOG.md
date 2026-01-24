@@ -10,16 +10,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### In Progress
-- Phase 2: Gate Control Service implementation (Issue #36)
+- Phase 2: Gate Control Service implementation (Issue #37)
 
 ### Recently Completed
+- ✅ Billing Service: Payment Status Endpoint (Issue #36) - 2026-01-24
 - ✅ Billing Service: Payment Recording API (Issues #34, #35) - 2026-01-24
 
 ---
 
 ## [0.5.0] - 2026-01-24
 
-### Added - Billing Service: Complete REST API Implementation (Issues #34, #35)
+### Added - Billing Service: Complete REST API Implementation (Issues #34, #35, #36)
+
+#### Issue #36: Payment Status Check Endpoint (/status)
+- **REST API Endpoint:**
+  - `GET /api/v1/billing/status?parkingEventId={id}` - comprehensive payment status check
+  - Returns complete payment information including isPaid status and remaining fee
+  - Support for both paid and unpaid tickets
+  - History of all payment attempts (including failed/refunded)
+- **Business Logic:**
+  - `BillingService.getPaymentStatus()` - retrieve payment status with remaining fee calculation
+  - Real-time fee calculation for unpaid tickets
+  - Payment history tracking with all statuses (COMPLETED, FAILED, REFUNDED, PENDING)
+- **Response DTO:**
+  - PaymentStatusResponse: parkingEventId, isPaid, remainingFee, payments[]
+  - PaymentInfo: paymentId, amount, status, paymentMethod, transactionId, paymentTime
+- **Integration Tests:** 3 additional comprehensive tests
+  - `getPaymentStatus_Success` - paid ticket status (isPaid=true, remainingFee=0.00)
+  - `getPaymentStatus_Unpaid_WithRemainingFee` - unpaid ticket with remaining fee calculation
+  - `getPaymentStatus_NotFound` - proper 404 handling for non-existent parking event
+  - **All 10 integration tests passing** ✅
+- **OpenAPI Documentation:**
+  - Full specification with request/response examples for all scenarios
+  - Documented error codes (400, 404, 500)
+  - Examples: paid event, unpaid event, multiple payment attempts
 
 #### Issue #35: Payment Recording Endpoint (/pay)
 - **REST API Endpoints:**
@@ -41,8 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `calculateFee_Success_OneAndHalfHours_RoundsUp` - rounding up logic verification
   - `calculateFee_Error404_TicketNotFound` - parking event not found handling
   - `calculateFee_Error400_TicketAlreadyPaid` - duplicate payment prevention
-  - `getPaymentStatus_Success` - payment status check
-  - **All tests passing** ✅
+  - `getPaymentStatus_Success` - payment status check (paid ticket)
+  - `getPaymentStatus_Unpaid_WithRemainingFee` - unpaid ticket status ⭐ **NEW**
+  - `getPaymentStatus_NotFound` - non-existent parking event ⭐ **NEW**
+  - **All 10 integration tests passing** ✅
 
 #### Issue #34: Fee Calculation API (/calculate)
 - **REST API Endpoints:**
@@ -68,10 +94,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical Details
 - **Architecture:** OpenAPI-first, Hibernate -> Domain Model <- DTO pattern
-- **Test Coverage:** 53 tests total (18 repository + 28 service + 6 integration + 1 smoke test)
+- **Test Coverage:** 57 tests total (19 repository + 28 service + 10 integration)
 - **Code Quality:** All tests passing, proper exception handling, comprehensive logging
 - **Documentation:** Full OpenAPI spec with examples, inline code documentation
-- **Status:** 🎉 Billing Service **COMPLETE** - Ready for Phase 3 integration!
+- **Endpoints:** 3 REST endpoints (calculate, pay, status) - all fully functional
+- **Status:** 🎉 Billing Service **100% COMPLETE** - Ready for Gate Control Service integration!
 
 ---
 

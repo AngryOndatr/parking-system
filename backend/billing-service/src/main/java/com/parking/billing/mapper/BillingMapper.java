@@ -133,15 +133,23 @@ public class BillingMapper {
      *
      * @param parkingEventId parking event ID
      * @param isPaid whether the ticket is paid
+     * @param remainingFee remaining fee to be paid (0.00 if paid)
      * @return PaymentStatusResponse
      */
-    public PaymentStatusResponse toPaymentStatusResponse(Long parkingEventId, boolean isPaid) {
+    public PaymentStatusResponse toPaymentStatusResponse(Long parkingEventId, boolean isPaid, BigDecimal remainingFee) {
         // Create response with required parameters (empty payments list for now)
-        return new PaymentStatusResponse(
+        PaymentStatusResponse response = new PaymentStatusResponse(
                 parkingEventId,
                 isPaid,
                 new java.util.ArrayList<>()  // Empty list, can be populated later with actual payment history
         );
+
+        // Set optional remainingFee using JsonNullable
+        if (remainingFee != null) {
+            response.setRemainingFee(org.openapitools.jackson.nullable.JsonNullable.of(remainingFee.doubleValue()));
+        }
+
+        return response;
     }
 }
 

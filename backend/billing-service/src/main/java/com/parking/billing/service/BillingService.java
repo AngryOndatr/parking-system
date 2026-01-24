@@ -356,5 +356,34 @@ public class BillingService {
 
         return isPaid;
     }
+
+    /**
+     * Get remaining fee for a parking event.
+     * Returns zero if already paid, otherwise calculates the fee based on current time.
+     *
+     * @param parkingEventId the parking event ID
+     * @return remaining fee amount
+     * @throws ParkingEventNotFoundException if parking event not found
+     */
+    @Transactional(readOnly = true)
+    public BigDecimal getRemainingFee(Long parkingEventId) {
+        log.debug("Getting remaining fee for parking event ID: {}", parkingEventId);
+
+        // Check if already paid
+        if (isEventPaid(parkingEventId)) {
+            log.debug("Event {} is already paid, remaining fee is 0", parkingEventId);
+            return BigDecimal.ZERO;
+        }
+
+        // Calculate fee for current time
+        try {
+            BigDecimal fee = calculateFeeByEventId(parkingEventId, LocalDateTime.now());
+            log.debug("Remaining fee for event {}: {}", parkingEventId, fee);
+            return fee;
+        } catch (TicketAlreadyPaidException e) {
+            // In case of race condition
+            return BigDecimal.ZERO;
+        }
+    }
 }
 

@@ -226,6 +226,7 @@ paths:
                   value:
                     parkingEventId: 12345
                     isPaid: true
+                    remainingFee: 0.00
                     payments:
                       - paymentId: 9876
                         amount: 100.00
@@ -237,12 +238,14 @@ paths:
                   value:
                     parkingEventId: 12346
                     isPaid: false
+                    remainingFee: 150.00
                     payments: []
                 multipleAttempts:
                   summary: Multiple payment attempts
                   value:
                     parkingEventId: 12347
                     isPaid: true
+                    remainingFee: 0.00
                     payments:
                       - paymentId: 9877
                         amount: 150.00
@@ -459,6 +462,12 @@ components:
           type: boolean
           description: Whether the parking event has been paid
           example: true
+        remainingFee:
+          type: number
+          format: double
+          description: Remaining fee to be paid (0.00 if already paid)
+          example: 0.00
+          nullable: true
         payments:
           type: array
           description: List of all payment attempts (chronological order)

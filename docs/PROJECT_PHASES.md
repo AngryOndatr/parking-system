@@ -134,20 +134,35 @@
 | 2.7 | **Fee Calculation Service** | BillingService with domain models & mapper (28 tests) | PostgreSQL | ✅ | #33 |
 | 2.8 | **POST /calculate** | Fee calculation endpoint with OpenAPI | Client Service, PostgreSQL | ✅ | #34 |
 | 2.9 | **POST /pay** | Payment recording endpoint (transaction ID generation) | PostgreSQL | ✅ | #35 |
-| 2.10 | **GET /status** | Payment status check endpoint | PostgreSQL | ✅ | #35 |
+| 2.10 | **GET /status** | Payment status check endpoint (with remaining fee) | PostgreSQL | ✅ | #36 |
 
 **Прогресс:** 6/6 (100%) ✅
+
+**Статистика тестирования:**
+- Интеграционные тесты: 10 (calculateFee, processPayment, getPaymentStatus)
+- Unit тесты: 28 (BillingService)
+- Репозиторные тесты: 19 (ParkingEvent, Payment, Tariff)
+- **Всего:** 57 тестов ✅
 
 #### Gate Control Service
 | ID | Задача | API Endpoints | Зависимости | Статус | Issue |
 |----|--------|---------------|-------------|--------|-------|
-| 2.7 | **POST /entry** | Логика въезда (проверка абонемента) | Client Service, Management Service | ⏳ | - |
-| 2.8 | **POST /exit** | Логика выезда (запрос оплаты) | Billing Service, Management Service | ⏳ | - |
-| 2.9 | **Decision Logic** | Принятие решений о допуске | Multiple Services | ⏳ | - |
+| 2.11 | **POST /entry** | Логика въезда (проверка абонемента) | Client Service, Management Service | ⏳ | - |
+| 2.12 | **POST /exit** | Логика выезда (запрос оплаты) | Billing Service, Management Service | ⏳ | - |
+| 2.13 | **Decision Logic** | Принятие решений о допуске | Multiple Services | ⏳ | - |
 
 **Прогресс:** 0/3 (0%)
 
 ### Общий Прогресс Фазы 2: 78% (10/13 задач)
+
+**Завершённые сервисы:**
+- ✅ Billing Service: 100% (6/6 задач)
+- ⏳ Gate Control Service: 0% (0/3 задач)
+
+**Следующие шаги:**
+- Gate Control Service: Entry/Exit endpoints (#37)
+- Inter-service communication with WebClient (#38)
+- Integration testing across services (#39)
 
 ### Что Сделано
 - ✅ Database schema extended (TARIFFS, PARKING_EVENTS, PAYMENTS)

@@ -270,7 +270,35 @@ class BillingControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.parkingEventId").value(event.getId()))
-                .andExpect(jsonPath("$.isPaid").value(true));
+                .andExpect(jsonPath("$.isPaid").value(true))
+                .andExpect(jsonPath("$.remainingFee").value(0.0));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/billing/status - Success: Check unpaid status with remaining fee")
+    void getPaymentStatus_Unpaid_WithRemainingFee() throws Exception {
+        // Given: Parking event without payment (2 hours parking = 100 UAH)
+        ParkingEvent event = createParkingEvent("TICKET-007", 2);
+        parkingEventRepository.save(event);
+
+        // When & Then: Check status
+        mockMvc.perform(get("/api/v1/billing/status")
+                        .param("parkingEventId", event.getId().toString()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.parkingEventId").value(event.getId()))
+                .andExpect(jsonPath("$.isPaid").value(false))
+                .andExpect(jsonPath("$.remainingFee").value(100.0));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/billing/status - Error 404: Parking event not found")
+    void getPaymentStatus_NotFound() throws Exception {
+        // When & Then: Check status for non-existent event
+        mockMvc.perform(get("/api/v1/billing/status")
+                        .param("parkingEventId", "999999"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
     }
 
     // Helper method to create parking event

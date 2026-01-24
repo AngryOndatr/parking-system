@@ -123,16 +123,22 @@ public class BillingController implements BillingApi {
 
         try {
             boolean isPaid = billingService.isEventPaid(parkingEventId);
+            BigDecimal remainingFee = billingService.getRemainingFee(parkingEventId);
 
             PaymentStatusResponse response = billingMapper.toPaymentStatusResponse(
                     parkingEventId,
-                    isPaid
+                    isPaid,
+                    remainingFee
             );
 
-            log.info("Payment status retrieved for event {}: {}", parkingEventId, isPaid);
+            log.info("Payment status retrieved for event {}: paid={}, remainingFee={}",
+                    parkingEventId, isPaid, remainingFee);
 
             return ResponseEntity.ok(response);
 
+        } catch (ParkingEventNotFoundException e) {
+            log.error("Parking event not found: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Error getting payment status: {}", e.getMessage(), e);
             throw new RuntimeException("Error getting payment status", e);
