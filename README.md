@@ -7,20 +7,23 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
-### 2026-01-24 - Billing Service: REST API & Integration Tests (Issue #34) ✅
+### 2026-01-24 - Billing Service: Payment Recording Endpoint (Issues #34, #35) ✅
 
-✅ **Billing Service - REST API Complete** (Issue #34)
+✅ **Billing Service - Payment Processing API Complete** (Issues #34, #35)
+- ✅ POST /api/v1/billing/calculate endpoint - fee calculation with OpenAPI validation
+- ✅ POST /api/v1/billing/pay endpoint - payment recording with transaction ID generation
+- ✅ GET /api/v1/billing/status endpoint - payment status check by parking event ID
 - ✅ OpenAPI-first REST controller implementing BillingApi interface
-- ✅ 3 endpoints: POST /calculate, POST /process-payment, GET /payment-status/{eventId}
-- ✅ FeeCalculationRequest/Response DTOs with full OpenAPI annotations
-- ✅ PaymentRequest/Response DTOs with validation and enum mappings
+- ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
 - ✅ BillingMapper for comprehensive DTO <-> Entity <-> Domain transformations
-- ✅ Global exception handler with proper HTTP status codes (404, 400, 500)
-- ✅ 7 integration tests covering success and error scenarios - all passing
+- ✅ Global exception handler with proper HTTP status codes (400, 404, 409, 500)
+- ✅ Payment validation: insufficient amount detection, duplicate payment prevention
+- ✅ 6 integration tests covering all success/error scenarios - **ALL PASSING** ✅
 - ✅ Full OpenAPI documentation available via Swagger UI
-- 📊 **Total Test Coverage:** 53 tests (18 repository + 28 service + 7 integration) - 100% passing
+- 📊 **Total Test Coverage:** 53 tests (18 repository + 28 service + 6 integration + 1 smoke) - **100% passing**
 - 📖 **Controller:** [BillingController.java](./backend/billing-service/src/main/java/com/parking/billing/controller/BillingController.java)
 - 📖 **Tests:** [BillingControllerIntegrationTest.java](./backend/billing-service/src/test/java/com/parking/billing/controller/BillingControllerIntegrationTest.java)
+- 🎉 **Status:** Phase 2 Billing Service **COMPLETE** - Ready for Phase 3 integration!
 
 ### 2026-01-18 - Billing Service: Complete Implementation (Issues #32, #33) ✅
 
@@ -70,12 +73,12 @@ Modern parking lot management system built on microservices architecture using S
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: █████████████░░░░░░░  67% 🔄 В ПРОЦЕССЕ (Неделя 2/2)
+Фаза 2: ███████████████░░░░░  75% 🔄 В ПРОЦЕССЕ (Billing Complete!)
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 
-Общий прогресс: ██████████░░░░ 50% (26/35 задач)
+Общий прогресс: ███████████░░░ 55% (28/35 задач)
 ```
 
 ### 📋 Project Phases Overview
@@ -84,7 +87,7 @@ Modern parking lot management system built on microservices architecture using S
 |-------|----------|--------|----------|-------------|
 | **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
 | **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
-| **Phase 2** | 2 weeks | 🔄 In Progress | 67% | Core Business Logic |
+| **Phase 2** | 2 weeks | 🔄 In Progress | 75% | Core Business Logic (Billing Complete!) |
 | **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
 | **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
 | **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |

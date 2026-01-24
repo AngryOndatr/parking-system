@@ -10,12 +10,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### In Progress
-- Phase 2: Gate Control Service implementation (Issue #34)
-- Phase 2: Inter-service communication (Issue #35)
+- Phase 2: Gate Control Service implementation (Issue #36)
+
+### Recently Completed
+- ✅ Billing Service: Payment Recording API (Issues #34, #35) - 2026-01-24
 
 ---
 
-## [0.4.0] - 2026-01-18
+## [0.5.0] - 2026-01-24
+
+### Added - Billing Service: Complete REST API Implementation (Issues #34, #35)
+
+#### Issue #35: Payment Recording Endpoint (/pay)
+- **REST API Endpoints:**
+  - `POST /api/v1/billing/pay` - payment recording with transaction ID generation
+  - Payment validation: insufficient amount detection, duplicate payment prevention
+  - Proper HTTP status codes: 201 Created, 400 Bad Request, 409 Conflict
+- **DTOs:**
+  - PaymentRequest: parkingEventId, amount, paymentMethod, operatorId (optional)
+  - PaymentResponse: paymentId, parkingEventId, amount, status, paymentMethod, transactionId, paymentTime
+  - PaymentStatusResponse: parkingEventId, isPaid
+- **Exception Handling:**
+  - GlobalExceptionHandler for InsufficientPaymentException (400)
+  - TicketAlreadyPaidException handling (409 Conflict)
+  - Proper error responses with timestamp, status, error, message, path
+- **Integration Tests:** 6 comprehensive tests
+  - `processPayment_Success` - successful payment recording
+  - `processPayment_Error400_InsufficientAmount` - validation for insufficient payment
+  - `calculateFee_Success_TwoHours` - fee calculation for 2 hours
+  - `calculateFee_Success_OneAndHalfHours_RoundsUp` - rounding up logic verification
+  - `calculateFee_Error404_TicketNotFound` - parking event not found handling
+  - `calculateFee_Error400_TicketAlreadyPaid` - duplicate payment prevention
+  - `getPaymentStatus_Success` - payment status check
+  - **All tests passing** ✅
+
+#### Issue #34: Fee Calculation API (/calculate)
+- **REST API Endpoints:**
+  - `POST /api/v1/billing/calculate` - parking fee calculation
+  - `GET /api/v1/billing/status?parkingEventId={id}` - payment status check
+- **OpenAPI-First Implementation:**
+  - BillingController implements BillingApi interface (generated from openapi.yaml)
+  - Full OpenAPI 3.0.3 specification with examples and detailed descriptions
+  - Swagger UI integration for API documentation and testing
+- **DTOs with Validation:**
+  - FeeCalculationRequest: parkingEventId, entryTime, exitTime, tariffType, isSubscriber
+  - FeeCalculationResponse: parkingEventId, durationMinutes, baseFee, discount, totalFee, tariffApplied, calculatedAt
+  - Validation annotations: @NotNull, @NotBlank, ISO 8601 datetime formats
+- **BillingMapper Enhancements:**
+  - `toFeeCalculationResponse()` - maps calculation results to response DTO
+  - `toPaymentResponse()` - maps Payment entity to response DTO
+  - `toPaymentStatusResponse()` - maps payment status to response DTO
+  - `toPaymentMethod()` - converts enum between OpenAPI and domain models
+- **Exception Handling:**
+  - GlobalExceptionHandler with @RestControllerAdvice
+  - ParkingEventNotFoundException (404), TicketAlreadyPaidException (400)
+  - Structured error responses: ErrorResponse with timestamp, status, error, message, path
+
+### Technical Details
+- **Architecture:** OpenAPI-first, Hibernate -> Domain Model <- DTO pattern
+- **Test Coverage:** 53 tests total (18 repository + 28 service + 6 integration + 1 smoke test)
+- **Code Quality:** All tests passing, proper exception handling, comprehensive logging
+- **Documentation:** Full OpenAPI spec with examples, inline code documentation
+- **Status:** 🎉 Billing Service **COMPLETE** - Ready for Phase 3 integration!
+
+---
 
 ### Added - Billing Service: Complete Entity & Service Layer (Issues #32, #33)
 
