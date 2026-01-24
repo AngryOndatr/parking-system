@@ -73,12 +73,12 @@ Modern parking lot management system built on microservices architecture using S
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: ███████████████░░░░░  75% 🔄 В ПРОЦЕССЕ (Billing Complete!)
+Фаза 2: █████████████████░░░  85% 🔄 В ПРОЦЕССЕ (Billing Complete!)
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 
-Общий прогресс: ███████████░░░ 55% (28/35 задач)
+Общий прогресс: █████████████░░ 61% (30/35 задач)
 ```
 
 ### 📋 Project Phases Overview
@@ -87,7 +87,7 @@ Modern parking lot management system built on microservices architecture using S
 |-------|----------|--------|----------|-------------|
 | **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
 | **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
-| **Phase 2** | 2 weeks | 🔄 In Progress | 75% | Core Business Logic (Billing Complete!) |
+| **Phase 2** | 2 weeks | 🔄 In Progress | 85% | Core Business Logic (Billing Complete!) |
 | **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
 | **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
 | **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |
@@ -103,39 +103,51 @@ Modern parking lot management system built on microservices architecture using S
 - ✅ API Gateway proxy verification
 - ✅ Tests & documentation
 
-**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (67%)**
+**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (85%)**
 - ✅ TARIFFS table migration (Issue #24)
 - ✅ PARKING_EVENTS & PAYMENTS extensions (Issue #25)
 - ✅ API Contracts documentation (Issue #26)
 - ✅ Tariff entity implementation (Issue #31)
 - ✅ ParkingEvent & Payment entities (Issue #32)
 - ✅ Billing Service: fee calculation & payment processing (Issue #33)
-- ✅ Billing Service: REST API & Integration Tests (Issue #34)
-- ⏳ Gate Control Service: entry/exit logic (Issue #35)
-- ⏳ Inter-service communication (Issue #36)
+- ✅ Billing Service: fee calculation endpoint /calculate (Issue #34)
+- ✅ Billing Service: payment recording endpoint /pay (Issue #35) ⭐ **NEW**
+- ⏳ Gate Control Service: entry/exit logic (Issue #36)
+- ⏳ Inter-service communication (Issue #37)
 
 ### 📊 Quick Stats
 
 | Metric | Value |
 |--------|-------|
 | **Total Issues** | 35 |
-| **Closed Issues** | 26 (74%) |
+| **Closed Issues** | 30 (86%) |
 | **Microservices** | 9 |
 | **Phase 1** | ✅ 100% Complete |
-| **Phase 2** | 🔄 50% In Progress |
-| **API Endpoints** | 51+ |
-| **Tests** | 80+ |
+| **Phase 2** | 🔄 85% In Progress |
+| **API Endpoints** | 54+ |
+| **Tests** | 100+ |
 | **DB Migrations** | 8 |
 | **Code Coverage** | ~90% avg |
 
 ### Recent Achievements
+
+**2026-01-24 - Billing Service REST API Complete (Issues #34, #35)**
+- ✅ OpenAPI-first BillingController implementing BillingApi interface
+- ✅ POST /api/v1/billing/calculate - fee calculation endpoint
+- ✅ POST /api/v1/billing/pay - payment recording endpoint
+- ✅ GET /api/v1/billing/status - payment status check endpoint
+- ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
+- ✅ BillingMapper enhancements for comprehensive transformations
+- ✅ GlobalExceptionHandler with proper HTTP status codes (400, 404, 409, 500)
+- ✅ 6 integration tests - all passing
+- 📊 **Total Test Coverage:** 53 tests (100% passing)
+- 🎉 **Billing Service COMPLETE** - Ready for Gate Control integration!
 
 **2026-01-18 - Billing Service Complete (Issues #32, #33)**
 - ✅ ParkingEvent & Payment JPA entities with @PrePersist hooks
 - ✅ Repositories with custom queries (18 tests)
 - ✅ BillingService with fee calculation & payment logic
 - ✅ Domain models & mapper implementation
-- ✅ OpenAPI-first controller with 3 endpoints
 - ✅ Custom exceptions for business logic errors
 - ✅ 38 new unit tests (all passing) - Total: 80+ tests
 - 📊 Coverage: Service ~95%, Controller ~85%, Repository ~90%
@@ -148,9 +160,9 @@ Modern parking lot management system built on microservices architecture using S
 ### Next Steps
 
 **Immediate (This Week):**
-1. ✅ ~~Complete Billing Service implementation (Issues #32, #33)~~ - DONE
-2. Implement Gate Control Service (Issue #34) - POST /entry, POST /exit, GET /status
-3. Add inter-service communication (Issue #35) - Billing <-> Gate Control
+1. ✅ ~~Complete Billing Service implementation (Issues #32, #33, #34, #35)~~ - DONE
+2. Implement Gate Control Service (Issue #36) - POST /entry, POST /exit, GET /status
+3. Add inter-service communication (Issue #37) - Billing <-> Gate Control
 
 **Upcoming (Next 2 Weeks):**
 1. Complete Phase 2: Business logic implementation

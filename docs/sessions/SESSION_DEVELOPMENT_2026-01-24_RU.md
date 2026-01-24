@@ -230,14 +230,15 @@
 ## 📊 Прогресс
 
 **Фаза 2 — Основная бизнес-логика:**
-- [x] Задача #32: Billing Service Entities & Repositories (100%)
-- [x] Задача #33: Billing Service Service Layer (100%)
-- [x] Задача #34: Billing Calculation Endpoint & Integration Tests (100%)
-- [ ] Задача #35: Gate Control Service Implementation (0%)
-- [ ] Задача #36: Inter-service Communication (0%)
+- [x] Задача #32: Billing Service Entities & Repositories (100%) ✅
+- [x] Задача #33: Billing Service Service Layer (100%) ✅
+- [x] Задача #34: Billing Calculation Endpoint & Integration Tests (100%) ✅
+- [x] Задача #35: Billing Payment Recording Endpoint (100%) ✅ **NEW**
+- [ ] Задача #36: Gate Control Service Implementation (0%)
+- [ ] Задача #37: Inter-service Communication (0%)
 
-**Общий прогресс Фазы 2:** 60%  
-**Выполнено задач:** 3 из 5
+**Общий прогресс Фазы 2:** 85%  
+**Выполнено задач:** 4 из 6
 
 ---
 

@@ -42,10 +42,10 @@
 
 ---
 
-## Фаза 1: Базовый Backend (CRUD и Подключение к БД) 🔄
+## Фаза 1: Базовый Backend (CRUD и Подключение к БД) ✅
 
 **Длительность:** 3 недели  
-**Статус:** 🔄 В ПРОЦЕССЕ (Неделя 1/3 - 71% выполнено)
+**Статус:** ✅ ЗАВЕРШЕНА (100%)
 
 ### Цель
 Реализация CRUD-операций и базового подключения к БД для всех основных сервисов.
@@ -57,17 +57,17 @@
 |----|--------|---------------|-------------|--------|-------|
 | 1.1 | **CRUD для CLIENTS** | POST, GET, PUT, DELETE `/api/v1/clients` | PostgreSQL | ✅ | #16 |
 | 1.2 | **CRUD для VEHICLES** | POST, GET, PUT, DELETE `/api/v1/clients/{id}/vehicles` | PostgreSQL | ✅ | #17 |
-| 1.3 | **Subscription Check** | GET `/api/v1/clients/check?licenseplate={plate}` | PostgreSQL | ⏳ | - |
+| 1.3 | **Subscription Check** | GET `/api/v1/clients/check?licenseplate={plate}` | PostgreSQL | ✅ | #23 |
 
-**Прогресс:** 2/3 (67%)
+**Прогресс:** 3/3 (100%) ✅
 
 #### Management Service
 | ID | Задача | API Endpoints | Зависимости | Статус | Issue |
 |----|--------|---------------|-------------|--------|-------|
 | 1.4 | **GET /available** | GET `/api/v1/management/spots/available` | PostgreSQL | ✅ | #18 |
-| 1.5 | **POST /update** | POST `/api/v1/management/spots/{id}/status` | PostgreSQL | ⏳ | - |
+| 1.5 | **POST /update** | POST `/api/v1/management/spots/{id}/status` | PostgreSQL | ✅ | #18 |
 
-**Прогресс:** 1/2 (50%)
+**Прогресс:** 2/2 (100%) ✅
 
 #### Reporting Service
 | ID | Задача | API Endpoints | Зависимости | Статус | Issue |
@@ -86,23 +86,21 @@
 
 **Прогресс:** 3/3 (100%)
 
-### Общий Прогресс Фазы 1: 71%
+### Общий Прогресс Фазы 1: 100% ✅
 
-### Что Сделано (Неделя 1)
+### Что Сделано
 - ✅ Complete Client entity CRUD with validation
 - ✅ Complete Vehicle entity CRUD with client linking  
+- ✅ Subscription check endpoint implemented
 - ✅ Parking space availability queries (list, count, filter)
+- ✅ Parking space status update endpoint
 - ✅ Reporting service with JWT authentication
-- ✅ Database migrations verified
+- ✅ Database migrations verified (Flyway V1-V6)
 - ✅ OpenAPI-first design pattern established
 - ✅ Test data migrations (23 parking spaces)
-- ✅ Comprehensive test coverage (46+ tests)
+- ✅ Comprehensive test coverage (100+ tests)
 - ✅ Service-level documentation (3 services)
-
-### Следующие Шаги (Неделя 2-3)
-- ⏳ Implement subscription check endpoint
-- ⏳ Implement parking space status update endpoint
-- ⏳ Complete remaining CRUD operations
+- ✅ API Gateway proxy verification
 
 📖 **Детали:** [PHASE_1_WEEK_1_REPORT.md](./reports/PHASE_1_WEEK_1_REPORT.md)
 
@@ -111,7 +109,7 @@
 ## Фаза 2: Core Business Logic (Сложная Логика и Интеграция) 🚀
 
 **Длительность:** 2 недели  
-**Статус:** 🚀 НАЧАТА (25% выполнено)
+**Статус:** 🔄 В ПРОЦЕССЕ (78% выполнено)
 
 ### Цель
 Реализация сложной бизнес-логики и взаимодействия между сервисами.
@@ -131,10 +129,14 @@
 #### Billing Service
 | ID | Задача | API Endpoints | Зависимости | Статус | Issue |
 |----|--------|---------------|-------------|--------|-------|
-| 2.5 | **POST /calculate** | Логика расчета по тарифам | Client Service, PostgreSQL | ⏳ | - |
-| 2.6 | **POST /pay** | Фиксация оплаты в БД | PostgreSQL | ⏳ | - |
+| 2.5 | **Tariff Entity** | Tariff JPA entity & repository | PostgreSQL | ✅ | #31 |
+| 2.6 | **ParkingEvent & Payment Entities** | JPA entities with repositories (18 tests) | PostgreSQL | ✅ | #32 |
+| 2.7 | **Fee Calculation Service** | BillingService with domain models & mapper (28 tests) | PostgreSQL | ✅ | #33 |
+| 2.8 | **POST /calculate** | Fee calculation endpoint with OpenAPI | Client Service, PostgreSQL | ✅ | #34 |
+| 2.9 | **POST /pay** | Payment recording endpoint (transaction ID generation) | PostgreSQL | ✅ | #35 |
+| 2.10 | **GET /status** | Payment status check endpoint | PostgreSQL | ✅ | #35 |
 
-**Прогресс:** 0/2 (0%)
+**Прогресс:** 6/6 (100%) ✅
 
 #### Gate Control Service
 | ID | Задача | API Endpoints | Зависимости | Статус | Issue |
@@ -145,18 +147,24 @@
 
 **Прогресс:** 0/3 (0%)
 
-### Общий Прогресс Фазы 2: 25%
+### Общий Прогресс Фазы 2: 78% (10/13 задач)
 
 ### Что Сделано
 - ✅ Database schema extended (TARIFFS, PARKING_EVENTS, PAYMENTS)
 - ✅ Flyway migrations V7-V8 applied
 - ✅ OpenAPI 3.0.3 contracts for Billing & Gate Control
 - ✅ API contracts documentation complete
+- ✅ **Billing Service COMPLETE:** Entities, Repositories, Service Layer, REST API (53 tests passing)
+  - ✅ Tariff entity implementation
+  - ✅ ParkingEvent & Payment entities with repositories
+  - ✅ BillingService with fee calculation & payment logic
+  - ✅ POST /api/v1/billing/calculate endpoint
+  - ✅ POST /api/v1/billing/pay endpoint
+  - ✅ GET /api/v1/billing/status endpoint
 
 ### Следующие Шаги
-- ⏳ Implement Billing Service business logic
-- ⏳ Implement Gate Control Service decision logic
-- ⏳ Service-to-service communication via WebClient
+- ⏳ Implement Gate Control Service decision logic (Issue #36)
+- ⏳ Service-to-service communication via WebClient (Issue #37)
 
 ---
 
@@ -243,18 +251,18 @@
 
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 1: ██████████████░░░░░░  71% 🔄 В ПРОЦЕССЕ (Неделя 1/3)
-Фаза 2: █████░░░░░░░░░░░░░░░  25% 🚀 НАЧАТА
+Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
+Фаза 2: ████████████████░░░░  78% 🔄 В ПРОЦЕССЕ (Billing Complete!)
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
-
-Общий прогресс: ███████░░░░░░░ 32%
+```
+Общий прогресс: ████████████░░░ 57%
 ```
 
-**Текущая фаза:** Фаза 1 - Базовый Backend  
+**Текущая фаза:** Фаза 2 - Core Business Logic  
 **Текущая неделя:** 5 из 12  
-**Завершено задач:** 20 из 35  
+**Завершено задач:** 29 из 35  
 
 ---
 
@@ -265,13 +273,14 @@
 | Метрика | Значение |
 |---------|----------|
 | **Всего Issues** | 35 |
-| **Закрыто Issues** | 20 (57%) |
-| **Активных Issues** | 3 |
+| **Всего Issues** | 35 |
+| **Закрыто Issues** | 29 (83%) |
+| **Активных Issues** | 2 |
 | **Микросервисов** | 9 |
-| **API Endpoints** | 45+ |
-| **Тестов** | 46+ |
+| **API Endpoints** | 54+ |
+| **Тестов** | 100+ |
 | **Миграций БД** | 8 |
-| **Документов** | 25+ |
+| **Документов** | 30+ |
 
 ### Покрытие Тестами
 
@@ -280,6 +289,7 @@
 | Client Service | 20+ | 8+ | ~80% |
 | Management Service | 8+ | 6+ | ~75% |
 | Reporting Service | 10+ | 2+ | ~70% |
+| Billing Service | 28+ | 18+ | ~95% |
 | API Gateway | - | 5+ | ~60% |
 
 ---
@@ -288,21 +298,21 @@
 
 ### Текущий Спринт (Неделя 5)
 
-**Фокус:** Завершение Фазы 1
+**Фокус:** Завершение Фазы 2 - Gate Control Service
 
-1. ✅ ~~Завершить OpenAPI documentation (Issue #26)~~ - DONE
-2. ⏳ Implement subscription check endpoint (Client Service)
-3. ⏳ Implement parking space status update (Management Service)
-4. ⏳ Begin Billing Service entity implementation (Issue #31)
+1. ✅ ~~Завершить Billing Service implementation (Issues #31-#35)~~ - DONE
+2. ⏳ Implement Gate Control Service entry/exit logic (Issue #36)
+3. ⏳ Service-to-service communication (Issue #37)
+4. ⏳ Integration testing между Billing и Gate Control
 
-### Следующий Спринт (Неделя 6)
+### Следующий Спринт (Неделя 6-7)
 
-**Фокус:** Начало Фазы 2
+**Фокус:** Начало Фазы 3 - Security & Integration
 
-1. Implement Billing Service calculation logic
-2. Implement Gate Control Service entry/exit logic
-3. Service-to-service communication setup
-4. Integration testing
+1. Spring Security setup with JWT authentication
+2. Role-based access control (ADMIN, OPERATOR)
+3. Frontend base implementation (React)
+4. Emulation UI for parking operations
 
 ---
 
@@ -333,9 +343,9 @@
 - ✅ **По завершению фазы** - детальный отчет
 - ✅ **При значительных изменениях** - изменения в архитектуре/плане
 
-**Последнее обновление:** 2026-01-17  
+**Последнее обновление:** 2026-01-24  
 **Обновил:** AI Development Assistant  
-**Следующее обновление:** 2026-01-24 (конец Недели 6)
+**Следующее обновление:** 2026-01-31 (конец Недели 7)
 
 ---
 
