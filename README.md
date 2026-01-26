@@ -7,6 +7,27 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
+### 2026-01-26 - Gate Control Service: Entry REST Endpoint (Issue #50) ✅
+
+✅ **Gate Control Service - Entry REST API Complete** (Issue #50)
+- ✅ POST /api/v1/gate/entry endpoint with OpenAPI-first implementation
+- ✅ GateController implementing GateApi interface from OpenAPI specification
+- ✅ EntryRequest DTO with validation (license plate pattern, entry method, gate ID)
+- ✅ EntryResponse DTO with JsonNullable for optional ticket code
+- ✅ 5 comprehensive integration tests - **ALL PASSING** ✅
+  - Subscriber entry returns 201 without ticket
+  - One-time visitor returns 201 with unique ticket code
+  - Invalid license plate format returns 400
+  - Missing required fields returns 400
+  - Manual entry with operator ID succeeds
+- ✅ TestSecurityConfig for integration tests (permits all requests in test profile)
+- ✅ Full request/response validation with proper HTTP status codes
+- ✅ SLF4J logging with emojis for all operations
+- 📖 **Controller:** [GateController.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/controller/GateController.java)
+- 📖 **Tests:** [GateControllerIntegrationTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/controller/GateControllerIntegrationTest.java)
+- 📖 **OpenAPI:** [openapi.yaml](./backend/gate-control-service/src/main/resources/openapi.yaml)
+- 🎯 **Next Steps:** Exit decision logic and REST endpoint
+
 ### 2026-01-26 - Gate Control Service: Entry Decision Logic (Issue #49) ✅
 
 ✅ **Gate Control Service - Entry Decision Logic** (Issue #49)
@@ -24,7 +45,6 @@ Modern parking lot management system built on microservices architecture using S
 - 📖 **Service:** [GateService.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/service/GateService.java)
 - 📖 **DTO:** [EntryDecision.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/EntryDecision.java)
 - 📖 **Tests:** [GateServiceTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/service/GateServiceTest.java)
-- 🎯 **Next Steps:** Exit decision logic (Issue #50), Entry/Exit REST endpoints (Issues #51, #52)
 
 ### 2026-01-26 - Gate Control Service: Client Service Integration (Issue #48) ✅
 

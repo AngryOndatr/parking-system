@@ -16,6 +16,11 @@ spring:
         format_sql: true
   flyway:
     enabled: false
+  security:
+    # Disable security for integration tests
+    user:
+      name: test
+      password: test
 
 # Test URLs for inter-service communication
 services:

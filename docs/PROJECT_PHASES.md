@@ -151,27 +151,27 @@
 | 2.12 | **WebClient Configuration** | WebClient beans for inter-service communication | Client, Billing, Management, Reporting | ✅ | #47 |
 | 2.13 | **Client Service Integration** | ClientServiceClient for subscription validation | Client Service, WebClient | ✅ | #48 |
 | 2.14 | **Entry Decision Logic** | Service layer for entry decisions with subscriber/visitor paths | Client Service, GateEvent | ✅ | #49 |
-| 2.15 | **Exit Decision Logic** | Service layer for exit decisions | Billing Service | ⏳ | #50 |
-| 2.16 | **POST /entry** | Entry endpoint with OpenAPI | GateService, WebClient | ⏳ | #51 |
+| 2.15 | **Entry REST Endpoint** | POST /api/v1/gate/entry with OpenAPI (5 integration tests) | GateService, WebClient | ✅ | #50 |
+| 2.16 | **Exit Decision Logic** | Service layer for exit decisions | Billing Service | ⏳ | #51 |
 | 2.17 | **POST /exit** | Exit endpoint with OpenAPI | GateService, WebClient | ⏳ | #52 |
 
-**Прогресс:** 4/7 (57%)
+**Прогресс:** 5/7 (71%)
 
 **Статистика тестирования:**
 - Репозиторные тесты: 5 (GateEvent)
 - Client тесты: 5 (ClientServiceClient с MockWebServer)
 - Service тесты: 5 (GateService - entry decision logic)
-- **Итого Gate Control:** 15 тестов ✅
+- Integration тесты: 5 (GateController - entry endpoint)
+- **Итого Gate Control:** 20 тестов ✅
 
-### Общий Прогресс Фазы 2: 93% (14/15 задач)
+### Общий Прогресс Фазы 2: 94% (15/16 задач)
 
 **Завершённые сервисы:**
 - ✅ Billing Service: 100% (6/6 задач)
-- 🔄 Gate Control Service: 57% (4/7 задач)
+- 🔄 Gate Control Service: 71% (5/7 задач)
 
 **Следующие шаги:**
-- Exit decision logic (Issue #50)
-- Entry REST endpoint with OpenAPI (Issue #51)
+- Exit decision logic (Issue #51)
 - Exit REST endpoint with OpenAPI (Issue #52)
 - Integration testing across services
 
@@ -187,7 +187,7 @@
   - ✅ POST /api/v1/billing/calculate endpoint
   - ✅ POST /api/v1/billing/pay endpoint
   - ✅ GET /api/v1/billing/status endpoint
-- 🔄 **Gate Control Service In Progress (57%):**
+- 🔄 **Gate Control Service In Progress (71%):**
   - ✅ GateEvent entity with EventType (ENTRY, EXIT, MANUAL_OPEN, ERROR) and Decision (OPEN, DENY) enums
   - ✅ GateEventRepository with license plate and timestamp queries
   - ✅ Flyway migration V9 for gate_events table
@@ -195,7 +195,10 @@
   - ✅ ClientServiceClient with fail-safe error handling
   - ✅ GateService with entry decision logic (subscriber/visitor paths)
   - ✅ Unique ticket generation for one-time visitors
-  - ✅ 15 comprehensive tests passing (5 repository + 5 client + 5 service)
+  - ✅ **POST /api/v1/gate/entry endpoint COMPLETE** with OpenAPI-first implementation
+  - ✅ GateController implementing GateApi interface
+  - ✅ EntryRequest/EntryResponse DTOs with JsonNullable for optional fields
+  - ✅ 20 comprehensive tests passing (5 repository + 5 client + 5 service + 5 integration)
 
 ### Следующие Шаги
 - ⏳ Implement exit decision logic with billing integration (Issue #50)
