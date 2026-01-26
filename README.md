@@ -7,6 +7,25 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
+### 2026-01-26 - Gate Control Service: Entry Decision Logic (Issue #49) ✅
+
+✅ **Gate Control Service - Entry Decision Logic** (Issue #49)
+- ✅ GateService with processEntry(licensePlate) decision logic
+- ✅ EntryDecision DTO with action (OPEN/DENY), message, and ticket code
+- ✅ Subscriber path: automatic gate opening without ticket generation
+- ✅ Visitor path: unique ticket generation (TICKET-{timestamp}-{random})
+- ✅ GateEvent logging for all entry decisions (ENTRY, OPEN/DENY with reason)
+- ✅ 5 comprehensive unit tests - **ALL PASSING** ✅
+  - Subscriber grants access without ticket
+  - One-time visitor generates ticket and grants access
+  - Client service called exactly once for both paths
+  - Multiple visitors receive unique tickets
+- ✅ Integration with ClientServiceClient and GateEventRepository
+- 📖 **Service:** [GateService.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/service/GateService.java)
+- 📖 **DTO:** [EntryDecision.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/EntryDecision.java)
+- 📖 **Tests:** [GateServiceTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/service/GateServiceTest.java)
+- 🎯 **Next Steps:** Exit decision logic (Issue #50), Entry/Exit REST endpoints (Issues #51, #52)
+
 ### 2026-01-26 - Gate Control Service: Client Service Integration (Issue #48) ✅
 
 ✅ **Gate Control Service - Client Service Integration** (Issue #48)
@@ -24,7 +43,6 @@ Modern parking lot management system built on microservices architecture using S
 - 📖 **Client:** [ClientServiceClient.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/client/ClientServiceClient.java)
 - 📖 **DTO:** [SubscriptionCheckResponse.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/SubscriptionCheckResponse.java)
 - 📖 **Tests:** [ClientServiceClientTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/client/ClientServiceClientTest.java)
-- 🎯 **Next Steps:** Billing Service integration (Issue #49), Management Service integration (Issue #50)
 
 ### 2026-01-26 - Gate Control Service: GateEvent Entity Implementation (Issue #46) ✅
 

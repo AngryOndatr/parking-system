@@ -10,12 +10,149 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### In Progress
-- Phase 2: Gate Control Service WebClient configuration (Issue #47)
+- Phase 2: Gate Control Service Exit Decision Logic (Issue #50)
 
 ### Recently Completed
+- ✅ Gate Control Service: Entry Decision Logic (Issue #49) - 2026-01-26
+- ✅ Gate Control Service: Client Service Integration (Issue #48) - 2026-01-26
+- ✅ Gate Control Service: WebClient Configuration (Issue #47) - 2026-01-26
 - ✅ Gate Control Service: GateEvent Entity & Repository (Issue #46) - 2026-01-26
 - ✅ Billing Service: Payment Status Endpoint (Issue #36) - 2026-01-24
 - ✅ Billing Service: Payment Recording API (Issues #34, #35) - 2026-01-24
+
+---
+
+## [0.9.0] - 2026-01-26
+
+### Added - Gate Control Service: Entry Decision Logic (Issue #49)
+
+#### Issue #49: Implement Entry Decision Logic
+- **Service Layer:**
+  - `GateService` with core business logic for entry processing
+  - `processEntry(String licensePlate)` method implementing decision tree:
+    - **Subscriber path:** automatic gate opening without ticket generation
+    - **Visitor path:** unique ticket generation with TICKET-{timestamp}-{random} format
+  - Integration with `ClientServiceClient` for subscription validation
+  - Integration with `GateEventRepository` for audit trail logging
+- **DTO Layer:**
+  - `EntryDecision` DTO with fields:
+    - `action`: "OPEN" or "DENY" decision
+    - `message`: User-friendly message for display
+    - `ticketCode`: Generated ticket code (null for subscribers)
+  - Lombok annotations for builder pattern support
+- **Decision Logic:**
+  - Call to Client Service to check subscription status
+  - If `isAccessGranted=true`: 
+    - Log ENTRY event with "Valid subscription" reason
+    - Return OPEN decision without ticket
+  - If `isAccessGranted=false`:
+    - Generate unique ticket code
+    - Log ENTRY event with "Ticket issued" reason and ticket code
+    - Return OPEN decision with ticket code
+  - All gate events saved with proper metadata (ENTRY-1 gate ID, timestamps)
+- **Testing:**
+  - 5 comprehensive unit tests with Mockito
+  - Test scenarios:
+    - Subscriber grants access without ticket
+    - One-time visitor generates ticket and grants access
+    - Client service called exactly once (both paths verified)
+    - Multiple visitors receive unique tickets
+  - Mock-based testing: ClientServiceClient and GateEventRepository mocked
+  - ArgumentCaptor usage for verifying saved GateEvent details
+  - **All tests passing** ✅
+- **Architecture:**
+  - Clean separation of concerns: Service -> Client -> Repository
+  - Domain-driven design principles applied
+  - Prepared for future REST endpoint integration
+
+**Dependencies:**
+- `ClientServiceClient` (Issue #48)
+- `GateEventRepository` (Issue #46)
+- `EntryDecision` DTO (new)
+
+**Files Added:**
+- `src/main/java/com/parking/gate_control_service/service/GateService.java`
+- `src/main/java/com/parking/gate_control_service/dto/EntryDecision.java`
+- `src/test/java/com/parking/gate_control_service/service/GateServiceTest.java`
+
+**Next Steps:**
+- Issue #50: Exit decision logic with billing integration
+- Issue #51: REST endpoint POST /api/v1/gate/entry
+- Issue #52: REST endpoint POST /api/v1/gate/exit
+
+---
+
+## [0.8.0] - 2026-01-26
+
+### Added - Gate Control Service: Client Service Integration (Issue #48)
+
+#### Issue #48: Implement Client Service Integration
+- **Client Layer:**
+  - `ClientServiceClient` for subscription validation via WebClient
+  - `checkSubscription(String licensePlate)` method calling Client Service API
+  - Fail-safe error handling: all errors result in access denial
+  - GET request to `/api/v1/clients/subscriptions/check?licensePlate={plate}`
+- **DTO Layer:**
+  - `SubscriptionCheckResponse` DTO with fields:
+    - `isAccessGranted`: Boolean flag for access decision
+    - `clientId`: ID of the client (nullable)
+    - `subscriptionId`: ID of the subscription (nullable)
+- **Error Handling:**
+  - 404 Not Found → access denied
+  - 5xx Server Errors → access denied
+  - Network/Timeout errors → access denied
+  - All errors logged with SLF4J
+- **Testing:**
+  - 5 comprehensive unit tests with MockWebServer
+  - Test scenarios:
+    - Active subscription validation (200 OK)
+    - Subscription not found (404)
+    - Inactive subscription handling
+    - Server error handling (500)
+    - Network error/timeout handling
+  - **All tests passing** ✅
+
+**Dependencies:**
+- WebClientConfig (Issue #47)
+
+**Files Added:**
+- `src/main/java/com/parking/gate_control_service/client/ClientServiceClient.java`
+- `src/main/java/com/parking/gate_control_service/dto/SubscriptionCheckResponse.java`
+- `src/test/java/com/parking/gate_control_service/client/ClientServiceClientTest.java`
+
+---
+
+## [0.7.0] - 2026-01-26
+
+### Added - Gate Control Service: WebClient Configuration (Issue #47)
+
+#### Issue #47: Setup WebClient for Inter-Service Communication
+- **Configuration Layer:**
+  - `WebClientConfig` with @Configuration for bean management
+  - Four WebClient beans for microservices communication:
+    - `clientServiceWebClient()` → Client Service
+    - `billingServiceWebClient()` → Billing Service
+    - `managementServiceWebClient()` → Management Service
+    - `reportingServiceWebClient()` → Reporting Service
+  - Base URL configuration via application.yml
+  - Environment variable support for deployment flexibility
+- **Application Configuration:**
+  - `application.yml` updated with service URLs:
+    - `services.client.url`: ${CLIENT_SERVICE_URL:http://localhost:8081}
+    - `services.billing.url`: ${BILLING_SERVICE_URL:http://localhost:8082}
+    - `services.management.url`: ${MANAGEMENT_SERVICE_URL:http://localhost:8083}
+    - `services.reporting.url`: ${REPORTING_SERVICE_URL:http://localhost:8084}
+- **Testing:**
+  - Integration test verifying bean creation
+  - All WebClient beans autowired and validated
+  - **Test passing** ✅
+
+**Files Added:**
+- `src/main/java/com/parking/gate_control_service/config/WebClientConfig.java`
+- `src/test/java/com/parking/gate_control_service/config/WebClientConfigTest.java`
+
+**Files Modified:**
+- `src/main/resources/application.yml`
 
 ---
 

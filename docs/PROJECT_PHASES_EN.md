@@ -86,9 +86,26 @@ Implement CRUD operations and basic database connectivity for all core services.
 
 **Progress:** 3/3 (100%)
 
-### Overall Phase 1 Progress: 71%
+### Overall Phase 2 Progress: 93% (14/15 tasks)
 
-### What's Done (Week 1)
+**Completed Services:**
+- ✅ Billing Service: 100% (6/6 tasks)
+- 🔄 Gate Control Service: 57% (4/7 tasks)
+
+**Test Statistics:**
+- Repository tests: 5 (GateEvent)
+- Client tests: 5 (ClientServiceClient with MockWebServer)
+- Service tests: 5 (GateService - entry decision logic)
+- **Total Gate Control:** 15 tests ✅
+- **Total Billing:** 57 tests ✅
+
+**Next Steps:**
+- Exit decision logic (Issue #50)
+- Entry REST endpoint with OpenAPI (Issue #51)
+- Exit REST endpoint with OpenAPI (Issue #52)
+- Integration testing across services
+
+### What's Done
 - ✅ Complete Client entity CRUD with validation
 - ✅ Complete Vehicle entity CRUD with client linking  
 - ✅ Parking space availability queries (list, count, filter)
@@ -131,32 +148,55 @@ Implement complex business logic and service-to-service communication.
 #### Billing Service
 | ID | Task | API Endpoints | Dependencies | Status | Issue |
 |----|------|---------------|--------------|--------|-------|
-| 2.5 | **POST /calculate** | Calculation logic based on tariffs | Client Service, PostgreSQL | ⏳ | - |
-| 2.6 | **POST /pay** | Save payment to DB | PostgreSQL | ⏳ | - |
+| 2.5 | **Tariff Entity** | JPA entity & repository with tests | PostgreSQL | ✅ | #30 |
+| 2.6 | **ParkingEvent & Payment Entities** | JPA entities & repositories (18 tests) | PostgreSQL | ✅ | #32 |
+| 2.7 | **BillingService** | Fee calculation & payment logic (28 tests) | Repositories | ✅ | #33 |
+| 2.8 | **POST /calculate** | Fee calculation endpoint with OpenAPI | BillingService | ✅ | #34 |
+| 2.9 | **POST /pay** | Payment recording endpoint | BillingService | ✅ | #35 |
+| 2.10 | **GET /status** | Payment status check endpoint | BillingService | ✅ | #36 |
 
-**Progress:** 0/2 (0%)
+**Progress:** 6/6 (100%) ✅
 
 #### Gate Control Service
 | ID | Task | API Endpoints | Dependencies | Status | Issue |
 |----|------|---------------|--------------|--------|-------|
-| 2.7 | **POST /entry** | Entry logic (subscription check) | Client Service, Management Service | ⏳ | - |
-| 2.8 | **POST /exit** | Exit logic (payment request) | Billing Service, Management Service | ⏳ | - |
-| 2.9 | **Decision Logic** | Access decision making | Multiple Services | ⏳ | - |
+| 2.11 | **GateEvent Entity** | JPA entity & repository with tests (5 tests) | PostgreSQL, Flyway V9 | ✅ | #46 |
+| 2.12 | **WebClient Configuration** | WebClient beans for inter-service communication | Client, Billing, Management, Reporting | ✅ | #47 |
+| 2.13 | **Client Service Integration** | ClientServiceClient for subscription validation | Client Service, WebClient | ✅ | #48 |
+| 2.14 | **Entry Decision Logic** | Service layer for entry decisions with subscriber/visitor paths | Client Service, GateEvent | ✅ | #49 |
+| 2.15 | **Exit Decision Logic** | Service layer for exit decisions | Billing Service | ⏳ | #50 |
+| 2.16 | **POST /entry** | Entry endpoint with OpenAPI | GateService, WebClient | ⏳ | #51 |
+| 2.17 | **POST /exit** | Exit endpoint with OpenAPI | GateService, WebClient | ⏳ | #52 |
 
-**Progress:** 0/3 (0%)
-
-### Overall Phase 2 Progress: 25%
+**Progress:** 4/7 (57%)
 
 ### What's Done
 - ✅ Database schema extended (TARIFFS, PARKING_EVENTS, PAYMENTS)
-- ✅ Flyway migrations V7-V8 applied
+- ✅ Flyway migrations V7-V9 applied
 - ✅ OpenAPI 3.0.3 contracts for Billing & Gate Control
 - ✅ API contracts documentation complete
+- ✅ **Billing Service COMPLETE:** Entities, Repositories, Service Layer, REST API (57 tests passing)
+  - ✅ Tariff entity implementation
+  - ✅ ParkingEvent & Payment entities with repositories
+  - ✅ BillingService with fee calculation & payment logic
+  - ✅ POST /api/v1/billing/calculate endpoint
+  - ✅ POST /api/v1/billing/pay endpoint
+  - ✅ GET /api/v1/billing/status endpoint
+- 🔄 **Gate Control Service In Progress (57%):**
+  - ✅ GateEvent entity with EventType (ENTRY, EXIT, MANUAL_OPEN, ERROR) and Decision (OPEN, DENY) enums
+  - ✅ GateEventRepository with license plate and timestamp queries
+  - ✅ Flyway migration V9 for gate_events table
+  - ✅ WebClient configuration for all inter-service communication
+  - ✅ ClientServiceClient with fail-safe error handling
+  - ✅ GateService with entry decision logic (subscriber/visitor paths)
+  - ✅ Unique ticket generation for one-time visitors
+  - ✅ 15 comprehensive tests passing (5 repository + 5 client + 5 service)
 
 ### Next Steps
-- ⏳ Implement Billing Service business logic
-- ⏳ Implement Gate Control Service decision logic
-- ⏳ Service-to-service communication via WebClient
+- ⏳ Implement exit decision logic with billing integration (Issue #50)
+- ⏳ Create REST endpoint POST /api/v1/gate/entry (Issue #51)
+- ⏳ Create REST endpoint POST /api/v1/gate/exit (Issue #52)
+- ⏳ Integration tests for Gate Control Service
 
 ---
 
@@ -243,13 +283,14 @@ Prepare system for production deployment.
 
 ```
 Phase 0: ████████████████████ 100% ✅ COMPLETED
-Phase 1: ██████████████░░░░░░  71% 🔄 IN PROGRESS (Week 1/3)
-Phase 2: █████░░░░░░░░░░░░░░░  25% 🚀 STARTED
+Phase 1: ████████████████████ 100% ✅ COMPLETED
+Phase 2: ██████████████████░░  93% 🔄 IN PROGRESS (Week 2/2)
 Phase 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
 Phase 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
 Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
 
-Overall progress: ███████░░░░░░░ 32%
+Total Progress: ████████░░░░░░░░░░░░ 39% (2.5/6 phases)
+```Overall progress: ███████░░░░░░░ 32%
 ```
 
 **Current Phase:** Phase 1 - Basic Backend  
