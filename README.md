@@ -7,6 +7,25 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
+### 2026-01-26 - Gate Control Service: Client Service Integration (Issue #48) ✅
+
+✅ **Gate Control Service - Client Service Integration** (Issue #48)
+- ✅ ClientServiceClient with WebClient for subscription validation
+- ✅ SubscriptionCheckResponse DTO with access grant status
+- ✅ Fail-safe error handling: all errors result in access denial
+- ✅ 5 comprehensive unit tests with MockWebServer - **ALL PASSING** ✅
+  - Active subscription validation (200 OK)
+  - Subscription not found handling (404)
+  - Inactive subscription handling
+  - Server error handling (500)
+  - Network error/timeout handling
+- ✅ SLF4J logging for all requests and errors
+- ✅ Integration with existing WebClientConfig
+- 📖 **Client:** [ClientServiceClient.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/client/ClientServiceClient.java)
+- 📖 **DTO:** [SubscriptionCheckResponse.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/SubscriptionCheckResponse.java)
+- 📖 **Tests:** [ClientServiceClientTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/client/ClientServiceClientTest.java)
+- 🎯 **Next Steps:** Billing Service integration (Issue #49), Management Service integration (Issue #50)
+
 ### 2026-01-26 - Gate Control Service: GateEvent Entity Implementation (Issue #46) ✅
 
 ✅ **Gate Control Service - Entity Layer** (Issue #46)
@@ -83,17 +102,17 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 📈 Project Status & Roadmap
 
-### Current Status: Phase 2 - Week 6 of 12 🚀
+### Current Status: Phase 2 - Week 7 of 12 🚀
 
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: ██████████████████░░  90% 🔄 В ПРОЦЕССЕ (Gate Control Started!)
+Фаза 2: ███████████████████░  93% 🔄 В ПРОЦЕССЕ (Gate Control Integration!)
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 
-Общий прогресс: █████████████░░ 65% (31/35 задач)
+Общий прогресс: ██████████████░ 68% (32/35 задач)
 ```
 
 ### 📋 Project Phases Overview
