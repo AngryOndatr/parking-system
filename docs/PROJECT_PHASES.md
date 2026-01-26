@@ -147,17 +147,18 @@
 #### Gate Control Service
 | ID | Задача | API Endpoints | Зависимости | Статус | Issue |
 |----|--------|---------------|-------------|--------|-------|
-| 2.11 | **POST /entry** | Логика въезда (проверка абонемента) | Client Service, Management Service | ⏳ | - |
-| 2.12 | **POST /exit** | Логика выезда (запрос оплаты) | Billing Service, Management Service | ⏳ | - |
-| 2.13 | **Decision Logic** | Принятие решений о допуске | Multiple Services | ⏳ | - |
+| 2.11 | **GateEvent Entity** | JPA entity & repository with tests | PostgreSQL | ✅ | #46 |
+| 2.12 | **POST /entry** | Логика въезда (проверка абонемента) | Client Service, Management Service | ⏳ | - |
+| 2.13 | **POST /exit** | Логика выезда (запрос оплаты) | Billing Service, Management Service | ⏳ | - |
+| 2.14 | **Decision Logic** | Принятие решений о допуске | Multiple Services | ⏳ | - |
 
-**Прогресс:** 0/3 (0%)
+**Прогресс:** 1/4 (25%)
 
-### Общий Прогресс Фазы 2: 78% (10/13 задач)
+### Общий Прогресс Фазы 2: 79% (11/14 задач)
 
 **Завершённые сервисы:**
 - ✅ Billing Service: 100% (6/6 задач)
-- ⏳ Gate Control Service: 0% (0/3 задач)
+- ⏳ Gate Control Service: 25% (1/4 задач)
 
 **Следующие шаги:**
 - Gate Control Service: Entry/Exit endpoints (#37)
@@ -166,7 +167,7 @@
 
 ### Что Сделано
 - ✅ Database schema extended (TARIFFS, PARKING_EVENTS, PAYMENTS)
-- ✅ Flyway migrations V7-V8 applied
+- ✅ Flyway migrations V7-V9 applied
 - ✅ OpenAPI 3.0.3 contracts for Billing & Gate Control
 - ✅ API contracts documentation complete
 - ✅ **Billing Service COMPLETE:** Entities, Repositories, Service Layer, REST API (53 tests passing)
@@ -176,10 +177,17 @@
   - ✅ POST /api/v1/billing/calculate endpoint
   - ✅ POST /api/v1/billing/pay endpoint
   - ✅ GET /api/v1/billing/status endpoint
+- ✅ **Gate Control Service Started:**
+  - ✅ GateEvent entity with EventType (ENTRY, EXIT, MANUAL_OPEN, ERROR) and Decision (OPEN, DENY) enums
+  - ✅ GateEventRepository with license plate and timestamp queries
+  - ✅ Flyway migration V9 for gate_events table
+  - ✅ 7 comprehensive integration tests passing
 
 ### Следующие Шаги
-- ⏳ Implement Gate Control Service decision logic (Issue #36)
-- ⏳ Service-to-service communication via WebClient (Issue #37)
+- ⏳ Create domain model wrapper for GateEvent (Issue #47)
+- ⏳ Implement GateControlService with decision logic (Issue #48)
+- ⏳ Create REST endpoints POST /entry and POST /exit (Issue #49)
+- ⏳ Service-to-service communication via WebClient (Issue #50)
 
 ---
 
@@ -267,17 +275,17 @@
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: ████████████████░░░░  78% 🔄 В ПРОЦЕССЕ (Billing Complete!)
+Фаза 2: ████████████████░░░░  79% 🔄 В ПРОЦЕССЕ (Gate Control Started!)
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 ```
-Общий прогресс: ████████████░░░ 57%
+Общий прогресс: █████████████░░ 58%
 ```
 
 **Текущая фаза:** Фаза 2 - Core Business Logic  
 **Текущая неделя:** 5 из 12  
-**Завершено задач:** 29 из 35  
+**Завершено задач:** 30 из 36  
 
 ---
 
@@ -287,14 +295,13 @@
 
 | Метрика | Значение |
 |---------|----------|
-| **Всего Issues** | 35 |
-| **Всего Issues** | 35 |
-| **Закрыто Issues** | 29 (83%) |
+| **Всего Issues** | 36 |
+| **Закрыто Issues** | 30 (83%) |
 | **Активных Issues** | 2 |
 | **Микросервисов** | 9 |
 | **API Endpoints** | 54+ |
-| **Тестов** | 100+ |
-| **Миграций БД** | 8 |
+| **Тестов** | 110+ |
+| **Миграций БД** | 9 |
 | **Документов** | 30+ |
 
 ### Покрытие Тестами
@@ -305,6 +312,7 @@
 | Management Service | 8+ | 6+ | ~75% |
 | Reporting Service | 10+ | 2+ | ~70% |
 | Billing Service | 28+ | 18+ | ~95% |
+| Gate Control Service | 0 | 7+ | ~50% |
 | API Gateway | - | 5+ | ~60% |
 
 ---
@@ -315,10 +323,11 @@
 
 **Фокус:** Завершение Фазы 2 - Gate Control Service
 
-1. ✅ ~~Завершить Billing Service implementation (Issues #31-#35)~~ - DONE
-2. ⏳ Implement Gate Control Service entry/exit logic (Issue #36)
-3. ⏳ Service-to-service communication (Issue #37)
-4. ⏳ Integration testing между Billing и Gate Control
+1. ✅ ~~Завершить Billing Service implementation (Issues #31-#36)~~ - DONE
+2. ✅ ~~GateEvent entity и repository (Issue #46)~~ - DONE
+3. ⏳ Implement Gate Control Service entry/exit logic (Issues #47-#49)
+4. ⏳ Service-to-service communication (Issue #50)
+5. ⏳ Integration testing между Billing и Gate Control
 
 ### Следующий Спринт (Неделя 6-7)
 
@@ -358,7 +367,7 @@
 - ✅ **По завершению фазы** - детальный отчет
 - ✅ **При значительных изменениях** - изменения в архитектуре/плане
 
-**Последнее обновление:** 2026-01-24  
+**Последнее обновление:** 2026-01-26  
 **Обновил:** AI Development Assistant  
 **Следующее обновление:** 2026-01-31 (конец Недели 7)
 
