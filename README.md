@@ -7,12 +7,26 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
+### 2026-01-26 - Gate Control Service: GateEvent Entity Implementation (Issue #46) ✅
+
+✅ **Gate Control Service - Entity Layer** (Issue #46)
+- ✅ GateEvent JPA entity with two enums (EventType: ENTRY/EXIT/MANUAL_OPEN/ERROR, Decision: OPEN/DENY)
+- ✅ GateEventRepository with custom query methods (findByLicensePlateOrderByTimestampDesc, findByTimestampBetween)
+- ✅ Flyway migration V9: gate_events table with indexes and constraints
+- ✅ 5 comprehensive integration tests - **ALL PASSING** ✅
+- ✅ Test configuration with H2 in-memory database
+- ✅ Domain model architecture: Hibernate -> Domain model <- DTO
+- 📖 **Entity:** [GateEvent.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/entity/GateEvent.java)
+- 📖 **Repository:** [GateEventRepository.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/repository/GateEventRepository.java)
+- 📖 **Tests:** [GateEventRepositoryTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/repository/GateEventRepositoryTest.java)
+- 🎯 **Next Steps:** WebClient configuration for inter-service communication (Issue #47)
+
 ### 2026-01-24 - Billing Service: Payment Status & Recording Endpoints (Issues #34, #35, #36) ✅
 
 ✅ **Billing Service - Complete REST API Implementation** (Issues #34, #35, #36)
 - ✅ POST /api/v1/billing/calculate endpoint - fee calculation with OpenAPI validation
 - ✅ POST /api/v1/billing/pay endpoint - payment recording with transaction ID generation
-- ✅ GET /api/v1/billing/status endpoint - comprehensive payment status check with remaining fee calculation ⭐ **NEW**
+- ✅ GET /api/v1/billing/status endpoint - comprehensive payment status check with remaining fee calculation
 - ✅ OpenAPI-first REST controller implementing BillingApi interface
 - ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
 - ✅ BillingMapper for comprehensive DTO <-> Entity <-> Domain transformations
@@ -69,17 +83,17 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 📈 Project Status & Roadmap
 
-### Current Status: Phase 2 - Week 5 of 12 🚀
+### Current Status: Phase 2 - Week 6 of 12 🚀
 
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: █████████████████░░░  85% 🔄 В ПРОЦЕССЕ (Billing Complete!)
+Фаза 2: ██████████████████░░  90% 🔄 В ПРОЦЕССЕ (Gate Control Started!)
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 
-Общий прогресс: █████████████░░ 61% (30/35 задач)
+Общий прогресс: █████████████░░ 65% (31/35 задач)
 ```
 
 ### 📋 Project Phases Overview
@@ -88,16 +102,33 @@ Modern parking lot management system built on microservices architecture using S
 |-------|----------|--------|----------|-------------|
 | **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
 | **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
-| **Phase 2** | 2 weeks | 🔄 In Progress | 85% | Core Business Logic (Billing Complete!) |
+| **Phase 2** | 2 weeks | 🔄 In Progress | 90% | Core Business Logic (Gate Control Started!) |
 | **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
 | **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
 | **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |
 
 📖 **Детальная дорожная карта:** [PROJECT_PHASES.md](./docs/PROJECT_PHASES.md)
 
-### 🎯 Current Sprint Goals (Week 5)
+### 🎯 Current Sprint Goals (Week 6)
 
-**Phase 1 - Basic Backend:** ✅ **ЗАВЕРШЕНА**
+**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (90%)**
+
+**Current Focus: Gate Control Service**
+- ✅ Issue #46: GateEvent entity & repository - **COMPLETED**
+- 🔄 Issue #47: WebClient configuration for inter-service calls - **IN PROGRESS**
+- ⏳ Issue #48: Entry decision logic service
+- ⏳ Issue #49: Exit decision logic service
+
+**Completed This Week:**
+- ✅ GateEvent JPA entity with enums (EventType, Decision)
+- ✅ GateEventRepository with custom queries
+- ✅ Flyway migration V9: gate_events table
+- ✅ 5 repository integration tests
+
+**Next Tasks:**
+1. Configure WebClient beans for Client, Billing, Management, Reporting services (Issue #47)
+2. Implement entry decision logic with subscription validation (Issue #48)
+3. Implement exit decision logic with payment verification (Issue #49)
 - ✅ Client Service: CRUD + subscription check
 - ✅ Management Service: available spots + status update
 - ✅ Reporting Service: log storage

@@ -28,3 +28,15 @@ springdoc:
     title: Gate Control Service API
     version: 1.0.0
     description: API for gate control and vehicle management
+
+# Inter-service communication URLs
+services:
+  client:
+    url: ${CLIENT_SERVICE_URL:http://localhost:8081}
+  billing:
+    url: ${BILLING_SERVICE_URL:http://localhost:8082}
+  management:
+    url: ${MANAGEMENT_SERVICE_URL:http://localhost:8083}
+  reporting:
+    url: ${REPORTING_SERVICE_URL:http://localhost:8084}
+

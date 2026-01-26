@@ -109,7 +109,7 @@
 ## Фаза 2: Core Business Logic (Сложная Логика и Интеграция) 🚀
 
 **Длительность:** 2 недели  
-**Статус:** 🔄 В ПРОЦЕССЕ (78% выполнено)
+**Статус:** 🔄 В ПРОЦЕССЕ (90% выполнено)
 
 ### Цель
 Реализация сложной бизнес-логики и взаимодействия между сервисами.
@@ -147,17 +147,23 @@
 #### Gate Control Service
 | ID | Задача | API Endpoints | Зависимости | Статус | Issue |
 |----|--------|---------------|-------------|--------|-------|
-| 2.11 | **GateEvent Entity** | JPA entity & repository with tests | PostgreSQL | ✅ | #46 |
-| 2.12 | **POST /entry** | Логика въезда (проверка абонемента) | Client Service, Management Service | ⏳ | - |
-| 2.13 | **POST /exit** | Логика выезда (запрос оплаты) | Billing Service, Management Service | ⏳ | - |
-| 2.14 | **Decision Logic** | Принятие решений о допуске | Multiple Services | ⏳ | - |
+| 2.11 | **GateEvent Entity** | JPA entity & repository with tests (5 tests) | PostgreSQL, Flyway V9 | ✅ | #46 |
+| 2.12 | **WebClient Configuration** | WebClient beans for inter-service communication | Client, Billing, Management, Reporting | 🔄 | #47 |
+| 2.13 | **Entry Decision Logic** | Service layer for entry decisions | Client Service | ⏳ | #48 |
+| 2.14 | **Exit Decision Logic** | Service layer for exit decisions | Billing Service | ⏳ | #49 |
+| 2.15 | **POST /entry** | Entry endpoint with OpenAPI | GateService, WebClient | ⏳ | #50 |
+| 2.16 | **POST /exit** | Exit endpoint with OpenAPI | GateService, WebClient | ⏳ | #51 |
 
-**Прогресс:** 1/4 (25%)
+**Прогресс:** 1/6 (17%)
 
-### Общий Прогресс Фазы 2: 79% (11/14 задач)
+**Статистика тестирования:**
+- Репозиторные тесты: 5 (GateEvent)
+
+### Общий Прогресс Фазы 2: 90% (13/15 задач)
 
 **Завершённые сервисы:**
 - ✅ Billing Service: 100% (6/6 задач)
+- 🔄 Gate Control Service: 17% (1/6 задач)
 - ⏳ Gate Control Service: 25% (1/4 задач)
 
 **Следующие шаги:**

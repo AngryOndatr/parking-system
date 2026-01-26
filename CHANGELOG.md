@@ -10,11 +10,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### In Progress
-- Phase 2: Gate Control Service implementation (Issue #37)
+- Phase 2: Gate Control Service WebClient configuration (Issue #47)
 
 ### Recently Completed
+- ✅ Gate Control Service: GateEvent Entity & Repository (Issue #46) - 2026-01-26
 - ✅ Billing Service: Payment Status Endpoint (Issue #36) - 2026-01-24
 - ✅ Billing Service: Payment Recording API (Issues #34, #35) - 2026-01-24
+
+---
+
+## [0.6.0] - 2026-01-26
+
+### Added - Gate Control Service: GateEvent Entity Implementation (Issue #46)
+
+#### Issue #46: Create GateEvent JPA Entity and Repository
+- **Entity Layer:**
+  - `GateEvent` JPA entity mapping to `gate_events` table
+  - Two enums for type safety:
+    - `EventType`: ENTRY, EXIT, MANUAL_OPEN, ERROR
+    - `Decision`: OPEN, DENY
+  - Fields: id, eventType, licensePlate, ticketCode, gateId, decision, reason, timestamp, operatorId
+  - `@PrePersist` method for automatic timestamp initialization
+  - Lombok annotations for clean code (@Data, @NoArgsConstructor, @AllArgsConstructor)
+- **Repository Layer:**
+  - `GateEventRepository` extends JpaRepository
+  - Custom query methods:
+    - `findByLicensePlateOrderByTimestampDesc(String licensePlate)` - event history by license plate
+    - `findByTimestampBetween(LocalDateTime start, LocalDateTime end)` - time-range queries
+- **Database Migration:**
+  - Flyway migration V9: `create_gate_events_table.sql`
+  - Table with proper indexes for performance (license_plate, timestamp, gate_id)
+  - Constraints: NOT NULL on critical fields, CHECK on enum values
+- **Testing:**
+  - 5 comprehensive integration tests with H2 in-memory database
+  - Test coverage: save, findById, findByLicensePlate, findByTimestampBetween, enum validation
+  - Test configuration: application-test.yml with H2 setup
+  - **All tests passing** ✅
+- **Architecture:**
+  - Domain model pattern: Hibernate -> Domain model <- DTO (prepared for future implementation)
+  - OpenAPI-first approach (ready for controller integration)
+
+**Files:**
+- Entity: `backend/gate-control-service/src/main/java/com/parking/gate_control_service/entity/GateEvent.java`
+- Repository: `backend/gate-control-service/src/main/java/com/parking/gate_control_service/repository/GateEventRepository.java`
+- Migration: `backend/gate-control-service/src/main/resources/db/migration/V9__create_gate_events_table.sql`
+- Tests: `backend/gate-control-service/src/test/java/com/parking/gate_control_service/repository/GateEventRepositoryTest.java`
+
+**Session Documentation:** [SESSION_DEVELOPMENT_2026-01-26_GATE_EVENT.md](./docs/sessions/SESSION_DEVELOPMENT_2026-01-26_GATE_EVENT.md)
 
 ---
 
