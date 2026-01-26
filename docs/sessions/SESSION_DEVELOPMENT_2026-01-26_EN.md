@@ -88,6 +88,14 @@ Task #48 is fully completed. Ready to move to next Phase 2 tasks:
 - #50: Implement Management Service integration (check spots)
 - #51: Implement gate decision logic (GateService)
 
+### Gate Control: Exit Logic & Billing Integration (#51)
+- GateService.processExit implemented with full business logic
+- BillingServiceClient for payment status check via WebClient
+- DTOs: PaymentStatusResponse, ExitDecision
+- Unit tests for all exit scenarios (subscriber, paid/unpaid visitor, no ticket)
+- Integration test for BillingServiceClient (MockWebServer)
+- All tests passing
+
 ## Notes
 
 - Uses OpenAPI-first approach (though optional for inter-service communication)

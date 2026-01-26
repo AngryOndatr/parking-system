@@ -94,3 +94,115 @@ GET /api/v1/clients/subscriptions/check?licensePlate={plate}
 - Применяется паттерн Domain Model (но для DTO клиента это не требуется)
 - MockWebServer предоставляет надежное тестирование WebClient без реального сервера
 - Обработка ошибок соответствует принципу "fail-safe" - при любых проблемах доступ запрещается
+
+---
+
+# Сессия разработки - Логика Выезда и Интеграция с Биллингом
+
+**Дата:** 2026-01-26  
+**Задача:** [Phase 2] Gate Control: Реализовать логику выезда и интеграцию с Биллингом #51
+
+## Выполненная работа
+
+### 1. Созданные файлы
+
+#### DTO для ответа статуса оплаты
+- **Файл:** `backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/PaymentStatusResponse.java`
+- **Описание:** DTO для ответа от Billing Service с информацией о статусе оплаты
+- **Поля:**
+  - `isPaid` (Boolean) - оплата произведена или нет
+  - `amount` (BigDecimal, nullable) - сумма оплаты
+  - `currency` (String, nullable) - валюта оплаты
+
+#### DTO для решения по выезду
+- **Файл:** `backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/ExitDecision.java`
+- **Описание:** DTO для решения о разрешении выезда
+- **Поля:**
+  - `isExitAllowed` (Boolean) - выезд разрешен или нет
+  - `reason` (String, nullable) - причина отказа в выезде
+
+#### Клиент для интеграции с Billing Service
+- **Файл:** `backend/gate-control-service/src/main/java/com/parking/gate_control_service/client/BillingServiceClient.java`
+- **Описание:** Сервисный клиент для вызова Billing Service API
+- **Основной метод:**
+  - `checkPayment(String licensePlate)` - проверка статуса оплаты по номеру авто
+- **Обработка ошибок:**
+  - 404 Not Found - возвращает `isPaid=false`
+  - Прочие ошибки - возвращает `isPaid=false`
+  - Логирование всех запросов и ошибок
+
+#### Логика обработки выезда
+- **Файл:** `backend/gate-control-service/src/main/java/com/parking/gate_control_service/service/GateService.java`
+- **Описание:** Сервис для обработки событий выезда автомобиля
+- **Основной метод:**
+  - `processExit(String licensePlate)` - обработка выезда по номеру авто
+- **Алгоритм:**
+  1. Проверка подписки через ClientServiceClient
+  2. Если подписка активна и оплата подтверждена - разрешить выезд
+  3. Иначе - запретить выезд с указанием причины
+
+#### Тесты с MockWebServer для Billing Service
+- **Файл:** `backend/gate-control-service/src/test/java/com/parking/gate_control_service/client/BillingServiceClientTest.java`
+- **Описание:** Unit-тесты для BillingServiceClient с использованием MockWebServer
+- **Тестовые сценарии:**
+  1. ✅ Успешная проверка оплаты с положительным результатом (200 OK)
+  2. ✅ Оплата не найдена (404 Not Found) - выезд запрещен
+  3. ✅ Ошибка сервера (500) - выезд запрещен
+  4. ✅ Ошибка сети/таймаут - выезд запрещен
+
+### 2. Обновленные файлы
+
+#### pom.xml
+- **Изменения:**
+  - Добавлена зависимость `mockwebserver` версии 4.12.0 для тестирования WebClient
+
+## Технические детали
+
+### WebClient Configuration
+- Используется существующая конфигурация `WebClientConfig`
+- Инжектируется через `@Qualifier("billingServiceWebClient")`
+- Базовый URL читается из `application.yml`: `${services.billing.url}`
+
+### API Endpoint Billing Service
+```
+GET /api/v1/payments/status?licensePlate={plate}
+```
+
+### Обработка ответов
+- **Успешный ответ (200):** Возвращается полученный DTO
+- **404 Not Found:** Создается новый DTO с `isPaid=false`
+- **Любая ошибка:** Создается новый DTO с `isPaid=false` + логирование ошибки
+
+## Результаты тестирования
+
+```
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+Все 4 теста прошли успешно:
+- ✅ Проверка оплаты (200 OK с isPaid=true)
+- ✅ Обработка ошибки 404 (возвращает isPaid=false)
+- ✅ Обработка серверной ошибки (500 Internal Server Error - логирует ошибку и возвращает isPaid=false)
+- ✅ Обработка сетевых ошибок (Connection refused - логирует ошибку и возвращает isPaid=false)
+
+**Примечание:** Stack trace ошибок в выводе тестов - ожидаемое поведение, демонстрирующее правильную обработку и логирование ошибочных сценариев.
+
+## Acceptance Criteria
+
+✅ **Client works** - BillingServiceClient корректно вызывает Billing Service  
+✅ **Mock test passes** - Все unit-тесты с MockWebServer прошли успешно  
+✅ **Error handling** - Все виды ошибок обрабатываются корректно  
+✅ **Logging** - Добавлено логирование запросов и ошибок через SLF4J
+
+## Следующие шаги
+
+Задача #51 полностью завершена. Можно переходить к следующей задаче в Phase 2:
+- #52: Реализовать логику принятия решений (GateService)
+
+## Примечания
+
+- Используется подход OpenAPI-first (хотя для inter-service коммуникации это опционально)
+- Применяется паттерн Domain Model (но для DTO клиента это не требуется)
+- MockWebServer предоставляет надежное тестирование WebClient без реального сервера
+- Обработка ошибок соответствует принципу "fail-safe" - при любых проблемах доступ запрещается

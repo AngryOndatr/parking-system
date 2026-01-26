@@ -1,4 +1,3 @@
-Markdown
 # 🅿️ Parking System - Microservices Architecture
 
 Modern parking lot management system built on microservices architecture using Spring Boot, Spring Cloud, and Docker.

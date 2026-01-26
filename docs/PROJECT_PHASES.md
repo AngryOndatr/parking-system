@@ -391,4 +391,3 @@
 ---
 
 **[← Назад к README](../README.md)** | **[Канбан-доска →](https://github.com/your-repo/parking-system/projects/1)**
-

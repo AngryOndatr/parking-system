@@ -1,10 +1,14 @@
 package com.parking.gate_control_service.service;
 
+import com.parking.gate_control_service.client.BillingServiceClient;
 import com.parking.gate_control_service.client.ClientServiceClient;
 import com.parking.gate_control_service.dto.EntryDecision;
+import com.parking.gate_control_service.dto.ExitDecision;
+import com.parking.gate_control_service.dto.PaymentStatusResponse;
 import com.parking.gate_control_service.dto.SubscriptionCheckResponse;
 import com.parking.gate_control_service.entity.GateEvent;
 import com.parking.gate_control_service.repository.GateEventRepository;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +29,9 @@ class GateServiceTest {
 
     @Mock
     private ClientServiceClient clientServiceClient;
+
+    @Mock
+    private BillingServiceClient billingServiceClient;
 
     @Mock
     private GateEventRepository gateEventRepository;
@@ -162,5 +169,76 @@ class GateServiceTest {
         assertThat(decision1.getTicketCode()).isNotNull();
         assertThat(decision2.getTicketCode()).isNotNull();
         assertThat(decision1.getTicketCode()).isNotEqualTo(decision2.getTicketCode());
+    }
+
+    @Test
+    void processExit_Subscriber_ExitAllowed() {
+        String licensePlate = "SUB123";
+        String ticketCode = null;
+        SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
+                .isAccessGranted(true)
+                .clientId(1L)
+                .subscriptionId(1L)
+                .build();
+        when(clientServiceClient.checkSubscription(licensePlate)).thenReturn(subscriptionResponse);
+        when(gateEventRepository.save(any(GateEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
+        assertThat(decision).isNotNull();
+        assertThat(decision.getAction()).isEqualTo("OPEN");
+        assertThat(decision.getMessage()).contains("Goodbye");
+    }
+
+    @Test
+    void processExit_OneTimeVisitor_Paid_ExitAllowed() {
+        String licensePlate = "VIS123";
+        String ticketCode = "TICKET-123";
+        SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
+                .isAccessGranted(false)
+                .build();
+        PaymentStatusResponse paymentStatus = PaymentStatusResponse.builder()
+                .isPaid(true)
+                .remainingFee(BigDecimal.ZERO)
+                .build();
+        when(clientServiceClient.checkSubscription(licensePlate)).thenReturn(subscriptionResponse);
+        when(billingServiceClient.checkPaymentStatus(ticketCode)).thenReturn(paymentStatus);
+        when(gateEventRepository.save(any(GateEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
+        assertThat(decision).isNotNull();
+        assertThat(decision.getAction()).isEqualTo("OPEN");
+        assertThat(decision.getMessage()).contains("Thank you for your payment");
+    }
+
+    @Test
+    void processExit_OneTimeVisitor_NotPaid_ExitDenied() {
+        String licensePlate = "VIS124";
+        String ticketCode = "TICKET-124";
+        SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
+                .isAccessGranted(false)
+                .build();
+        PaymentStatusResponse paymentStatus = PaymentStatusResponse.builder()
+                .isPaid(false)
+                .remainingFee(new BigDecimal("20.00"))
+                .build();
+        when(clientServiceClient.checkSubscription(licensePlate)).thenReturn(subscriptionResponse);
+        when(billingServiceClient.checkPaymentStatus(ticketCode)).thenReturn(paymentStatus);
+        when(gateEventRepository.save(any(GateEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
+        assertThat(decision).isNotNull();
+        assertThat(decision.getAction()).isEqualTo("DENY");
+        assertThat(decision.getMessage()).contains("Payment required: 20.00");
+    }
+
+    @Test
+    void processExit_NoTicketOrSubscription_ExitDenied() {
+        String licensePlate = "UNKNOWN";
+        String ticketCode = null;
+        SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
+                .isAccessGranted(false)
+                .build();
+        when(clientServiceClient.checkSubscription(licensePlate)).thenReturn(subscriptionResponse);
+        ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
+        assertThat(decision).isNotNull();
+        assertThat(decision.getAction()).isEqualTo("DENY");
+        assertThat(decision.getMessage()).contains("No valid ticket or subscription");
     }
 }
