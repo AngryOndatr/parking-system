@@ -6,6 +6,21 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
+### 2026-01-27 - Gate Control Service: Exit & Manual Control Endpoints (Issue #52) ✅
+
+✅ **Gate Control Service - Exit & Manual Control Endpoints Complete** (Issue #52)
+- ✅ POST /api/v1/gate/exit endpoint with OpenAPI-first implementation
+- ✅ POST /api/v1/gate/control endpoint for operator manual control
+- ✅ ExitRequest and ManualControlRequest DTOs with validation
+- ✅ ExitDecision and ManualControlResponse DTOs for responses
+- ✅ GateService.processExit implemented with BillingService integration (payment check)
+- ✅ Manual control logs operator actions to Reporting Service and GateEvent (MANUAL_OPEN)
+- ✅ Integration tests covering paid/unpaid exits and manual control - **ALL PASSING** ✅
+- 📖 **Controller:** [GateController.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/controller/GateController.java)
+- 📖 **Tests:** [GateControllerIntegrationTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/controller/GateControllerIntegrationTest.java)
+- 📖 **OpenAPI:** [openapi.yaml](./backend/gate-control-service/src/main/resources/openapi.yaml)
+- 🎯 **Next Steps:** None - Phase 2 complete!
+
 ### 2026-01-26 - Gate Control Service: Entry REST Endpoint (Issue #50) ✅
 
 ✅ **Gate Control Service - Entry REST API Complete** (Issue #50)
@@ -139,17 +154,15 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 📈 Project Status & Roadmap
 
-### Current Status: Phase 2 - Week 7 of 12 🚀
+### Current Status: Phase 2 - COMPLETE 🚀
 
 ```
 Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: ███████████████████░  93% 🔄 В ПРОЦЕССЕ (Gate Control Integration!)
+Фаза 2: ████████████████████ 100% ✅ ЗАВЕРШЕНА
 Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
 Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
-
-Общий прогресс: ██████████████░ 68% (32/35 задач)
 ```
 
 ### 📋 Project Phases Overview
@@ -158,7 +171,7 @@ Modern parking lot management system built on microservices architecture using S
 |-------|----------|--------|----------|-------------|
 | **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
 | **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
-| **Phase 2** | 2 weeks | 🔄 In Progress | 90% | Core Business Logic (Gate Control Started!) |
+| **Phase 2** | 2 weeks | ✅ Complete | 100% | Core Business Logic |
 | **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
 | **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
 | **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |

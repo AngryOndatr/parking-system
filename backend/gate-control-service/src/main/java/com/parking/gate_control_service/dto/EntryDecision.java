@@ -29,4 +29,9 @@ public class EntryDecision {
      * Ticket code if generated for one-time visitor (null for subscribers)
      */
     private String ticketCode;
+
+    /**
+     * Parking event ID to carry saved entity ID back to controller
+     */
+    private Long parkingEventId;
 }

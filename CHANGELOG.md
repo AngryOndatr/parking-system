@@ -10,9 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### In Progress
-- Phase 2: Gate Control Service Exit Decision Logic (Issue #50)
+
+- Phase 2: Gate Control Service Next Feature (Issue #52) ✅ Completed 2026-01-27
 
 ### Recently Completed
+- ✅ Gate Control Service: Exit & Manual Control Endpoints (Issue #52) - 2026-01-27
+- ✅ Gate Control Service: Exit Logic with Billing Service Integration (Issue #51) - 2026-01-26
 - ✅ Gate Control Service: Entry Decision Logic (Issue #49) - 2026-01-26
 - ✅ Gate Control Service: Client Service Integration (Issue #48) - 2026-01-26
 - ✅ Gate Control Service: WebClient Configuration (Issue #47) - 2026-01-26
@@ -337,7 +340,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Architecture documentation for multi-layer design
 
 ### Statistics
-- **Total Tests in Billing Service:** 38 (18 repository + 16 service + 4 controller)
+- **Total Tests in Billing Service:** 38 (18 repository + 18 service + 4 controller)
 - **Overall Test Count:** 52+ across all services
 - **Code Added:** ~2000+ lines (including tests)
 - **Test Coverage:** Service ~95%, Controller ~85%, Repository ~90%
@@ -632,4 +635,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 **[View Current Status](./docs/PROJECT_PHASES.md)** | **[Session Logs](./docs/sessions/)** | **[Reports](./docs/reports/)**
-

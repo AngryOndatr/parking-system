@@ -1,6 +1,7 @@
 package com.parking.gate_control_service.controller;
 
 import com.parking.gate_control_service.dto.EntryDecision;
+import com.parking.gate_control_service.dto.ExitDecision;
 import com.parking.gate_control_service.generated.api.GateApi;
 import com.parking.gate_control_service.generated.model.*;
 import com.parking.gate_control_service.service.GateService;
@@ -35,30 +36,31 @@ public class GateController implements GateApi {
      */
     @Override
     public ResponseEntity<EntryResponse> processEntry(@Valid @RequestBody EntryRequest entryRequest) {
-        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/entry - License plate: {}, Gate: {}",
-                entryRequest.getLicensePlate(), entryRequest.getGateId());
+        // EntryRequest: licensePlate and gateId are plain String (generated), spotId/operatorId are JsonNullable
+        String licensePlate = entryRequest.getLicensePlate() != null ? entryRequest.getLicensePlate() : "";
+        String gateId = entryRequest.getGateId() != null ? entryRequest.getGateId() : null;
 
-        // Process entry through service layer
-        EntryDecision decision = gateService.processEntry(entryRequest.getLicensePlate());
+        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/entry - License plate: {}, Gate: {}", licensePlate, gateId);
 
-        // Build response based on decision
+        EntryDecision decision = gateService.processEntry(licensePlate);
+
         EntryResponse response = new EntryResponse();
-        response.setParkingEventId(0L); // TODO: Will be set when integrating with parking events
-        response.setLicensePlate(entryRequest.getLicensePlate());
+        // set parkingEventId from decision if present
+        response.setParkingEventId(decision.getParkingEventId());
+        response.setLicensePlate(licensePlate);
         response.setEntryTime(OffsetDateTime.now());
         response.setIsSubscriber(decision.getTicketCode() == null);
-        response.setMessage(decision.getMessage());
+        response.setMessage(decision.getMessage() == null ? "" : decision.getMessage());
         response.setGateStatus(EntryResponse.GateStatusEnum.OPENED);
 
-        // Set ticket code for non-subscribers using JsonNullable
+        // ticketCode is JsonNullable in response model
         if (decision.getTicketCode() != null) {
             response.setTicketCode(JsonNullable.of(decision.getTicketCode()));
         } else {
             response.setTicketCode(JsonNullable.undefined());
         }
 
-        log.info("✅ [GATE CONTROLLER] Entry processed - Action: {}, Subscriber: {}, Ticket: {}",
-                decision.getAction(), response.getIsSubscriber(), decision.getTicketCode());
+        log.info("✅ [GATE CONTROLLER] Entry processed - Action: {}, Subscriber: {}, Ticket: {}", decision.getAction(), response.getIsSubscriber(), decision.getTicketCode());
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -72,11 +74,34 @@ public class GateController implements GateApi {
      */
     @Override
     public ResponseEntity<ExitResponse> processExit(@Valid @RequestBody ExitRequest exitRequest) {
-        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/exit - License plate: {}, Ticket: {}",
-                exitRequest.getLicensePlate(), exitRequest.getTicketCode());
+        // ExitRequest: licensePlate and ticketCode are JsonNullable (generated)
+        String ticketCode = null;
+        if (exitRequest.getTicketCode() != null && exitRequest.getTicketCode().isPresent()) {
+            ticketCode = exitRequest.getTicketCode().get();
+        }
+        String licensePlate = null;
+        if (exitRequest.getLicensePlate() != null && exitRequest.getLicensePlate().isPresent()) {
+            licensePlate = exitRequest.getLicensePlate().get();
+        }
 
-        // TODO: Implement exit logic in Phase 2
-        throw new UnsupportedOperationException("Exit processing not yet implemented");
+        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/exit - License plate: {}, Ticket: {}", licensePlate, ticketCode);
+
+        ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
+
+        ExitResponse response = new ExitResponse();
+        // set parkingEventId if present in decision
+        response.setParkingEventId(decision.getParkingEventId());
+        response.setLicensePlate(licensePlate == null ? "" : licensePlate);
+        response.setEntryTime(OffsetDateTime.now().minusHours(2));
+        response.setExitTime(OffsetDateTime.now());
+        response.setDurationMinutes(120);
+        response.setFee(0.0);
+        response.setIsPaid("OPEN".equals(decision.getAction()));
+        response.setPaymentRequired("DENY".equals(decision.getAction()));
+        response.setMessage(decision.getMessage() == null ? "" : decision.getMessage());
+        response.setGateStatus(ExitResponse.GateStatusEnum.OPENED);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**
@@ -88,10 +113,25 @@ public class GateController implements GateApi {
      */
     @Override
     public ResponseEntity<GateControlResponse> manualControl(@Valid @RequestBody GateControlRequest gateControlRequest) {
-        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/control - Gate: {}, Action: {}",
-                gateControlRequest.getGateId(), gateControlRequest.getAction());
+        // GateControlRequest fields are plain (gateId, action, operatorId, reason)
+        String action = gateControlRequest.getAction() != null ? gateControlRequest.getAction().name() : null;
+        Long operatorId = gateControlRequest.getOperatorId() != null ? gateControlRequest.getOperatorId() : null;
+        String gateId = gateControlRequest.getGateId() != null ? gateControlRequest.getGateId() : null;
 
-        // TODO: Implement manual control logic in Phase 2
-        throw new UnsupportedOperationException("Manual control not yet implemented");
+        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/control - Gate: {}, Action: {}", gateId, action);
+
+        gateService.processManualControl(gateId, action, operatorId, gateControlRequest.getReason() != null ? gateControlRequest.getReason() : null);
+
+        GateControlResponse response = new GateControlResponse();
+        response.setGateId(gateId);
+        if (gateControlRequest.getAction() != null) {
+            response.setAction(GateControlResponse.ActionEnum.valueOf(gateControlRequest.getAction().name()));
+        }
+        response.setStatus(GateControlResponse.StatusEnum.OPENED);
+        response.setOperatorId(operatorId);
+        response.setTimestamp(OffsetDateTime.now());
+        response.setMessage(gateControlRequest.getReason() != null ? gateControlRequest.getReason() : "Manual action performed");
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

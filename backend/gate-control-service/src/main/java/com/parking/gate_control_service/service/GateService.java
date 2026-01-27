@@ -75,9 +75,10 @@ public class GateService {
         event.setDecision(GateEvent.Decision.OPEN);
         event.setReason("Valid subscription (ID: " + subscriptionCheck.getSubscriptionId() + ")");
         event.setTimestamp(LocalDateTime.now());
-        gateEventRepository.save(event);
+        GateEvent saved = gateEventRepository.save(event);
 
         return EntryDecision.builder()
+                .parkingEventId(saved.getId())
                 .action(ACTION_OPEN)
                 .message("Welcome, subscriber!")
                 .build();
@@ -104,9 +105,10 @@ public class GateService {
         event.setDecision(GateEvent.Decision.OPEN);
         event.setReason("Ticket issued");
         event.setTimestamp(LocalDateTime.now());
-        gateEventRepository.save(event);
+        GateEvent saved = gateEventRepository.save(event);
 
         return EntryDecision.builder()
+                .parkingEventId(saved.getId())
                 .action(ACTION_OPEN)
                 .message("Take your ticket")
                 .ticketCode(ticketCode)
@@ -194,5 +196,31 @@ public class GateService {
                     .message("No valid ticket or subscription found.")
                     .build();
         }
+    }
+
+    /**
+     * Process a manual control action performed by an operator.
+     * Saves a MANUAL_OPEN GateEvent and records operator information.
+     *
+     * @param gateId     gate identifier
+     * @param action     action performed (OPEN/CLOSE)
+     * @param operatorId operator id who performed the action
+     * @param reason     optional reason text
+     */
+    @Transactional
+    public void processManualControl(String gateId, String action, Long operatorId, String reason) {
+        log.info("Processing manual control: gateId={}, action={}, operatorId={}, reason={}", gateId, action, operatorId, reason);
+
+        GateEvent event = new GateEvent();
+        event.setEventType(GateEvent.EventType.MANUAL_OPEN);
+        event.setLicensePlate("-"); // no license plate for manual control
+        event.setGateId(gateId != null ? gateId : "UNKNOWN");
+        // for manual controls, decision OPEN when action equals OPEN, otherwise DENY
+        event.setDecision("OPEN".equalsIgnoreCase(action) ? GateEvent.Decision.OPEN : GateEvent.Decision.DENY);
+        event.setReason(reason != null ? reason : "Manual operator action");
+        event.setTimestamp(LocalDateTime.now());
+        event.setOperatorId(operatorId);
+
+        gateEventRepository.save(event);
     }
 }
