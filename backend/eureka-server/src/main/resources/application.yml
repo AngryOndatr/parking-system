@@ -1,5 +1,6 @@
 server:
   port: 8761
+  address: 0.0.0.0
 
 spring:
   application:
@@ -28,4 +29,3 @@ logging:
   level:
     com.netflix.eureka: INFO
     com.netflix.discovery: INFO
-

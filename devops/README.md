@@ -1,17 +1,17 @@
-# DevOps - Docker Compose Configuration
+# DevOps — Docker Compose Configuration
 
-Эта директория содержит конфигурации Docker Compose для развертывания системы parking-system.
+This directory contains Docker Compose configurations for deploying the parking-system.
 
-## Структура файлов
+## File Structure
 
-### Docker Compose файлы
+### Docker Compose Files
 
-1. **docker-compose.infrastructure.yml** - Базовая инфраструктура
-   - PostgreSQL (база данных)
-   - Redis (кеш и сессии)
+1. **docker-compose.infrastructure.yml** — Base infrastructure
+   - PostgreSQL (database)
+   - Redis (cache and sessions)
    - Eureka Server (service discovery)
 
-2. **docker-compose.services.yml** - Микросервисы приложения
+2. **docker-compose.services.yml** — Application microservices
    - API Gateway
    - Client Service
    - Gate Control Service
@@ -19,121 +19,135 @@
    - Management Service
    - Reporting Service
 
-3. **docker-compose.yml** - Полная конфигурация (legacy, для обратной совместимости)
+3. **docker-compose.yml** — Full configuration (legacy, for backwards compatibility)
 
-### Скрипты управления
+### Management Scripts
 
-- **full-rebuild.ps1** - ⭐ **ПОЛНАЯ ПЕРЕСБОРКА** системы с нуля + автотесты всех эндпойнтов
-- **start-system.ps1** - Запуск системы (infrastructure/services/all)
-- **stop-system.ps1** - Остановка системы (infrastructure/services/all)
-- **check-system.ps1** - Проверка статуса всех сервисов
-- **start-full-system.ps1** - Запуск полной системы со всеми сервисами
+- **full-rebuild.ps1** — ⭐ **FULL REBUILD** from scratch + automated endpoint tests
+- **start-system.ps1** — Start the system (infrastructure/services/all)
+- **stop-system.ps1** — Stop the system (infrastructure/services/all)
+- **check-system.ps1** — Check the status of all services
+- **start-full-system.ps1** — Start the full system with all services
+- **run-e2e-tests.ps1** — Run E2E tests (with Docker health check)
 
-### Тестовые скрипты
+### Test Scripts
 
-- **test-proxy.ps1** - 🧪 **API GATEWAY PROXY TESTS** - smoke tests для всех proxy endpoints
-- **test-proxy.sh** - 🧪 Bash версия proxy smoke tests (Linux/Mac)
-- **test-login.html** - 🌐 Интерактивный веб-тестер API с UI
+- **test-proxy.ps1** — 🧪 **API GATEWAY PROXY TESTS** — smoke tests for all proxy endpoints
+- **test-proxy.sh** — 🧪 Bash version of proxy smoke tests (Linux/Mac)
+- **test-login.html** — 🌐 Interactive web API tester with UI
 
-### Интерактивные инструменты
+### Interactive Tools
 
-- **test-login.html** - 🌐 **ИНТЕРАКТИВНЫЙ ТЕСТЕР** всех API эндпойнтов (веб-интерфейс)
-  - **Client Management**: CRUD для клиентов, поиск по телефону
-  - **Vehicle Management**: CRUD для транспортных средств, связь с клиентами
-  - **Parking Space Management**: Просмотр доступных мест, поиск по параметрам, подсчет
-  - **Quick Test Suite**: Автоматическое тестирование всех эндпойнтов
-  - Поддержка JWT аутентификации
-  - Визуализация ответов с подсветкой синтаксиса
+- **test-login.html** — 🌐 **INTERACTIVE TESTER** for all API endpoints (web interface)
+  - **Client Management**: CRUD for clients, search by phone
+  - **Vehicle Management**: CRUD for vehicles, link to clients
+  - **Parking Space Management**: View available spots, search by parameters, count
+  - **Quick Test Suite**: Automated testing of all endpoints in one click
+  - JWT authentication support
+  - Response visualisation with syntax highlighting
 
-### Документация
+### Documentation
 
-- **[TEST_LOGIN_README.md](TEST_LOGIN_README.md)** - 🌐 Руководство по использованию веб-тестера API
-- **[DOCKER_COMPOSE_USAGE.md](DOCKER_COMPOSE_USAGE.md)** - 📖 Подробная инструкция по использованию Docker Compose
-- **[OBSERVABILITY_README.md](OBSERVABILITY_README.md)** - 📊 Настройка мониторинга и трейсинга
+| Document | 🇬🇧 English | 🇷🇺 Русский |
+|----------|-------------|-------------|
+| Web API tester guide | [TEST_LOGIN_README_EN.md](TEST_LOGIN_README_EN.md) | [TEST_LOGIN_README_RU.md](TEST_LOGIN_README_RU.md) |
+| Monitoring & tracing | [OBSERVABILITY_README_EN.md](OBSERVABILITY_README_EN.md) | [OBSERVABILITY_README_RU.md](OBSERVABILITY_README_RU.md) |
+| Script fix notes | [README_SCRIPT_FIX_EN.md](README_SCRIPT_FIX_EN.md) | [README_SCRIPT_FIX_RU.md](README_SCRIPT_FIX_RU.md) |
 
-## Быстрый старт
+## Quick Start
 
-### ⭐ Вариант 0: Полная пересборка с нуля (рекомендуется для первого запуска)
+### ⭐ Option 0: Full rebuild from scratch (recommended for first run)
 
 ```powershell
-# ПОЛНАЯ АВТОМАТИЧЕСКАЯ ПЕРЕСБОРКА + ТЕСТИРОВАНИЕ
+# FULL AUTOMATED REBUILD + TESTING
 .\full-rebuild.ps1
 ```
 
-**Что делает:**
-- Останавливает и удаляет все контейнеры
-- Очищает старые Docker образы
-- Пересобирает все сервисы с Maven
-- Последовательно запускает всю инфраструктуру
-- Инициализирует базу данных
-- **Автоматически тестирует все 11 эндпойнтов API** ✅
-- Показывает детальную статистику и логи
+**What it does:**
+- Stops and removes all containers
+- Cleans up old Docker images
+- Rebuilds all services with Maven
+- Starts the full infrastructure sequentially
+- Initialises the database
+- **Automatically tests all API endpoints** ✅
+- Displays detailed statistics and logs
 
-**Время выполнения:** ~3-4 минуты
-
-📖 Подробнее: [FULL_REBUILD_QUICK_REF.md](FULL_REBUILD_QUICK_REF.md)
+**Estimated time:** ~3–4 minutes
 
 ---
 
-### 🌐 Интерактивное тестирование API
+### 🧪 Running E2E Tests
 
-После запуска системы откройте в браузере:
+```powershell
+# Full build + E2E tests
+.\run-e2e-tests.ps1
+
+# Skip Maven build (images already built)
+.\run-e2e-tests.ps1 -SkipBuild
+
+# Skip Docker image build only
+.\run-e2e-tests.ps1 -SkipDockerBuild
+```
+
+---
+
+### 🌐 Interactive API Testing
+
+After starting the system, open in a browser:
 ```
 test-login.html
 ```
 
-**Возможности:**
-- 🔐 Авторизация с JWT токенами
-- 👥 Тестирование всех Client API эндпойнтов (5 шт.)
-- 🚗 Тестирование всех Vehicle API эндпойнтов (7 шт.)
-- ⚡ Автоматический полный тест за один клик (11 эндпойнтов)
-- 🎨 Удобный интерфейс с вкладками и цветовой индикацией
-
-📖 Подробнее: [TEST_LOGIN_README.md](TEST_LOGIN_README.md)
+**Features:**
+- 🔐 JWT authentication
+- 👥 All Client API endpoints (5)
+- 🚗 All Vehicle API endpoints (7)
+- ⚡ Automated full test in one click (11 endpoints)
+- 🎨 Tab-based interface with colour-coded status
 
 ---
 
-### Вариант 1: Использование скрипта (для повседневной работы)
+### Option 1: Using a script (daily workflow)
 
 ```powershell
-# Запуск всей системы
+# Start the full system
 .\start-system.ps1
 
-# Только инфраструктура
+# Infrastructure only
 .\start-system.ps1 infrastructure
 
-# Только сервисы (если инфраструктура уже запущена)
+# Services only (if infrastructure is already running)
 .\start-system.ps1 services
 
-# Остановка
+# Stop
 .\stop-system.ps1
 
-# Остановка с удалением данных
+# Stop and remove data
 .\stop-system.ps1 -RemoveVolumes
 ```
 
-### Вариант 2: Ручной запуск
+### Option 2: Manual startup
 
 ```powershell
-# Создание сети (один раз)
+# Create network (once)
 docker network create parking-network
 
-# Запуск инфраструктуры
+# Start infrastructure
 docker-compose -f docker-compose.infrastructure.yml up -d
 
-# Ожидание запуска Eureka (30 сек)
+# Wait for Eureka to start (30 sec)
 Start-Sleep -Seconds 30
 
-# Запуск сервисов
+# Start services
 docker-compose -f docker-compose.services.yml up -d
 
-# Проверка статуса
+# Check status
 docker ps
 ```
 
 ## Endpoints
 
-После запуска доступны следующие endpoints:
+After startup the following endpoints are available:
 
 - **Eureka Server**: http://localhost:8761
 - **API Gateway**: http://localhost:8086
@@ -143,7 +157,7 @@ docker ps
 - **Management Service**: http://localhost:8084
 - **Reporting Service**: http://localhost:8085
 
-### Проверка работоспособности
+### Health Checks
 
 ```powershell
 # Eureka Dashboard
@@ -152,39 +166,39 @@ curl http://localhost:8761
 # API Gateway Health
 curl http://localhost:8086/actuator/health
 
-# Client Service через Gateway
+# Client Service via Gateway
 curl http://localhost:8086/client-service/actuator/health
 ```
 
 ## Troubleshooting
 
-### Проблемы с подключением к Eureka
+### Eureka connection issues
 
 ```powershell
-# Проверка логов Eureka
+# Check Eureka logs
 docker logs eureka-server
 
-# Проверка регистрации сервисов
+# Check registered services
 curl http://localhost:8761
 ```
 
-### Проблемы с проксированием через Gateway
+### Gateway proxy issues
 
 ```powershell
-# Проверка логов Gateway
+# Check Gateway logs
 docker logs api-gateway
 
-# Проверка маршрутов
+# Check routes
 curl http://localhost:8086/actuator/gateway/routes
 ```
 
 ---
 
-## 🧪 Тестирование API Gateway Proxy
+## 🧪 API Gateway Proxy Testing
 
-### Автоматические Smoke Tests
+### Automated Smoke Tests
 
-Для быстрой проверки всех proxy endpoints используйте:
+For a quick check of all proxy endpoints:
 
 **PowerShell (Windows):**
 ```powershell
@@ -197,7 +211,7 @@ chmod +x test-proxy.sh
 ./test-proxy.sh
 ```
 
-**Что тестируется:**
+**What is tested:**
 - ✅ Management Service proxy (4 endpoints)
   - GET /api/management/spots/available
   - GET /api/management/spots/available/count
@@ -210,7 +224,7 @@ chmod +x test-proxy.sh
   - GET /api/clients
   - GET /api/vehicles
 
-**Вывод:**
+**Output:**
 ```
 🧪 API Gateway Proxy Smoke Tests
 ============================================================
@@ -232,30 +246,30 @@ Total: 11/11 passed
 ✅ All proxy tests passed!
 ```
 
-### Ручное тестирование
+### Manual Testing
 
-Примеры curl и PowerShell команд для всех endpoints:
+curl and PowerShell examples for all endpoints:
 
-📖 **См.:** [API_GATEWAY_PROXY_EXAMPLES.md](../docs/API_GATEWAY_PROXY_EXAMPLES.md)
+📖 **See:** [API_GATEWAY_PROXY_EXAMPLES.md](../docs/API_GATEWAY_PROXY_EXAMPLES.md)
 
 ---
 
-### Полная перезагрузка
+### Full Reset
 
 ```powershell
-# Остановить все с удалением volumes
+# Stop all with volume removal
 .\stop-system.ps1 -RemoveVolumes
 
-# Очистка Docker
+# Clean Docker
 docker system prune -f
 
-# Пересборка и запуск
+# Rebuild and start
 docker-compose -f docker-compose.infrastructure.yml build --no-cache
 docker-compose -f docker-compose.services.yml build --no-cache
 .\start-system.ps1
 ```
 
-## Технологии
+## Technologies
 
 - Docker & Docker Compose
 - PostgreSQL 16

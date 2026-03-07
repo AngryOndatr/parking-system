@@ -1,0 +1,642 @@
+openapi: 3.0.3
+info:
+  title: Parking Gate Control Service API
+  description: |
+    API for managing parking gate operations: entry, exit, and manual control.
+    Integrates with parking events, vehicle recognition, and access control.
+  version: 1.0.0
+  contact:
+    name: Parking System Team
+    email: support@parkingsystem.com
+
+servers:
+  - url: http://localhost:8083
+    description: Gate Control Service Development Server
+  - url: http://gate-control-service:8083
+    description: Gate Control Service Docker Network
+
+tags:
+  - name: Gate
+    description: Gate operations and access control
+    x-interface-name: GateApi
+
+paths:
+  # =================================================================
+  # VEHICLE ENTRY
+  # =================================================================
+  /api/v1/gate/entry:
+    post:
+      tags:
+        - Gate
+      summary: Process vehicle entry through gate
+      description: |
+        Registers a new parking event when a vehicle enters the parking lot.
+        - Scans or manually enters license plate
+        - Creates parking event record
+        - Issues ticket for one-time visitors
+        - Identifies subscribers and applies benefits
+        - Opens entry gate
+      operationId: processEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntryRequest'
+            examples:
+              scanEntry:
+                summary: Automatic entry via license plate scan
+                value:
+                  licensePlate: "ABC-1234"
+                  entryMethod: "SCAN"
+                  spotId: 15
+                  gateId: "GATE-ENTRY-1"
+              manualEntry:
+                summary: Manual entry by operator
+                value:
+                  licensePlate: "XYZ-5678"
+                  entryMethod: "MANUAL"
+                  spotId: null
+                  gateId: "GATE-ENTRY-2"
+                  operatorId: 3
+      responses:
+        '201':
+          description: Entry registered successfully, gate opened
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntryResponse'
+              examples:
+                subscriberEntry:
+                  summary: Subscriber entry
+                  value:
+                    parkingEventId: 12345
+                    licensePlate: "ABC-1234"
+                    ticketCode: null
+                    entryTime: "2026-01-16T10:00:00Z"
+                    spotId: 15
+                    isSubscriber: true
+                    message: "Welcome! Your subscription is active."
+                    gateStatus: "OPENED"
+                guestEntry:
+                  summary: One-time visitor entry
+                  value:
+                    parkingEventId: 12346
+                    licensePlate: "XYZ-5678"
+                    ticketCode: "TKT-20260116-12346"
+                    entryTime: "2026-01-16T10:05:00Z"
+                    spotId: null
+                    isSubscriber: false
+                    message: "Welcome! Please keep your ticket."
+                    gateStatus: "OPENED"
+        '400':
+          description: Invalid entry request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T10:00:00Z"
+                status: 400
+                error: "Bad Request"
+                message: "License plate format is invalid"
+                path: "/api/v1/gate/entry"
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T10:00:00Z"
+                status: 403
+                error: "Forbidden"
+                message: "Vehicle is blacklisted or subscription expired"
+                path: "/api/v1/gate/entry"
+        '409':
+          description: Vehicle already inside
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T10:00:00Z"
+                status: 409
+                error: "Conflict"
+                message: "Vehicle ABC-1234 is already inside (entry at 08:00)"
+                path: "/api/v1/gate/entry"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # =================================================================
+  # VEHICLE EXIT
+  # =================================================================
+  /api/v1/gate/exit:
+    post:
+      tags:
+        - Gate
+      summary: Process vehicle exit through gate
+      description: |
+        Completes parking event when a vehicle exits the parking lot.
+        - Scans license plate or ticket code
+        - Closes parking event (sets exit time)
+        - Calculates fee (integrates with Billing Service)
+        - Checks payment status
+        - Opens exit gate if paid
+      operationId: processExit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExitRequest'
+            examples:
+              scanExit:
+                summary: Exit via license plate scan
+                value:
+                  licensePlate: "ABC-1234"
+                  ticketCode: null
+                  exitMethod: "SCAN"
+                  gateId: "GATE-EXIT-1"
+              ticketExit:
+                summary: Exit via ticket code
+                value:
+                  licensePlate: null
+                  ticketCode: "TKT-20260116-12346"
+                  exitMethod: "SCAN"
+                  gateId: "GATE-EXIT-1"
+              manualExit:
+                summary: Manual exit by operator
+                value:
+                  licensePlate: "XYZ-5678"
+                  ticketCode: null
+                  exitMethod: "MANUAL"
+                  gateId: "GATE-EXIT-2"
+                  operatorId: 3
+      responses:
+        '200':
+          description: Exit processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExitResponse'
+              examples:
+                paidExit:
+                  summary: Paid parking - gate opens
+                  value:
+                    parkingEventId: 12345
+                    licensePlate: "ABC-1234"
+                    entryTime: "2026-01-16T10:00:00Z"
+                    exitTime: "2026-01-16T12:00:00Z"
+                    durationMinutes: 120
+                    fee: 0.00
+                    isPaid: true
+                    paymentRequired: false
+                    message: "Thank you! Have a nice day."
+                    gateStatus: "OPENED"
+                unpaidExit:
+                  summary: Unpaid parking - payment required
+                  value:
+                    parkingEventId: 12346
+                    licensePlate: "XYZ-5678"
+                    entryTime: "2026-01-16T10:05:00Z"
+                    exitTime: "2026-01-16T12:10:00Z"
+                    durationMinutes: 125
+                    fee: 105.00
+                    isPaid: false
+                    paymentRequired: true
+                    message: "Please proceed to payment terminal. Fee: 105.00"
+                    gateStatus: "CLOSED"
+        '400':
+          description: Invalid exit request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Parking event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T12:00:00Z"
+                status: 404
+                error: "Not Found"
+                message: "No active parking event found for license plate ABC-1234"
+                path: "/api/v1/gate/exit"
+        '409':
+          description: Exit already processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T12:00:00Z"
+                status: 409
+                error: "Conflict"
+                message: "Parking event already closed (exit at 11:00)"
+                path: "/api/v1/gate/exit"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # =================================================================
+  # MANUAL GATE CONTROL
+  # =================================================================
+  /api/v1/gate/control:
+    post:
+      tags:
+        - Gate
+      summary: Manual gate control (operator override)
+      description: |
+        Allows operators to manually control gate operation.
+        - Open/Close gate regardless of automatic rules
+        - Emergency situations
+        - Maintenance mode
+        - Override payment requirements
+      operationId: manualControl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GateControlRequest'
+            examples:
+              openGate:
+                summary: Manually open gate
+                value:
+                  gateId: "GATE-EXIT-1"
+                  action: "OPEN"
+                  operatorId: 3
+                  reason: "Emergency exit - fire alarm"
+              closeGate:
+                summary: Manually close gate
+                value:
+                  gateId: "GATE-ENTRY-1"
+                  action: "CLOSE"
+                  operatorId: 3
+                  reason: "Maintenance mode"
+      responses:
+        '200':
+          description: Gate control executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GateControlResponse'
+              examples:
+                success:
+                  summary: Gate opened successfully
+                  value:
+                    gateId: "GATE-EXIT-1"
+                    action: "OPEN"
+                    status: "OPENED"
+                    operatorId: 3
+                    timestamp: "2026-01-16T12:00:00Z"
+                    message: "Gate opened manually by operator"
+        '400':
+          description: Invalid control request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Operator not authorized for gate control
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2026-01-16T12:00:00Z"
+                status: 403
+                error: "Forbidden"
+                message: "Operator does not have permission for manual gate control"
+                path: "/api/v1/gate/control"
+        '404':
+          description: Gate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# =================================================================
+# COMPONENTS
+# =================================================================
+components:
+  schemas:
+    # =================================================================
+    # REQUEST MODELS
+    # =================================================================
+    EntryRequest:
+      type: object
+      required:
+        - licensePlate
+        - entryMethod
+        - gateId
+      properties:
+        licensePlate:
+          type: string
+          maxLength: 20
+          pattern: '^[A-Z0-9-]+$'
+          description: Vehicle license plate
+          example: "ABC-1234"
+        entryMethod:
+          type: string
+          enum: [SCAN, MANUAL]
+          description: Entry method (automatic scan or manual input)
+          example: "SCAN"
+        spotId:
+          type: integer
+          format: int64
+          description: Assigned parking spot ID (if pre-assigned)
+          example: 15
+          nullable: true
+        gateId:
+          type: string
+          description: Gate identifier
+          example: "GATE-ENTRY-1"
+        operatorId:
+          type: integer
+          format: int64
+          description: Operator ID (required for MANUAL entry)
+          example: 3
+          nullable: true
+
+    ExitRequest:
+      type: object
+      required:
+        - exitMethod
+        - gateId
+      properties:
+        licensePlate:
+          type: string
+          maxLength: 20
+          description: Vehicle license plate (required if ticketCode not provided)
+          example: "ABC-1234"
+          nullable: true
+        ticketCode:
+          type: string
+          maxLength: 50
+          description: Ticket code (required if licensePlate not provided)
+          example: "TKT-20260116-12346"
+          nullable: true
+        exitMethod:
+          type: string
+          enum: [SCAN, MANUAL, AUTO]
+          description: Exit method
+          example: "SCAN"
+        gateId:
+          type: string
+          description: Gate identifier
+          example: "GATE-EXIT-1"
+        operatorId:
+          type: integer
+          format: int64
+          description: Operator ID (for manual exits)
+          example: 3
+          nullable: true
+
+    GateControlRequest:
+      type: object
+      required:
+        - gateId
+        - action
+        - operatorId
+        - reason
+      properties:
+        gateId:
+          type: string
+          description: Gate identifier
+          example: "GATE-EXIT-1"
+        action:
+          type: string
+          enum: [OPEN, CLOSE]
+          description: Gate action
+          example: "OPEN"
+        operatorId:
+          type: integer
+          format: int64
+          description: Operator performing the action
+          example: 3
+        reason:
+          type: string
+          maxLength: 255
+          description: Reason for manual control
+          example: "Emergency exit - fire alarm"
+
+    # =================================================================
+    # RESPONSE MODELS
+    # =================================================================
+    EntryResponse:
+      type: object
+      required:
+        - parkingEventId
+        - licensePlate
+        - entryTime
+        - isSubscriber
+        - message
+        - gateStatus
+      properties:
+        parkingEventId:
+          type: integer
+          format: int64
+          description: Created parking event ID
+          example: 12345
+        licensePlate:
+          type: string
+          description: Vehicle license plate
+          example: "ABC-1234"
+        ticketCode:
+          type: string
+          description: Generated ticket code (for non-subscribers)
+          example: "TKT-20260116-12346"
+          nullable: true
+        entryTime:
+          type: string
+          format: date-time
+          description: Entry timestamp
+          example: "2026-01-16T10:00:00Z"
+        spotId:
+          type: integer
+          format: int64
+          description: Assigned parking spot ID
+          example: 15
+          nullable: true
+        isSubscriber:
+          type: boolean
+          description: Whether vehicle has active subscription
+          example: true
+        message:
+          type: string
+          description: Message to display to driver
+          example: "Welcome! Your subscription is active."
+        gateStatus:
+          type: string
+          enum: [OPENED, CLOSED, ERROR]
+          description: Gate status after operation
+          example: "OPENED"
+
+    ExitResponse:
+      type: object
+      required:
+        - parkingEventId
+        - licensePlate
+        - entryTime
+        - exitTime
+        - durationMinutes
+        - fee
+        - isPaid
+        - paymentRequired
+        - message
+        - gateStatus
+      properties:
+        parkingEventId:
+          type: integer
+          format: int64
+          description: Parking event ID
+          example: 12345
+        licensePlate:
+          type: string
+          description: Vehicle license plate
+          example: "ABC-1234"
+        entryTime:
+          type: string
+          format: date-time
+          description: Entry timestamp
+          example: "2026-01-16T10:00:00Z"
+        exitTime:
+          type: string
+          format: date-time
+          description: Exit timestamp
+          example: "2026-01-16T12:00:00Z"
+        durationMinutes:
+          type: integer
+          description: Parking duration in minutes
+          example: 120
+        fee:
+          type: number
+          format: double
+          description: Calculated parking fee
+          example: 0.00
+        isPaid:
+          type: boolean
+          description: Whether parking has been paid
+          example: true
+        paymentRequired:
+          type: boolean
+          description: Whether payment is required before gate opens
+          example: false
+        message:
+          type: string
+          description: Message to display to driver
+          example: "Thank you! Have a nice day."
+        gateStatus:
+          type: string
+          enum: [OPENED, CLOSED, ERROR]
+          description: Gate status after operation
+          example: "OPENED"
+
+    GateControlResponse:
+      type: object
+      required:
+        - gateId
+        - action
+        - status
+        - operatorId
+        - timestamp
+        - message
+      properties:
+        gateId:
+          type: string
+          description: Gate identifier
+          example: "GATE-EXIT-1"
+        action:
+          type: string
+          enum: [OPEN, CLOSE]
+          description: Action performed
+          example: "OPEN"
+        status:
+          type: string
+          enum: [OPENED, CLOSED, ERROR]
+          description: Gate status after action
+          example: "OPENED"
+        operatorId:
+          type: integer
+          format: int64
+          description: Operator who performed the action
+          example: 3
+        timestamp:
+          type: string
+          format: date-time
+          description: Action timestamp
+          example: "2026-01-16T12:00:00Z"
+        message:
+          type: string
+          description: Operation result message
+          example: "Gate opened manually by operator"
+
+    # =================================================================
+    # ERROR MODELS
+    # =================================================================
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2026-01-16T12:00:00Z"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        error:
+          type: string
+          description: Error type
+          example: "Bad Request"
+        message:
+          type: string
+          description: Error message
+          example: "Invalid request parameters"
+        path:
+          type: string
+          description: Request path where error occurred
+          example: "/api/v1/gate/entry"
+
+  # =================================================================
+  # REUSABLE RESPONSES
+  # =================================================================
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            timestamp: "2026-01-16T12:00:00Z"
+            status: 400
+            error: "Bad Request"
+            message: "Invalid request parameters"
+            path: "/api/v1/gate/entry"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            timestamp: "2026-01-16T12:00:00Z"
+            status: 500
+            error: "Internal Server Error"
+            message: "An unexpected error occurred"
+            path: "/api/v1/gate/entry"
+

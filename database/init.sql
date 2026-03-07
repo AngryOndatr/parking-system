@@ -146,32 +146,77 @@ CREATE TABLE subscriptions (
 -- Таблица: PARKING_EVENTS (Журнал въездов/выездов)
 CREATE TABLE parking_events (
     id BIGSERIAL PRIMARY KEY,
-    vehicle_id BIGINT NOT NULL,
-    entry_time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    vehicle_id BIGINT, -- Nullable для разовых посетителей без регистрации
+    license_plate VARCHAR(20) NOT NULL, -- Обязательное поле для всех посетителей
+    entry_time TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     exit_time TIMESTAMP WITHOUT TIME ZONE,
+    entry_method VARCHAR(20), -- 'SCAN', 'MANUAL'
+    exit_method VARCHAR(20), -- 'SCAN', 'MANUAL', 'AUTO'
     spot_id BIGINT, -- Если используем резервирование конкретного места
-    ticket_code VARCHAR(100) UNIQUE, -- Для разовых посетителей
+    ticket_code VARCHAR(50) UNIQUE, -- Для разовых посетителей
+    is_subscriber BOOLEAN NOT NULL DEFAULT FALSE,
     is_paid BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    -- Внешний ключ на таблицу VEHICLES
+    -- Внешний ключ на таблицу VEHICLES (ON DELETE SET NULL для гостей)
     CONSTRAINT fk_event_vehicle
         FOREIGN KEY (vehicle_id)
         REFERENCES vehicles (id)
+        ON DELETE SET NULL,
+
+    -- Проверки для методов въезда/выезда
+    CONSTRAINT chk_entry_method CHECK (entry_method IN ('SCAN', 'MANUAL') OR entry_method IS NULL),
+    CONSTRAINT chk_exit_method CHECK (exit_method IN ('SCAN', 'MANUAL', 'AUTO') OR exit_method IS NULL)
 );
+
+-- Индексы для parking_events
+CREATE INDEX idx_parking_events_ticket ON parking_events (ticket_code);
+CREATE INDEX idx_parking_events_entry_time ON parking_events (entry_time);
+CREATE INDEX idx_parking_events_license ON parking_events (license_plate);
 
 -- Таблица: PAYMENTS (Учет оплаты разовой парковки)
 CREATE TABLE payments (
     id BIGSERIAL PRIMARY KEY,
-    parking_event_id BIGINT UNIQUE NOT NULL, -- Одно событие - одна оплата
+    parking_event_id BIGINT NOT NULL, -- Может быть несколько платежей на одно событие
     amount NUMERIC(10, 2) NOT NULL,
     payment_time TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    payment_method VARCHAR(50) NOT NULL, -- 'CASH', 'CARD'
+    payment_method VARCHAR(20) NOT NULL, -- 'CARD', 'CASH', 'MOBILE_PAY'
+    status VARCHAR(20) NOT NULL DEFAULT 'COMPLETED', -- 'PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'
+    transaction_id VARCHAR(100) UNIQUE, -- Уникальный идентификатор транзакции
+    operator_id BIGINT, -- ID оператора, если оплата произведена оператором
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- Внешний ключ на событие парковки
     CONSTRAINT fk_payment_event
         FOREIGN KEY (parking_event_id)
-        REFERENCES parking_events (id)
+        REFERENCES parking_events (id),
+
+    -- Проверки для полей
+    CONSTRAINT chk_payment_method CHECK (payment_method IN ('CARD', 'CASH', 'MOBILE_PAY')),
+    CONSTRAINT chk_payment_status CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED')),
+    CONSTRAINT chk_payment_amount CHECK (amount >= 0)
 );
+
+-- Таблица: GATE_EVENTS (Журнал всех операций с воротами)
+CREATE TABLE gate_events (
+    id BIGSERIAL PRIMARY KEY,
+    event_type VARCHAR(20) NOT NULL,
+    license_plate VARCHAR(20) NOT NULL,
+    ticket_code VARCHAR(50),
+    gate_id VARCHAR(20) NOT NULL,
+    decision VARCHAR(10) NOT NULL,
+    reason VARCHAR(500),
+    timestamp TIMESTAMP NOT NULL,
+    operator_id BIGINT,
+
+    CONSTRAINT chk_event_type CHECK (event_type IN ('ENTRY', 'EXIT', 'MANUAL_OPEN', 'ERROR')),
+    CONSTRAINT chk_decision CHECK (decision IN ('OPEN', 'DENY'))
+);
+
+-- Индексы для gate_events
+CREATE INDEX idx_gate_events_license_plate ON gate_events(license_plate);
+CREATE INDEX idx_gate_events_timestamp ON gate_events(timestamp);
+CREATE INDEX idx_gate_events_gate_id ON gate_events(gate_id);
 
 -- Таблица: LOGS (Журнал системных действий и действий операторов)
 CREATE TABLE logs (
@@ -180,6 +225,8 @@ CREATE TABLE logs (
     log_level VARCHAR(50) NOT NULL,
     message TEXT NOT NULL,
     user_id BIGINT,
+    service VARCHAR(100),
+    meta JSON,
 
     -- Внешний ключ на пользователя (если действие совершено оператором)
     CONSTRAINT fk_log_user

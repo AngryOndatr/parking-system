@@ -6,6 +6,9 @@
     "files.associations": {
         "*.ps1": "powershell"
     },
-    "powershell.codeFormatting.preset": "OTBS"
+    "powershell.codeFormatting.preset": "OTBS",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
 

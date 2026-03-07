@@ -5,8 +5,8 @@
 -- Add service column to store the originating service name
 ALTER TABLE logs ADD COLUMN IF NOT EXISTS service VARCHAR(100);
 
--- Add meta column to store additional JSON metadata
-ALTER TABLE logs ADD COLUMN IF NOT EXISTS meta TEXT;
+-- Add meta column to store additional JSON metadata (using JSON type)
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS meta JSON;
 
 -- Add index on service for faster filtering
 CREATE INDEX IF NOT EXISTS idx_logs_service ON logs(service);

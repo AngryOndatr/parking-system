@@ -1,0 +1,42 @@
+# Minimal OpenTelemetry Collector configuration for E2E tests
+# Simply accepts traces and logs them (we don't need to store them in tests)
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+
+exporters:
+  # Use debug exporter instead of deprecated logging
+  debug:
+    verbosity: normal
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+
+  # Health check endpoint
+  telemetry:
+    logs:
+      level: info
+

@@ -22,7 +22,7 @@ import java.util.Enumeration;
 public class ReportingProxyController {
 
     private final RestTemplate restTemplate;
-    private static final String REPORTING_SERVICE_URL = "http://reporting-service:8084";
+    private static final String REPORTING_SERVICE_URL = "http://reporting-service:8080";
 
     /**
      * Proxy POST request to create a log entry

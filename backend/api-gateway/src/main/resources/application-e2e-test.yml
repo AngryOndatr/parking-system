@@ -1,0 +1,50 @@
+# E2E Test Profile - Security DISABLED for testing
+# This profile is ONLY for automated E2E tests
+
+spring:
+
+  # Disable all security auto-configuration
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
+# Actuator configuration for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+
+# Disable tracing
+  tracing:
+    enabled: false
+
+  # Disable OpenTelemetry metrics
+  metrics:
+    export:
+      otlp:
+        enabled: false
+
+# Disable OpenTelemetry completely
+otel:
+  sdk:
+    disabled: true
+  javaagent:
+    enabled: false
+  traces:
+    exporter: none
+  metrics:
+    exporter: none
+
+logging:
+  level:
+    root: INFO
+    com.parking: DEBUG
+    org.springframework.security: DEBUG
+    io.opentelemetry: OFF
+

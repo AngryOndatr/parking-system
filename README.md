@@ -1,154 +1,321 @@
-Markdown
 # 🅿️ Parking System - Microservices Architecture
+
+> 🇷🇺 **Русская версия:** [README_RU.md](./README_RU.md)
 
 Modern parking lot management system built on microservices architecture using Spring Boot, Spring Cloud, and Docker.
 
 ## 🆕 Latest Updates
 
-### 2026-01-13 - Phase 1 Complete: Tests & Documentation (Issue #22) ✅
+> **Showing the latest 3 updates.** Full history: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
 
-✅ **Tests & Documentation - Phase 1 Complete** (Issue #22)
-- ✅ Comprehensive test coverage (46+ test cases)
-  - Client Service: 20+ tests (unit + MockMvc integration)
-  - Management Service: 14+ tests (integration)
-  - Reporting Service: 12+ tests (unit + integration)
-- ✅ Service-level documentation complete
-  - **NEW**: Client Service README (630+ lines)
-  - Management Service README (307 lines)
-  - Reporting Service README (434 lines)
-- ✅ API examples for all endpoints (curl + PowerShell)
-- ✅ Happy path + negative case coverage
-- ✅ Local test scripts operational
-- 📖 **Status Report**: [ISSUE_22_STATUS_REPORT.md](./docs/reports/ISSUE_22_STATUS_REPORT.md)
-- 📖 **Client Service**: [README.md](./backend/client-service/README.md)
+### 2026-03-07 — Bug Fixes & All Tests Green (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor) ✅
 
-### 2026-01-13 - API Gateway Proxy Testing Infrastructure (Issue #21) ✅
+✅ **Full Build: 161 unit tests + 1 E2E test — BUILD SUCCESS**
+- 🐛 **billing-service**: `getPaymentStatus` — fixed 404 response for unknown events
+- 🐛 **billing-service**: `JacksonConfig` — fixed `@DataJpaTest` slice incompatibility
+- 🐛 **gate-control-service**: `PaymentStatusResponse.remainingFee` — restored `BigDecimal`
+- 🐛 **gate-control-service**: `BillingServiceClient` — parse fee as `BigDecimal` (not `Double`)
+- 🐛 **gate-control-service**: `GateServiceTest` — fix mock (`checkPaymentStatusByTicket`), remove unused stubs
+- 🛠️ **New script**: `devops/run-e2e-tests.ps1` — standalone E2E runner with Docker check
+- 📖 **Session Report**: [docs/sessions/SESSION_DEVELOPMENT_2026-03-07.md](./docs/sessions/SESSION_DEVELOPMENT_2026-03-07.md)
 
-✅ **API Gateway Proxy Verification Complete** (Issue #21)
-- ✅ PowerShell smoke test script (test-proxy.ps1, 269 lines)
-- ✅ Bash smoke test script (test-proxy.sh, 270 lines)
-- ✅ 11 automated tests across all services
-- ✅ Comprehensive API documentation (36 code examples)
-- ✅ Management Service proxy verified (4 endpoints)
-- ✅ Reporting Service proxy verified (5 endpoints)
-- ✅ Client Service proxy verified (2 endpoints)
-- ✅ JWT token forwarding tested
-- ✅ Cross-platform support (Windows/Linux/Mac)
-- 📖 **API Examples**: [API_GATEWAY_PROXY_EXAMPLES.md](./docs/API_GATEWAY_PROXY_EXAMPLES.md)
-- 📖 **Testing Guide**: [devops/README.md](./devops/README.md)
+### 2026-02-14 — E2E Testing Infrastructure Complete (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor) ✅
 
-### 2026-01-13 - Reporting Service JWT Authentication Complete (Issue #19) ✅
+✅ **E2E Tests - One-Time Visitor Scenario** (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor)
+- ✅ `OneTimeVisitorE2ETest` - complete parking cycle (Entry → Payment → Exit)
+- ✅ Testcontainers integration with docker-compose orchestration
+- ✅ 9 microservices tested in isolated environment
+- ✅ Test duration: ~2 minutes | Success rate: 100%
+- ✅ Windows 11 Home Edition support (Docker API compatibility fix)
+- ✅ Automated build script: `build-e2e-images.ps1`
+- 📊 **Test Coverage**: Entry gate, payment processing, exit gate, service discovery
+- 🏗️ **Architecture Improvements**:
+  - Ticket-based payment flow (ticketCode as natural key)
+  - Database schema synchronization (init.sql updated to match V8/V9 migrations)
+  - New endpoints: `/api/v1/billing/pay-test`, `/api/v1/billing/status-by-ticket`
+  - Support for nullable `vehicle_id` (one-time visitors without registration)
+- 📖 **Documentation**: [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
+- 📖 **Session Report**: [docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md](./docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md)
+- 🎯 **Next Steps**: Subscriber test scenario, subscription management tests
 
-✅ **Reporting Service - Complete with JWT Authentication** (Issue #19)
-- ✅ POST /api/reporting/log - Create log entries (JWT protected)
-- ✅ GET /api/reporting/logs - Retrieve logs with filters (JWT protected)
-- ✅ JWT Authentication integrated (JwtAuthenticationFilter, JwtTokenProvider, SecurityConfig)
-- ✅ Jackson JsonNullable support for OpenAPI models
-- ✅ Unified JWT secret across all microservices (768 bits, HS512 compliant)
-- ✅ JSON metadata support with proper deserialization
-- ✅ Comprehensive test coverage
-- 🔧 **FIXED**: JWT signature mismatch (unified secrets in docker-compose.yml)
-- 🔧 **FIXED**: JWT key too short (upgraded to 96 characters)
-- 🔧 **FIXED**: Jackson JsonNullable deserialization error (added module)
-- 📖 **Session Log**: [SESSION_DEVELOPMENT_2026-01-13.md](./docs/sessions/SESSION_DEVELOPMENT_2026-01-13.md)
+### 2026-01-27 - Gate Control Service: Exit & Manual Control Endpoints (Issue #52) ✅
 
-### 2026-01-12 - Phase 1: Backend CRUD Implementation Started 🚀
+✅ **Gate Control Service - Exit & Manual Control Endpoints Complete** (Issue #52)
+- ✅ POST /api/v1/gate/exit endpoint with OpenAPI-first implementation
+- ✅ POST /api/v1/gate/control endpoint for operator manual control
+- ✅ ExitRequest and ManualControlRequest DTOs with validation
+- ✅ ExitDecision and ManualControlResponse DTOs for responses
+- ✅ GateService.processExit implemented with BillingService integration (payment check)
+- ✅ Manual control logs operator actions to Reporting Service and GateEvent (MANUAL_OPEN)
+- ✅ Integration tests covering paid/unpaid exits and manual control - **ALL PASSING** ✅
+- 📖 **Controller:** [GateController.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/controller/GateController.java)
+- 📖 **Tests:** [GateControllerIntegrationTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/controller/GateControllerIntegrationTest.java)
+- 📖 **OpenAPI:** [openapi.yaml](./backend/gate-control-service/src/main/resources/openapi.yaml)
+- 🎯 **Next Steps:** None - Phase 2 complete!
 
-✅ **Client Service - Full CRUD Complete** (Issue #16)
-- ✅ Complete CRUD endpoints for Clients entity
-- ✅ OpenAPI-first design with generated interfaces
-- ✅ Comprehensive validation and error handling
-- ✅ Unit and integration tests
-- ✅ JWT-protected endpoints via API Gateway
-- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-16)
+### 2026-01-26 - Gate Control Service: Entry REST Endpoint (Issue #50) ✅
 
-✅ **Client Service - Vehicles Management Complete** (Issue #17)
-- ✅ Full CRUD for Vehicles linked to Clients
-- ✅ License plate uniqueness enforcement
-- ✅ Client-Vehicle relationship management
-- ✅ Comprehensive test coverage
-- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-17)
+✅ **Gate Control Service - Entry REST API Complete** (Issue #50)
+- ✅ POST /api/v1/gate/entry endpoint with OpenAPI-first implementation
+- ✅ GateController implementing GateApi interface from OpenAPI specification
+- ✅ EntryRequest DTO with validation (license plate pattern, entry method, gate ID)
+- ✅ EntryResponse DTO with JsonNullable for optional ticket code
+- ✅ 5 comprehensive integration tests - **ALL PASSING** ✅
+  - Subscriber entry returns 201 without ticket
+  - One-time visitor returns 201 with unique ticket code
+  - Invalid license plate format returns 400
+  - Missing required fields returns 400
+  - Manual entry with operator ID succeeds
+- ✅ TestSecurityConfig for integration tests (permits all requests in test profile)
+- ✅ Full request/response validation with proper HTTP status codes
+- ✅ SLF4J logging with emojis for all operations
+- 📖 **Controller:** [GateController.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/controller/GateController.java)
+- 📖 **Tests:** [GateControllerIntegrationTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/controller/GateControllerIntegrationTest.java)
+- 📖 **OpenAPI:** [openapi.yaml](./backend/gate-control-service/src/main/resources/openapi.yaml)
+- 🎯 **Next Steps:** Exit decision logic and REST endpoint
 
-✅ **Management Service - Parking Spaces API Complete** (Issue #18)
-- ✅ GET /available - List all available parking spaces
-- ✅ GET /available/count - Count of available spaces
-- ✅ GET /available/lot/{id} - Available spaces by lot
-- ✅ GET /search - Search with filters (type, status)
-- ✅ Test data migration with 23 parking spaces
-- ✅ API Gateway proxy endpoints configured
-- 📖 **Details:** [Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md#issue-18)
+### 2026-01-26 - Gate Control Service: Entry Decision Logic (Issue #49) ✅
 
-### 2025-12-26 - Flyway Database Migrations
+✅ **Gate Control Service - Entry Decision Logic** (Issue #49)
+- ✅ GateService with processEntry(licensePlate) decision logic
+- ✅ EntryDecision DTO with action (OPEN/DENY), message, and ticket code
+- ✅ Subscriber path: automatic gate opening without ticket generation
+- ✅ Visitor path: unique ticket generation (TICKET-{timestamp}-{random})
+- ✅ GateEvent logging for all entry decisions (ENTRY, OPEN/DENY with reason)
+- ✅ 5 comprehensive unit tests - **ALL PASSING** ✅
+  - Subscriber grants access without ticket
+  - One-time visitor generates ticket and grants access
+  - Client service called exactly once for both paths
+  - Multiple visitors receive unique tickets
+- ✅ Integration with ClientServiceClient and GateEventRepository
+- 📖 **Service:** [GateService.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/service/GateService.java)
+- 📖 **DTO:** [EntryDecision.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/EntryDecision.java)
+- 📖 **Tests:** [GateServiceTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/service/GateServiceTest.java)
 
-✅ **Flyway Database Migrations Implemented**
-- ✅ Flyway configured and integrated into API Gateway
-- ✅ 5 migrations created (V1-V5): initial schema, parking_lots, parking_spaces, bookings, test data
-- ✅ Comprehensive database documentation created
-- ✅ Deployment guide with migration instructions
-- ✅ Test scripts for migration verification
-- 📖 **Migration Guide:** [Database README](./database/README.md)
-- 📖 **Deployment Guide:** [DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)
+### 2026-01-26 - Gate Control Service: Client Service Integration (Issue #48) ✅
 
-### 2025-12-25 - Initial Setup
+✅ **Gate Control Service - Client Service Integration** (Issue #48)
+- ✅ ClientServiceClient with WebClient for subscription validation
+- ✅ SubscriptionCheckResponse DTO with access grant status
+- ✅ Fail-safe error handling: all errors result in access denial
+- ✅ 5 comprehensive unit tests with MockWebServer - **ALL PASSING** ✅
+  - Active subscription validation (200 OK)
+  - Subscription not found handling (404)
+  - Inactive subscription handling
+  - Server error handling (500)
+  - Network error/timeout handling
+- ✅ SLF4J logging for all requests and errors
+- ✅ Integration with existing WebClientConfig
+- 📖 **Client:** [ClientServiceClient.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/client/ClientServiceClient.java)
+- 📖 **DTO:** [SubscriptionCheckResponse.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/SubscriptionCheckResponse.java)
+- 📖 **Tests:** [ClientServiceClientTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/client/ClientServiceClientTest.java)
 
-✅ **Infrastructure & Foundation**
-- ✅ API Gateway with JWT authentication and security features
-- ✅ Complete microservices implementation (Eureka, API Gateway, Client Service)
-- ✅ PostgreSQL and Redis working and accessible
-- ✅ Observability stack integrated (Prometheus, Grafana, Jaeger, OpenTelemetry)
-- ✅ Docker Compose configuration optimized
-- ✅ Correct password hashes configured (BCrypt)
-- 📖 Complete development documentation: [SESSION_DEVELOPMENT_2025-12-25_EN.md](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
+### 2026-01-26 - Gate Control Service: GateEvent Entity Implementation (Issue #46) ✅
+
+✅ **Gate Control Service - Entity Layer** (Issue #46)
+- ✅ GateEvent JPA entity with two enums (EventType: ENTRY/EXIT/MANUAL_OPEN/ERROR, Decision: OPEN/DENY)
+- ✅ GateEventRepository with custom query methods (findByLicensePlateOrderByTimestampDesc, findByTimestampBetween)
+- ✅ Flyway migration V9: gate_events table with indexes and constraints
+- ✅ 5 comprehensive integration tests - **ALL PASSING** ✅
+- ✅ Test configuration with H2 in-memory database
+- ✅ Domain model architecture: Hibernate -> Domain model <- DTO
+- 📖 **Entity:** [GateEvent.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/entity/GateEvent.java)
+- 📖 **Repository:** [GateEventRepository.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/repository/GateEventRepository.java)
+- 📖 **Tests:** [GateEventRepositoryTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/repository/GateEventRepositoryTest.java)
+- 🎯 **Next Steps:** WebClient configuration for inter-service communication (Issue #47)
+
+### 2026-01-24 - Billing Service: Payment Status & Recording Endpoints (Issues #34, #35, #36) ✅
+
+✅ **Billing Service - Complete REST API Implementation** (Issues #34, #35, #36)
+- ✅ POST /api/v1/billing/calculate endpoint - fee calculation with OpenAPI validation
+- ✅ POST /api/v1/billing/pay endpoint - payment recording with transaction ID generation
+- ✅ GET /api/v1/billing/status endpoint - comprehensive payment status check with remaining fee calculation
+- ✅ OpenAPI-first REST controller implementing BillingApi interface
+- ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
+- ✅ BillingMapper for comprehensive DTO <-> Entity <-> Domain transformations
+- ✅ Global exception handler with proper HTTP status codes (400, 404, 409, 500)
+- ✅ Payment validation: insufficient amount detection, duplicate payment prevention
+- ✅ Payment status tracking: support for paid/unpaid tickets with history of all payment attempts
+- ✅ 10 integration tests covering all success/error scenarios - **ALL PASSING** ✅
+- ✅ Full OpenAPI documentation available via Swagger UI
+- 📊 **Total Test Coverage:** 57 tests (19 repository + 28 service + 10 integration) - **100% passing**
+- 📖 **Controller:** [BillingController.java](./backend/billing-service/src/main/java/com/parking/billing/controller/BillingController.java)
+- 📖 **Tests:** [BillingControllerIntegrationTest.java](./backend/billing-service/src/test/java/com/parking/billing/controller/BillingControllerIntegrationTest.java)
+- 🎉 **Status:** Phase 2 Billing Service **100% COMPLETE** - Ready for Gate Control Service integration!
+
+### 2026-01-18 - Billing Service: Complete Implementation (Issues #32, #33) ✅
+
+✅ **Billing Service - Service Layer Complete** (Issue #33)
+- ✅ BillingService with fee calculation logic (hourly rate + rounding up)
+- ✅ Payment recording with validation and unique transaction ID generation (TRX-{timestamp}-{random})
+- ✅ Domain models (ParkingEventDomain, PaymentDomain, TariffDomain)
+- ✅ BillingMapper for Entity <-> DTO transformation
+- ✅ Custom exceptions (ParkingEventNotFound, TicketAlreadyPaid, InsufficientPayment, TariffNotFound)
+- ✅ 28 unit tests (BillingService + mapper) - all passing
+- 📊 **Test Coverage:** Service ~95%, Repository ~90%
+- 📖 **Service:** [BillingService.java](./backend/billing-service/src/main/java/com/parking/billing/service/BillingService.java)
+
+### 2026-01-18 - Billing Service: ParkingEvent & Payment Entities (Issue #32) ✅
+
+✅ **Billing Service - Entity & Repository Layer** (Issue #32)
+- ✅ ParkingEvent entity with entry/exit tracking and method enums (SCAN, MANUAL, AUTO)
+- ✅ Payment entity with status tracking (PENDING, COMPLETED, FAILED, REFUNDED) and transaction management
+- ✅ ParkingEventRepository with custom queries (findByTicketCode, findByLicensePlateAndExitTimeIsNull, findByEntryTimeBetween)
+- ✅ PaymentRepository with payment status queries (findByParkingEventIdAndStatus, findByTransactionId)
+- ✅ 18 repository integration tests - all green
+- ✅ @PrePersist hooks for automatic timestamp initialization
+- 📖 **Entities:** [ParkingEvent.java](./backend/billing-service/src/main/java/com/parking/billing/entity/ParkingEvent.java), [Payment.java](./backend/billing-service/src/main/java/com/parking/billing/entity/Payment.java)
+- 📖 **Repositories:** [ParkingEventRepository.java](./backend/billing-service/src/main/java/com/parking/billing/repository/ParkingEventRepository.java), [PaymentRepository.java](./backend/billing-service/src/main/java/com/parking/billing/repository/PaymentRepository.java)
+
+### 2026-01-16 - Phase 2: Database Extensions & API Contracts (Issues #24-26) ✅
+
+✅ **Database - TARIFFS & Extended Tables** (Issues #24, #25)
+- ✅ V7 migration: TARIFFS table with 4 seed tariffs (ONE_TIME, DAILY, NIGHT, VIP)
+- ✅ V8 migration: Extended PARKING_EVENTS (license_plate, entry/exit_method, is_subscriber)
+- ✅ V8 migration: Extended PAYMENTS (status, transaction_id, operator_id)
+- ✅ 9 new indexes for performance optimization
+- 📖 **Migration Details**: [database/README.md](./database/README.md)
+
+✅ **API Contracts - Billing & Gate Control** (Issue #26)
+- ✅ OpenAPI 3.0.3 specification for Billing Service (3 endpoints)
+- ✅ OpenAPI 3.0.3 specification for Gate Control Service (3 endpoints)
+- 📖 **API Contracts:** [docs/api-contracts.md](./docs/api-contracts.md)
+
+
+---
 
 ## 📈 Project Status & Roadmap
 
-### Phase 0: Infrastructure & Foundation ✅ COMPLETE
+### Current Status: Phase 2 - COMPLETE 🚀
 
-| Task | Description | Status | Completion |
-|------|-------------|--------|------------|
-| 0.1 | **GitHub Setup** | ✅ Complete | 100% |
-| 0.2 | **Docker Compose** | ✅ Complete | 100% |
-| 0.3 | **PostgreSQL DDL** | ✅ Complete | 100% |
-| 0.4 | **Spring Boot Services** | ✅ Complete | 100% |
+```
+Phase 0: ████████████████████ 100% ✅ COMPLETE
+Phase 1: ████████████████████ 100% ✅ COMPLETE
+Phase 2: ████████████████████ 100% ✅ COMPLETE
+Phase 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
+Phase 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
+Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
+```
 
-📖 **Phase 0 Summary:** [PHASE_0_SUMMARY.md](./docs/reports/PHASE_0_SUMMARY.md)
+### 📋 Project Phases Overview
 
-### Phase 1: Basic Backend (In Progress - Week 1/3) 🔄
+| Phase | Duration | Status | Progress | Description |
+|-------|----------|--------|----------|-------------|
+| **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
+| **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
+| **Phase 2** | 2 weeks | ✅ Complete | 100% | Core Business Logic |
+| **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
+| **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
+| **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |
 
-**Goal:** Implement CRUD operations and database connectivity for core services.
+📖 **Детальная дорожная карта:** [PROJECT_PHASES.md](./docs/PROJECT_PHASES.md)
 
-| Service | Task | Status | Issue |
-|---------|------|--------|-------|
-| **Client Service** | ✅ CRUD for CLIENTS | Complete | #16 |
-| **Client Service** | ✅ CRUD for VEHICLES | Complete | #17 |
-| **Client Service** | ⏳ GET /check (subscription) | Pending | - |
-| **Management Service** | ✅ GET /available | Complete | #18 |
-| **Management Service** | ⏳ POST /update (status) | Pending | - |
-| **Reporting Service** | ✅ POST /log | Complete | #19 |
-| **Database** | ✅ Flyway migrations | Complete | #20 |
+### 🎯 Current Sprint Goals (Week 6)
 
-**Progress:** 5/7 tasks complete (71%)
+**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (90%)**
 
-**What's Done:**
-- ✅ Complete Client entity CRUD with validation
-- ✅ Complete Vehicle entity CRUD with client linking
-- ✅ Parking space availability queries (list, count, filter)
-- ✅ Reporting service with JWT authentication and logging
-- ✅ Database migrations verified (parking_spaces, logs tables)
-- ✅ OpenAPI-first design pattern established
-- ✅ Test data migrations (23 parking spaces)
-- ✅ Comprehensive test coverage
+**Current Focus: Gate Control Service**
+- ✅ Issue #46: GateEvent entity & repository - **COMPLETED**
+- 🔄 Issue #47: WebClient configuration for inter-service calls - **IN PROGRESS**
+- ⏳ Issue #48: Entry decision logic service
+- ⏳ Issue #49: Exit decision logic service
 
-**Next Steps:**
-- ⏳ Implement subscription check endpoint
-- ⏳ Implement parking space status update
+**Completed This Week:**
+- ✅ GateEvent JPA entity with enums (EventType, Decision)
+- ✅ GateEventRepository with custom queries
+- ✅ Flyway migration V9: gate_events table
+- ✅ 5 repository integration tests
 
-**Week 1 Achievements:**
-- 5 major issues completed (#16, #17, #18, #19, #20)
-- 3 microservices enhanced (client-service, management-service, reporting-service)
-- 15+ endpoints implemented and tested
-- Production-ready OpenAPI contracts
-- Database schema validated and documented
+**Next Tasks:**
+1. Configure WebClient beans for Client, Billing, Management, Reporting services (Issue #47)
+2. Implement entry decision logic with subscription validation (Issue #48)
+3. Implement exit decision logic with payment verification (Issue #49)
+- ✅ Client Service: CRUD + subscription check
+- ✅ Management Service: available spots + status update
+- ✅ Reporting Service: log storage
+- ✅ API Gateway proxy verification
+- ✅ Tests & documentation
+
+**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (90%)**
+- ✅ TARIFFS table migration (Issue #24)
+- ✅ PARKING_EVENTS & PAYMENTS extensions (Issue #25)
+- ✅ API Contracts documentation (Issue #26)
+- ✅ Tariff entity implementation (Issue #31)
+- ✅ ParkingEvent & Payment entities (Issue #32)
+- ✅ Billing Service: fee calculation & payment processing (Issue #33)
+- ✅ Billing Service: fee calculation endpoint /calculate (Issue #34)
+- ✅ Billing Service: payment recording endpoint /pay (Issue #35)
+- ✅ Billing Service: payment status endpoint /status (Issue #36) ⭐ **NEW**
+- ⏳ Gate Control Service: entry/exit logic (Issue #37)
+- ⏳ Inter-service communication (Issue #38)
+
+### 📊 Quick Stats
+
+| Metric | Value |
+|--------|-------|
+| **Total Issues** | 70 |
+| **Closed Issues** | 53 (76%) |
+| **Microservices** | 9 |
+| **Phase 1** | ✅ 100% Complete |
+| **Phase 2** | ✅ 100% Complete |
+| **E2E Tests** | ✅ Implemented |
+| **API Endpoints** | 54+ |
+| **Tests** | 100+ (unit + integration + E2E) |
+| **DB Migrations** | 9 (V0-V9) |
+| **Code Coverage** | ~90% avg |
+
+### Recent Achievements
+
+**2026-02-14 - E2E Testing Infrastructure (Issue #70)**
+- ✅ OneTimeVisitorE2ETest - complete parking cycle test
+- ✅ Testcontainers integration with docker-compose
+- ✅ 9 microservices tested in isolated environment
+- ✅ Test duration: ~2 minutes | Success rate: 100%
+- ✅ Windows 11 Home Edition support (Docker API compatibility)
+- ✅ Ticket-based payment flow implementation
+- ✅ Database schema synchronization (init.sql updated to V8/V9)
+- ✅ New endpoints: `/api/v1/billing/pay-test`, `/api/v1/billing/status-by-ticket`
+- 📖 **Test:** [OneTimeVisitorE2ETest.java](./backend/e2e-tests/src/test/java/com/parking/e2e/OneTimeVisitorE2ETest.java)
+- 📖 **Documentation:** [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
+
+**2026-01-24 - Billing Service REST API Complete (Issues #34, #35, #36)**
+- ✅ OpenAPI-first BillingController implementing BillingApi interface
+- ✅ POST /api/v1/billing/calculate - fee calculation endpoint
+- ✅ POST /api/v1/billing/pay - payment recording endpoint
+- ✅ GET /api/v1/billing/status - comprehensive payment status endpoint with remaining fee ⭐ **NEW**
+- ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
+- ✅ BillingMapper enhancements for comprehensive transformations
+- ✅ GlobalExceptionHandler with proper HTTP status codes (400, 404, 409, 500)
+- ✅ 10 integration tests - all passing (7 core + 3 for status)
+- ✅ Payment status tracking with history of all payment attempts
+- 📊 **Total Test Coverage:** 57 tests (100% passing)
+- 🎉 **Billing Service 100% COMPLETE** - Ready for Gate Control integration!
+
+**2026-01-18 - Billing Service Complete (Issues #32, #33)**
+- ✅ ParkingEvent & Payment JPA entities with @PrePersist hooks
+- ✅ Repositories with custom queries (18 tests)
+- ✅ BillingService with fee calculation & payment logic
+- ✅ Domain models & mapper implementation
+- ✅ Custom exceptions for business logic errors
+- ✅ 38 new unit tests (all passing) - Total: 80+ tests
+- 📊 Coverage: Service ~95%, Controller ~85%, Repository ~90%
+
+**2026-01-16 - Phase 2 Database & API Contracts (Issues #24-26)**
+- ✅ V7 migration: TARIFFS table with 4 seed tariffs
+- ✅ V8 migration: Extended PARKING_EVENTS & PAYMENTS
+- ✅ OpenAPI 3.0.3 specs for Billing & Gate Control
+
+### Next Steps
+
+**Immediate (This Week):**
+1. ✅ ~~Complete Billing Service implementation (Issues #32, #33, #34, #35, #36)~~ - DONE
+2. Implement Gate Control Service (Issue #37) - POST /entry, POST /exit, GET /status
+3. Add inter-service communication (Issue #38) - Billing <-> Gate Control
+
+**Upcoming (Next 2 Weeks):**
+1. Complete Phase 2: Business logic implementation
+2. Service-to-service communication with WebClient
+3. Begin Phase 3: Security & Integration (JWT, Spring Security)
 
 ## 🏗️ System Architecture
 
@@ -481,6 +648,7 @@ services:
 
 ### Development History
 - **[Session Logs](./docs/sessions/)** - Detailed development session logs
+  - [2026-02-14 - E2E Testing Implementation](./docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md)
   - [2025-12-25 - Project Setup](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
   - [2026-01-03 - Issue #16 Client CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-03_EN.md)
   - [2026-01-04 - Issue #17 Vehicle CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-04_EN.md)
@@ -509,7 +677,29 @@ services:
 
 ## 🧪 Testing
 
-### Automated Tests
+### E2E Tests (End-to-End)
+```bash
+# Prerequisites
+cd backend/e2e-tests
+.\build-e2e-images.ps1  # Build Docker images
+
+# Run tests
+mvn test
+
+# Run specific test
+mvn test -Dtest=OneTimeVisitorE2ETest
+```
+
+**Test Coverage:**
+- ✅ One-time visitor full cycle (Entry → Payment → Exit)
+- ✅ All 9 microservices integration
+- ✅ Database operations (PostgreSQL)
+- ✅ Service discovery (Eureka)
+- ✅ API Gateway routing
+
+📖 **Documentation**: [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
+
+### Unit & Integration Tests
 ```bash
 # Unit tests
 mvn test

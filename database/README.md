@@ -13,18 +13,25 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 | Version | File | Description | Tables | Status |
 |---------|------|-------------|--------|--------|
 | V0 | `V0__baseline.sql` | Baseline migration | N/A | ✅ |
-| V1 | `V1__initial_schema.sql` | Initial schema | users, user_backup_codes, clients, vehicles, subscriptions, parking_events, payments, logs | ✅ |
+| V1 | `V1__initial_schema.sql` | Initial schema with security | users, user_backup_codes, clients, vehicles, subscriptions, parking_events, payments, logs | ✅ |
 | V2 | `V2__add_parking_lots.sql` | Parking facilities management | parking_lots | ✅ |
 | V3 | `V3__add_parking_spaces.sql` | Individual parking spaces | parking_spaces | ✅ |
 | V4 | `V4__add_bookings.sql` | Reservation system | bookings | ✅ |
 | V5 | `V5__insert_test_parking_data.sql` | Test data for development | N/A (inserts) | ✅ |
 | V6 | `V6__extend_logs_table.sql` | Extend logs table | logs (service, meta columns) | ✅ |
+| V7 | `V7__create_tariffs_table.sql` | Tariffs and pricing | tariffs | ✅ |
+| V8 | `V8__extend_parking_events_and_payments.sql` | Extend parking events and payments | parking_events, payments (extended) | ✅ |
 
-**Latest Migration (V6 - 2026-01-13):**
-- Added `service` column to logs table (VARCHAR(100)) - tracks originating microservice
-- Added `meta` column to logs table (TEXT/JSON) - stores additional metadata
-- Added indexes on `service` and `log_level` for query performance
-- Required for Reporting Service (Issue #19)
+**Latest Migration (V8 - 2026-01-16):**
+- Extended `parking_events` table: added license_plate, entry_method, exit_method, is_subscriber, created_at
+- Extended `payments` table: added status, transaction_id, operator_id, created_at
+- Added CHECK constraints for entry/exit methods, payment methods, and status values
+- Added indexes for performance: ticket_code, entry_time, license_plate, transaction_id
+- Added FK constraints with proper ON DELETE behavior
+- Added UNIQUE constraint: only one COMPLETED payment per parking_event_id
+- Required for Phase 2 / Issue #25
+
+**Note:** V1 already includes comprehensive user security features (2FA, brute-force protection, soft delete, etc.). The legacy file `users_security_migration.sql` was removed as duplicate (2026-01-16).
 
 ### Test Data (V5)
 
@@ -48,7 +55,7 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 - 2 RESERVED
 - 2 MAINTENANCE/OUT_OF_SERVICE
 
-### Total Tables: 13
+### Total Tables: 14
 
 **Core Tables:**
 - `users` - User authentication and security (38 fields)
