@@ -23,6 +23,14 @@ public interface GateEventRepository extends JpaRepository<GateEvent, Long> {
     List<GateEvent> findByLicensePlateOrderByTimestampDesc(String licensePlate);
 
     /**
+     * Find gate event by ticket code.
+     *
+     * @param ticketCode the ticket code to search for
+     * @return gate event with the specified ticket code
+     */
+    GateEvent findByTicketCode(String ticketCode);
+
+    /**
      * Find all gate events within a time range.
      *
      * @param start the start of the time range (inclusive)

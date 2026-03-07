@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * Routes billing-related requests from API Gateway to Billing Service
  */
 @RestController
-@RequestMapping("/api/billing")
+@RequestMapping("/api/v1/billing")
 @RequiredArgsConstructor
 @Slf4j
 public class BillingProxyController {
@@ -23,12 +23,61 @@ public class BillingProxyController {
     private static final String BILLING_SERVICE_URL = "http://billing-service:8080";
 
     /**
+     * Proxy POST request to calculate parking fee
+     */
+    @PostMapping("/calculate")
+    public ResponseEntity<?> calculateFee(@RequestBody String calculateData, HttpServletRequest request) {
+        log.info("Proxying POST request to Billing Service: /api/v1/billing/calculate");
+        return proxyRequest(HttpMethod.POST, "/api/v1/billing/calculate", calculateData, request);
+    }
+
+    /**
+     * Proxy POST request to process payment
+     */
+    @PostMapping("/pay")
+    public ResponseEntity<?> processPayment(@RequestBody String paymentData, HttpServletRequest request) {
+        log.info("Proxying POST request to Billing Service: /api/v1/billing/pay");
+        return proxyRequest(HttpMethod.POST, "/api/v1/billing/pay", paymentData, request);
+    }
+
+    /**
+     * Proxy POST request to test payment endpoint (for E2E tests)
+     */
+    @PostMapping("/pay-test")
+    public ResponseEntity<?> processTestPayment(@RequestBody String paymentData, HttpServletRequest request) {
+        log.info("🧪 Proxying POST request to Billing Service TEST endpoint: /api/v1/billing/pay-test");
+        return proxyRequest(HttpMethod.POST, "/api/v1/billing/pay-test", paymentData, request);
+    }
+
+    /**
+     * Proxy GET request to check payment status
+     */
+    @GetMapping("/status")
+    public ResponseEntity<?> checkPaymentStatus(
+            @RequestParam(required = false) String ticketCode,
+            @RequestParam(required = false) Long parkingEventId,
+            HttpServletRequest request) {
+
+        // Build query string based on provided parameters
+        StringBuilder queryString = new StringBuilder();
+        if (ticketCode != null) {
+            queryString.append("ticketCode=").append(ticketCode);
+        } else if (parkingEventId != null) {
+            queryString.append("parkingEventId=").append(parkingEventId);
+        }
+
+        String fullPath = "/api/v1/billing/status" + (queryString.length() > 0 ? "?" + queryString : "");
+        log.info("Proxying GET request to Billing Service: {}", fullPath);
+        return proxyRequest(HttpMethod.GET, fullPath, null, request);
+    }
+
+    /**
      * Proxy GET request to fetch all invoices
      */
     @GetMapping("/invoices")
     public ResponseEntity<?> getAllInvoices(HttpServletRequest request) {
-        log.info("Proxying GET request to Billing Service: /api/billing/invoices");
-        return proxyRequest(HttpMethod.GET, "/api/billing/invoices", null, request);
+        log.info("Proxying GET request to Billing Service: /api/v1/billing/invoices");
+        return proxyRequest(HttpMethod.GET, "/api/v1/billing/invoices", null, request);
     }
 
     /**
@@ -36,8 +85,8 @@ public class BillingProxyController {
      */
     @GetMapping("/invoices/{id}")
     public ResponseEntity<?> getInvoiceById(@PathVariable Long id, HttpServletRequest request) {
-        log.info("Proxying GET request to Billing Service: /api/billing/invoices/{}", id);
-        return proxyRequest(HttpMethod.GET, "/api/billing/invoices/" + id, null, request);
+        log.info("Proxying GET request to Billing Service: /api/v1/billing/invoices/{}", id);
+        return proxyRequest(HttpMethod.GET, "/api/v1/billing/invoices/" + id, null, request);
     }
 
     /**
@@ -45,8 +94,8 @@ public class BillingProxyController {
      */
     @PostMapping("/invoices")
     public ResponseEntity<?> createInvoice(@RequestBody String invoiceData, HttpServletRequest request) {
-        log.info("Proxying POST request to Billing Service: /api/billing/invoices");
-        return proxyRequest(HttpMethod.POST, "/api/billing/invoices", invoiceData, request);
+        log.info("Proxying POST request to Billing Service: /api/v1/billing/invoices");
+        return proxyRequest(HttpMethod.POST, "/api/v1/billing/invoices", invoiceData, request);
     }
 
     /**
@@ -55,8 +104,8 @@ public class BillingProxyController {
     @PutMapping("/invoices/{id}")
     public ResponseEntity<?> updateInvoice(@PathVariable Long id, @RequestBody String invoiceData,
                                            HttpServletRequest request) {
-        log.info("Proxying PUT request to Billing Service: /api/billing/invoices/{}", id);
-        return proxyRequest(HttpMethod.PUT, "/api/billing/invoices/" + id, invoiceData, request);
+        log.info("Proxying PUT request to Billing Service: /api/v1/billing/invoices/{}", id);
+        return proxyRequest(HttpMethod.PUT, "/api/v1/billing/invoices/" + id, invoiceData, request);
     }
 
     /**
@@ -64,17 +113,18 @@ public class BillingProxyController {
      */
     @DeleteMapping("/invoices/{id}")
     public ResponseEntity<?> deleteInvoice(@PathVariable Long id, HttpServletRequest request) {
-        log.info("Proxying DELETE request to Billing Service: /api/billing/invoices/{}", id);
-        return proxyRequest(HttpMethod.DELETE, "/api/billing/invoices/" + id, null, request);
+        log.info("Proxying DELETE request to Billing Service: /api/v1/billing/invoices/{}", id);
+        return proxyRequest(HttpMethod.DELETE, "/api/v1/billing/invoices/" + id, null, request);
     }
+
 
     /**
      * Proxy GET request to fetch client invoices
      */
     @GetMapping("/clients/{clientId}/invoices")
     public ResponseEntity<?> getClientInvoices(@PathVariable Long clientId, HttpServletRequest request) {
-        log.info("Proxying GET request to Billing Service: /api/billing/clients/{}/invoices", clientId);
-        return proxyRequest(HttpMethod.GET, "/api/billing/clients/" + clientId + "/invoices", null, request);
+        log.info("Proxying GET request to Billing Service: /api/v1/billing/clients/{}/invoices", clientId);
+        return proxyRequest(HttpMethod.GET, "/api/v1/billing/clients/" + clientId + "/invoices", null, request);
     }
 
     /**

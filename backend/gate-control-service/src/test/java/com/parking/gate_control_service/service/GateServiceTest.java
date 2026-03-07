@@ -192,17 +192,20 @@ class GateServiceTest {
     void processExit_OneTimeVisitor_Paid_ExitAllowed() {
         String licensePlate = "VIS123";
         String ticketCode = "TICKET-123";
+
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
                 .isAccessGranted(false)
                 .build();
         PaymentStatusResponse paymentStatus = PaymentStatusResponse.builder()
                 .isPaid(true)
-                .remainingFee(BigDecimal.ZERO)
+                .remainingFee(java.math.BigDecimal.ZERO)
                 .build();
         when(clientServiceClient.checkSubscription(licensePlate)).thenReturn(subscriptionResponse);
-        when(billingServiceClient.checkPaymentStatus(ticketCode)).thenReturn(paymentStatus);
+        when(billingServiceClient.checkPaymentStatusByTicket(ticketCode)).thenReturn(paymentStatus);
         when(gateEventRepository.save(any(GateEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
         ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
+
         assertThat(decision).isNotNull();
         assertThat(decision.getAction()).isEqualTo("OPEN");
         assertThat(decision.getMessage()).contains("Thank you for your payment");
@@ -212,17 +215,20 @@ class GateServiceTest {
     void processExit_OneTimeVisitor_NotPaid_ExitDenied() {
         String licensePlate = "VIS124";
         String ticketCode = "TICKET-124";
+
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
                 .isAccessGranted(false)
                 .build();
         PaymentStatusResponse paymentStatus = PaymentStatusResponse.builder()
                 .isPaid(false)
-                .remainingFee(new BigDecimal("20.00"))
+                .remainingFee(new java.math.BigDecimal("20.00"))
                 .build();
         when(clientServiceClient.checkSubscription(licensePlate)).thenReturn(subscriptionResponse);
-        when(billingServiceClient.checkPaymentStatus(ticketCode)).thenReturn(paymentStatus);
+        when(billingServiceClient.checkPaymentStatusByTicket(ticketCode)).thenReturn(paymentStatus);
         when(gateEventRepository.save(any(GateEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
         ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
+
         assertThat(decision).isNotNull();
         assertThat(decision.getAction()).isEqualTo("DENY");
         assertThat(decision.getMessage()).contains("Payment required: 20.00");

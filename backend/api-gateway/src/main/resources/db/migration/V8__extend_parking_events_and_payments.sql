@@ -27,6 +27,11 @@ ALTER TABLE parking_events
     ALTER COLUMN license_plate SET NOT NULL;
 
 -- Add CHECK constraints for entry_method and exit_method
+-- Drop if exists to avoid "already exists" error
+ALTER TABLE parking_events
+    DROP CONSTRAINT IF EXISTS chk_entry_method,
+    DROP CONSTRAINT IF EXISTS chk_exit_method;
+
 ALTER TABLE parking_events
     ADD CONSTRAINT chk_entry_method CHECK (entry_method IN ('SCAN', 'MANUAL') OR entry_method IS NULL),
     ADD CONSTRAINT chk_exit_method CHECK (exit_method IN ('SCAN', 'MANUAL', 'AUTO') OR exit_method IS NULL);
@@ -84,13 +89,22 @@ ALTER TABLE payments
 
 -- Add CHECK constraint for status
 ALTER TABLE payments
+    DROP CONSTRAINT IF EXISTS chk_payment_status;
+
+ALTER TABLE payments
     ADD CONSTRAINT chk_payment_status CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'));
 
 -- Add CHECK constraint for amount >= 0
 ALTER TABLE payments
+    DROP CONSTRAINT IF EXISTS chk_payment_amount;
+
+ALTER TABLE payments
     ADD CONSTRAINT chk_payment_amount CHECK (amount >= 0);
 
 -- Add UNIQUE constraint on transaction_id
+ALTER TABLE payments
+    DROP CONSTRAINT IF EXISTS uniq_transaction_id;
+
 ALTER TABLE payments
     ADD CONSTRAINT uniq_transaction_id UNIQUE (transaction_id);
 
@@ -99,6 +113,9 @@ ALTER TABLE payments
     DROP CONSTRAINT IF EXISTS payments_parking_event_id_key;
 
 -- Add FK to users (operator_id) with ON DELETE SET NULL
+ALTER TABLE payments
+    DROP CONSTRAINT IF EXISTS fk_payment_operator;
+
 ALTER TABLE payments
     ADD CONSTRAINT fk_payment_operator
         FOREIGN KEY (operator_id)

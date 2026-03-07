@@ -137,52 +137,68 @@ public class GateService {
      */
     @Transactional
     public ExitDecision processExit(String ticketCode, String licensePlate) {
-        log.info("Processing exit for license plate: {}, ticketCode: {}", licensePlate, ticketCode);
-        SubscriptionCheckResponse subscriptionCheck = clientServiceClient.checkSubscription(licensePlate);
-        if (subscriptionCheck.getIsAccessGranted()) {
-            // Subscriber exit - always allowed
-            GateEvent event = new GateEvent();
-            event.setEventType(GateEvent.EventType.EXIT);
-            event.setLicensePlate(licensePlate);
-            event.setGateId("EXIT-1");
-            event.setDecision(GateEvent.Decision.OPEN);
-            event.setReason("Subscriber exit");
-            event.setTimestamp(LocalDateTime.now());
-            gateEventRepository.save(event);
-            return ExitDecision.builder()
-                    .action(ACTION_OPEN)
-                    .message("Goodbye!")
-                    .build();
-        } else if (ticketCode != null && !ticketCode.isBlank()) {
-            // One-time visitor: check payment status
-            PaymentStatusResponse paymentStatus = billingServiceClient.checkPaymentStatus(ticketCode);
-            if (paymentStatus != null && Boolean.TRUE.equals(paymentStatus.getIsPaid())) {
+        try {
+            log.info("=== Processing exit for license plate: {}, ticketCode: {} ===", licensePlate, ticketCode);
+
+            // Step 1: Check subscription
+            log.debug("Step 1: Checking subscription for license plate: {}", licensePlate);
+            SubscriptionCheckResponse subscriptionCheck = clientServiceClient.checkSubscription(licensePlate);
+            log.debug("Subscription check result: isAccessGranted={}", subscriptionCheck.getIsAccessGranted());
+
+            if (subscriptionCheck.getIsAccessGranted()) {
+                // Subscriber exit - always allowed
+                log.info("Subscriber detected, granting access");
                 GateEvent event = new GateEvent();
                 event.setEventType(GateEvent.EventType.EXIT);
                 event.setLicensePlate(licensePlate);
-                event.setTicketCode(ticketCode);
                 event.setGateId("EXIT-1");
                 event.setDecision(GateEvent.Decision.OPEN);
-                event.setReason("Payment complete");
+                event.setReason("Subscriber exit");
                 event.setTimestamp(LocalDateTime.now());
                 gateEventRepository.save(event);
                 return ExitDecision.builder()
                         .action(ACTION_OPEN)
-                        .message("Thank you for your payment. Goodbye!")
+                        .message("Goodbye!")
                         .build();
-            } else {
-                // Not paid
-                GateEvent event = new GateEvent();
-                event.setEventType(GateEvent.EventType.EXIT);
-                event.setLicensePlate(licensePlate);
-                event.setTicketCode(ticketCode);
-                event.setGateId("EXIT-1");
-                event.setDecision(GateEvent.Decision.DENY);
-                event.setReason("Payment required");
-                event.setTimestamp(LocalDateTime.now());
+            } else if (ticketCode != null && !ticketCode.isBlank()) {
+                // One-time visitor: check payment by ticket code
+                log.debug("Step 2: Checking payment status for ticket code: {}", ticketCode);
+
+                PaymentStatusResponse paymentStatus = billingServiceClient.checkPaymentStatusByTicket(ticketCode);
+                log.info("Payment status received for ticket {}: isPaid={}, remainingFee={}",
+                    ticketCode,
+                    paymentStatus != null ? paymentStatus.getIsPaid() : "null",
+                    paymentStatus != null ? paymentStatus.getRemainingFee() : "null");
+
+                if (paymentStatus != null && Boolean.TRUE.equals(paymentStatus.getIsPaid())) {
+                    log.info("Payment confirmed, granting access");
+                    GateEvent event = new GateEvent();
+                    event.setEventType(GateEvent.EventType.EXIT);
+                    event.setLicensePlate(licensePlate);
+                    event.setTicketCode(ticketCode);
+                    event.setGateId("EXIT-1");
+                    event.setDecision(GateEvent.Decision.OPEN);
+                    event.setReason("Payment complete");
+                    event.setTimestamp(LocalDateTime.now());
+                    gateEventRepository.save(event);
+                    return ExitDecision.builder()
+                            .action(ACTION_OPEN)
+                            .message("Thank you for your payment. Goodbye!")
+                            .build();
+                } else {
+                    // Not paid
+                    log.info("Payment not confirmed, denying access");
+                    GateEvent event = new GateEvent();
+                    event.setEventType(GateEvent.EventType.EXIT);
+                    event.setLicensePlate(licensePlate);
+                    event.setTicketCode(ticketCode);
+                    event.setGateId("EXIT-1");
+                    event.setDecision(GateEvent.Decision.DENY);
+                    event.setReason("Payment required");
+                    event.setTimestamp(LocalDateTime.now());
                 gateEventRepository.save(event);
                 String feeMsg = paymentStatus != null && paymentStatus.getRemainingFee() != null
-                        ? paymentStatus.getRemainingFee().toPlainString()
+                        ? String.valueOf(paymentStatus.getRemainingFee())
                         : "unknown";
                 return ExitDecision.builder()
                         .action(ACTION_DENY)
@@ -191,10 +207,16 @@ public class GateService {
             }
         } else {
             // No ticket and not a subscriber
+            log.warn("No ticket code provided and not a subscriber");
             return ExitDecision.builder()
                     .action(ACTION_DENY)
                     .message("No valid ticket or subscription found.")
                     .build();
+        }
+        } catch (Exception e) {
+            log.error("Unexpected error processing exit for licensePlate={}, ticketCode={}: {}",
+                licensePlate, ticketCode, e.getMessage(), e);
+            throw new RuntimeException("Error processing exit", e);
         }
     }
 

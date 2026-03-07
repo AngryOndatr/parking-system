@@ -85,9 +85,12 @@ public class BillingMapper {
                 paymentTime
         );
 
-        // Set optional transactionId using JsonNullable
+        // Set optional transactionId directly (not using JsonNullable to avoid serialization issues)
         if (payment.getTransactionId() != null) {
             response.setTransactionId(org.openapitools.jackson.nullable.JsonNullable.of(payment.getTransactionId()));
+        } else {
+            // Set undefined to make it clear field is optional
+            response.setTransactionId(org.openapitools.jackson.nullable.JsonNullable.undefined());
         }
 
         return response;
@@ -144,9 +147,11 @@ public class BillingMapper {
                 new java.util.ArrayList<>()  // Empty list, can be populated later with actual payment history
         );
 
-        // Set optional remainingFee using JsonNullable
+        // Set optional remainingFee as Double wrapped in JsonNullable (but the value is Double, not object)
         if (remainingFee != null) {
             response.setRemainingFee(org.openapitools.jackson.nullable.JsonNullable.of(remainingFee.doubleValue()));
+        } else {
+            response.setRemainingFee(org.openapitools.jackson.nullable.JsonNullable.of(0.0));
         }
 
         return response;

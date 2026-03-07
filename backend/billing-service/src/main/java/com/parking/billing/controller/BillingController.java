@@ -1,10 +1,13 @@
 package com.parking.billing.controller;
 
 import com.parking.billing.entity.Payment;
+import com.parking.billing.entity.ParkingEvent;
 import com.parking.billing.exception.ParkingEventNotFoundException;
 import com.parking.billing.exception.TicketAlreadyPaidException;
 import com.parking.billing.mapper.BillingMapper;
 import com.parking.billing.service.BillingService;
+import com.parking.billing.repository.PaymentRepository;
+import com.parking.billing.repository.ParkingEventRepository;
 import com.parking.billing_service.generated.api.BillingApi;
 import com.parking.billing_service.generated.model.*;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 
 /**
  * REST controller implementing BillingApi for fee calculation and payment processing.
@@ -28,6 +34,8 @@ public class BillingController implements BillingApi {
 
     private final BillingService billingService;
     private final BillingMapper billingMapper;
+    private final PaymentRepository paymentRepository;
+    private final ParkingEventRepository parkingEventRepository;
 
     @Override
     public ResponseEntity<FeeCalculationResponse> calculateFee(FeeCalculationRequest feeCalculationRequest) {
@@ -137,11 +145,119 @@ public class BillingController implements BillingApi {
             return ResponseEntity.ok(response);
 
         } catch (ParkingEventNotFoundException e) {
-            log.error("Parking event not found: {}", e.getMessage());
+            log.warn("Parking event {} not found", parkingEventId);
             throw e;
         } catch (Exception e) {
             log.error("Error getting payment status: {}", e.getMessage(), e);
             throw new RuntimeException("Error getting payment status", e);
+        }
+    }
+
+    /**
+     * Get payment status by ticket code instead of parking event ID.
+     * This is useful for gate-control-service which only knows the ticket code.
+     *
+     * @param ticketCode the ticket code
+     * @return payment status response
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/api/v1/billing/status-by-ticket")
+    public ResponseEntity<PaymentStatusResponse> getPaymentStatusByTicket(
+            @org.springframework.web.bind.annotation.RequestParam String ticketCode) {
+        log.info("Received payment status request for ticket: {}", ticketCode);
+
+        try {
+            // Find ParkingEvent by ticket code
+            ParkingEvent parkingEvent = parkingEventRepository.findByTicketCode(ticketCode)
+                    .orElseThrow(() -> new ParkingEventNotFoundException("Parking event not found for ticket: " + ticketCode));
+
+            boolean isPaid = billingService.isEventPaid(parkingEvent.getId());
+            BigDecimal remainingFee = billingService.getRemainingFee(parkingEvent.getId());
+
+            PaymentStatusResponse response = billingMapper.toPaymentStatusResponse(
+                    parkingEvent.getId(),
+                    isPaid,
+                    remainingFee
+            );
+
+            log.info("Payment status retrieved for ticket {}: paid={}, remainingFee={}",
+                    ticketCode, isPaid, remainingFee);
+
+            return ResponseEntity.ok(response);
+
+        } catch (ParkingEventNotFoundException e) {
+            log.warn("Parking event not found for ticket {}, returning unpaid status", ticketCode);
+            // Return unpaid status for unknown tickets
+            PaymentStatusResponse response = new PaymentStatusResponse();
+            response.setParkingEventId(0L); // Dummy ID
+            response.setIsPaid(false);
+            response.setRemainingFee(org.openapitools.jackson.nullable.JsonNullable.of(0.0));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error getting payment status by ticket: {}", e.getMessage(), e);
+            throw new RuntimeException("Error getting payment status", e);
+        }
+    }
+
+    /**
+     * Simplified payment endpoint for E2E testing.
+     * Creates ParkingEvent if needed and saves payment to database.
+     * Now accepts ticketCode instead of parkingEventId to properly link with GateEvent.
+     *
+     * @param request payment request with ticketCode, licensePlate and amount
+     * @return payment response
+     */
+    @PostMapping("/api/v1/billing/pay-test")
+    public ResponseEntity<PaymentResponse> processTestPayment(@RequestBody Map<String, Object> request) {
+        log.info("🧪 TEST ENDPOINT: Received simplified payment request: {}", request);
+
+        try {
+            String ticketCode = (String) request.get("ticketCode");
+            String licensePlate = (String) request.get("licensePlate");
+            Double amount = ((Number) request.get("amount")).doubleValue();
+
+            log.info("Creating test payment for ticketCode: {}, licensePlate: {}, amount: {}",
+                    ticketCode, licensePlate, amount);
+
+            // Find or create ParkingEvent by ticket code
+            ParkingEvent parkingEvent = parkingEventRepository.findByTicketCode(ticketCode)
+                    .orElseGet(() -> {
+                        log.info("ParkingEvent not found for ticket {}, creating new one", ticketCode);
+                        ParkingEvent newEvent = new ParkingEvent();
+                        // Don't set ID - let database generate it
+                        newEvent.setVehicleId(null); // nullable for one-time visitors
+                        newEvent.setLicensePlate(licensePlate != null ? licensePlate : "E2E-TEST");
+                        newEvent.setTicketCode(ticketCode);
+                        newEvent.setEntryTime(LocalDateTime.now().minusHours(2));
+                        newEvent.setIsSubscriber(false);
+                        newEvent.setEntryMethod(ParkingEvent.EntryMethod.SCAN);
+                        ParkingEvent saved = parkingEventRepository.save(newEvent);
+                        log.info("✅ Created ParkingEvent with ID: {} for ticket: {}", saved.getId(), ticketCode);
+                        return saved;
+                    });
+
+            // Create Payment
+            Payment payment = new Payment();
+            payment.setParkingEventId(parkingEvent.getId());
+            payment.setAmount(BigDecimal.valueOf(amount));
+            payment.setPaymentMethod(Payment.PaymentMethod.CARD);
+            payment.setStatus(Payment.PaymentStatus.COMPLETED);
+            payment.setPaymentTime(LocalDateTime.now());
+            payment.setTransactionId("TEST-" + System.currentTimeMillis());
+
+            log.info("Saving payment with transaction ID: {}", payment.getTransactionId());
+            Payment saved = paymentRepository.save(payment);
+
+            log.info("✅ Test payment saved successfully with ID: {}, parkingEventId: {}",
+                    saved.getId(), parkingEvent.getId());
+
+            PaymentResponse response = billingMapper.toPaymentResponse(saved);
+            // Also return parkingEventId in response for compatibility
+            response.setParkingEventId(parkingEvent.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            log.error("❌ Error in test payment endpoint: {}", e.getMessage(), e);
+            throw new RuntimeException("Test payment failed: " + e.getMessage(), e);
         }
     }
 }

@@ -74,34 +74,66 @@ public class GateController implements GateApi {
      */
     @Override
     public ResponseEntity<ExitResponse> processExit(@Valid @RequestBody ExitRequest exitRequest) {
-        // ExitRequest: licensePlate and ticketCode are JsonNullable (generated)
-        String ticketCode = null;
-        if (exitRequest.getTicketCode() != null && exitRequest.getTicketCode().isPresent()) {
-            ticketCode = exitRequest.getTicketCode().get();
+        try {
+            log.info("🚪 [GATE CONTROLLER] POST /api/v1/gate/exit - RECEIVED REQUEST");
+            log.info("🔍 [RAW] exitRequest class: {}", exitRequest != null ? exitRequest.getClass().getName() : "null");
+            log.info("🔍 [RAW] exitRequest toString: {}", exitRequest);
+
+            if (exitRequest == null) {
+                log.error("❌ exitRequest is NULL!");
+                throw new IllegalArgumentException("Exit request cannot be null");
+            }
+
+            log.debug("Exit request object fields:");
+            log.debug("  - ticketCode field: {}", exitRequest.getTicketCode());
+            log.debug("  - licensePlate field: {}", exitRequest.getLicensePlate());
+            log.debug("  - exitMethod: {}", exitRequest.getExitMethod());
+            log.debug("  - gateId: {}", exitRequest.getGateId());
+
+            // ExitRequest: licensePlate and ticketCode are JsonNullable (generated)
+            String ticketCode = null;
+            if (exitRequest.getTicketCode() != null && exitRequest.getTicketCode().isPresent()) {
+                ticketCode = exitRequest.getTicketCode().get();
+                log.debug("✅ Extracted ticket code: {}", ticketCode);
+            } else {
+                log.debug("⚠️  No ticket code in request (null or not present)");
+            }
+
+            String licensePlate = null;
+            if (exitRequest.getLicensePlate() != null && exitRequest.getLicensePlate().isPresent()) {
+                licensePlate = exitRequest.getLicensePlate().get();
+                log.debug("✅ Extracted license plate: {}", licensePlate);
+            } else {
+                log.debug("⚠️  No license plate in request (null or not present)");
+            }
+
+            log.info("🚀 [GATE CONTROLLER] Processing exit - License plate: {}, Ticket: {}", licensePlate, ticketCode);
+
+            ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
+            log.info("✅ [GATE CONTROLLER] Exit decision received: action={}, message={}",
+                decision.getAction(), decision.getMessage());
+
+            ExitResponse response = new ExitResponse();
+            // set parkingEventId if present in decision
+            response.setParkingEventId(decision.getParkingEventId());
+            response.setLicensePlate(licensePlate == null ? "" : licensePlate);
+            response.setEntryTime(OffsetDateTime.now().minusHours(2));
+            response.setExitTime(OffsetDateTime.now());
+            response.setDurationMinutes(120);
+            response.setFee(0.0);
+            response.setIsPaid("OPEN".equals(decision.getAction()));
+            response.setPaymentRequired("DENY".equals(decision.getAction()));
+            response.setMessage(decision.getMessage() == null ? "" : decision.getMessage());
+            response.setGateStatus(ExitResponse.GateStatusEnum.OPENED);
+
+            log.info("✅ [GATE CONTROLLER] Returning exit response with status OK");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            log.error("❌ [GATE CONTROLLER] Error processing exit request: {} - {}",
+                e.getClass().getSimpleName(), e.getMessage(), e);
+            throw e;
         }
-        String licensePlate = null;
-        if (exitRequest.getLicensePlate() != null && exitRequest.getLicensePlate().isPresent()) {
-            licensePlate = exitRequest.getLicensePlate().get();
-        }
-
-        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/exit - License plate: {}, Ticket: {}", licensePlate, ticketCode);
-
-        ExitDecision decision = gateService.processExit(ticketCode, licensePlate);
-
-        ExitResponse response = new ExitResponse();
-        // set parkingEventId if present in decision
-        response.setParkingEventId(decision.getParkingEventId());
-        response.setLicensePlate(licensePlate == null ? "" : licensePlate);
-        response.setEntryTime(OffsetDateTime.now().minusHours(2));
-        response.setExitTime(OffsetDateTime.now());
-        response.setDurationMinutes(120);
-        response.setFee(0.0);
-        response.setIsPaid("OPEN".equals(decision.getAction()));
-        response.setPaymentRequired("DENY".equals(decision.getAction()));
-        response.setMessage(decision.getMessage() == null ? "" : decision.getMessage());
-        response.setGateStatus(ExitResponse.GateStatusEnum.OPENED);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**

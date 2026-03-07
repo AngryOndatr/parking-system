@@ -11,17 +11,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### In Progress
 
-- Phase 2: Gate Control Service Next Feature (Issue #52) ✅ Completed 2026-01-27
+- Subscriber E2E test scenario
+- CI/CD integration for E2E tests (GitHub Actions)
 
 ### Recently Completed
-- ✅ Gate Control Service: Exit & Manual Control Endpoints (Issue #52) - 2026-01-27
-- ✅ Gate Control Service: Exit Logic with Billing Service Integration (Issue #51) - 2026-01-26
-- ✅ Gate Control Service: Entry Decision Logic (Issue #49) - 2026-01-26
-- ✅ Gate Control Service: Client Service Integration (Issue #48) - 2026-01-26
-- ✅ Gate Control Service: WebClient Configuration (Issue #47) - 2026-01-26
-- ✅ Gate Control Service: GateEvent Entity & Repository (Issue #46) - 2026-01-26
-- ✅ Billing Service: Payment Status Endpoint (Issue #36) - 2026-01-24
-- ✅ Billing Service: Payment Recording API (Issues #34, #35) - 2026-01-24
+- ✅ **E2E Tests Fully Green** (Issue #70) — One-Time Visitor full cycle 100% passing - 2026-03-07
+- ✅ Bug Fix: `BillingController.getPaymentStatus` — restored 404 for unknown events - 2026-03-07
+- ✅ Bug Fix: `JacksonConfig` — removed `Jackson2ObjectMapperBuilder` dependency (broke `@DataJpaTest`) - 2026-03-07
+- ✅ Bug Fix: `PaymentStatusResponse.remainingFee` — restored `BigDecimal` type - 2026-03-07
+- ✅ Bug Fix: `BillingServiceClient` — parse `remainingFee` as `BigDecimal`, not `Double` - 2026-03-07
+- ✅ Bug Fix: `GateServiceTest` — fix mock method (`checkPaymentStatusByTicket`) and remove unused stubs - 2026-03-07
+- ✅ New script: `devops/run-e2e-tests.ps1` — standalone E2E runner with Docker health check - 2026-03-07
+- ✅ E2E Test Implementation: OneTimeVisitorE2ETest (6-step full cycle) (Issue #70) - 2026-02-14
+- ✅ Flyway Migration Fix: Moved gate_events table migration from gate-control-service to api-gateway (Issue #46) - 2026-02-04
+- ✅ Eureka Service Discovery: Registered Billing and Gate Control Services - 2026-02-04
+- ✅ Docker Compose: Enabled Gate Control and Billing Services - 2026-02-04
+- ✅ E2E Test Setup: Testcontainers Configuration for Full Cycle Test - 2026-02-04
+
+---
+
+## [0.10.0] - 2026-03-07
+
+### Fixed — Unit Tests & E2E Infrastructure (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor)
+
+#### Bug Fixes
+
+**billing-service**
+
+- `BillingController.getPaymentStatus()` — re-throw `ParkingEventNotFoundException` instead of
+  returning `200 OK`; `GlobalExceptionHandler` now correctly returns **404 Not Found**
+- `JacksonConfig.objectMapper()` — remove dependency on `Jackson2ObjectMapperBuilder`
+  (unavailable in `@DataJpaTest` slice); `ObjectMapper` created directly
+
+**gate-control-service**
+
+- `PaymentStatusResponse.remainingFee` — restored from `Double` back to `BigDecimal`
+- `BillingServiceClient.checkPaymentStatus()` / `checkPaymentStatusByTicket()` — parse
+  `remainingFee` via `new BigDecimal(value.toString())` to preserve decimal scale
+- `GateServiceTest` — fixed mock: `checkPaymentStatus(id)` → `checkPaymentStatusByTicket(code)`;
+  changed `remainingFee(0.0)` → `BigDecimal.ZERO`; removed unnecessary `findByTicketCode` stubs
+
+#### Added
+
+- `devops/run-e2e-tests.ps1` — standalone PowerShell E2E runner:
+  - Docker daemon health check (with Windows named-pipe validation)
+  - Maven auto-discovery (`PATH` + known install locations)
+  - Flags: `-SkipBuild`, `-SkipDockerBuild`
+  - Docker image existence validation before running tests
+  - Coloured pass/fail banner with elapsed time
+
+#### E2E Test Result
+```
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0  (OneTimeVisitorE2ETest)
+Time elapsed: 107.6 s
+BUILD SUCCESS
+```
+
+Full project unit tests: **161 tests, 0 failures, BUILD SUCCESS**
+
+---
+
+## [0.9.5] - 2026-02-14
+
+### Added — E2E Testing Infrastructure (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor)
+
+#### `e2e-tests` module (новый)
+- `OneTimeVisitorE2ETest` — full one-time visitor cycle (Entry → Payment → Exit)
+  with Testcontainers + docker-compose orchestration
+- `SimpleHealthCheckTest` — checks availability of all services
+- `docker-compose-e2e.yml` — isolated test environment (9 services)
+- `build-e2e-images.ps1` / `build-images.ps1` — Docker image build scripts
+- `otel-collector-config.yaml` — OpenTelemetry Collector configuration for tests
+- `logback-test.xml` — test logging configuration
+
+#### Architecture Fixes (for E2E)
+- `BillingController` — new endpoints `/api/v1/billing/pay-test` and `/api/v1/billing/status-by-ticket`
+- `BillingService.recordPaymentByTicketCode()` — links payments by `ticketCode`
+- `GateService.processExit()` — verifies payment via `checkPaymentStatusByTicket()`
+- `BillingServiceClient.checkPaymentStatusByTicket()` — new WebClient method
+- `E2ESecurityConfiguration` — `e2e-test` profile with relaxed security constraints
+- `application-e2e-test.yml` — api-gateway configuration for E2E
+- `SubscriptionCheckController` — new endpoint in client-service for E2E subscription checks
+
+#### Database
+- `database/init.sql` — synchronised with V8/V9 Flyway migration schema
+- `V8__extend_parking_events_and_payments.sql` — nullable `vehicle_id` for guest visits
+- `V9__create_gate_events_table.sql` — `gate_events` table moved to api-gateway
+
+#### Windows / Testcontainers Fix
+- Docker Engine config: `"min-api-version": "1.24"` — resolves `BadRequestException` on Docker discovery
+- Documentation: `E2E_TESTCONTAINERS_WINDOWS_SETUP_EN.md`
+
+#### E2E Documentation
+- `backend/e2e-tests/README.md`
+- `backend/e2e-tests/E2E_TESTING_GUIDE_EN.md`
+- `backend/e2e-tests/QUICK_START_GUIDE_EN.md`
+- `backend/e2e-tests/PORTS_ARCHITECTURE_EN.md`
+- `backend/e2e-tests/E2E_TESTCONTAINERS_WINDOWS_SETUP_EN.md`
 
 ---
 

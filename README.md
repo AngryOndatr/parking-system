@@ -1,10 +1,42 @@
 # 🅿️ Parking System - Microservices Architecture
 
+> 🇷🇺 **Русская версия:** [README_RU.md](./README_RU.md)
+
 Modern parking lot management system built on microservices architecture using Spring Boot, Spring Cloud, and Docker.
 
 ## 🆕 Latest Updates
 
-> **Показаны последние 3 обновления.** Полная история: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
+> **Showing the latest 3 updates.** Full history: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
+
+### 2026-03-07 — Bug Fixes & All Tests Green (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor) ✅
+
+✅ **Full Build: 161 unit tests + 1 E2E test — BUILD SUCCESS**
+- 🐛 **billing-service**: `getPaymentStatus` — fixed 404 response for unknown events
+- 🐛 **billing-service**: `JacksonConfig` — fixed `@DataJpaTest` slice incompatibility
+- 🐛 **gate-control-service**: `PaymentStatusResponse.remainingFee` — restored `BigDecimal`
+- 🐛 **gate-control-service**: `BillingServiceClient` — parse fee as `BigDecimal` (not `Double`)
+- 🐛 **gate-control-service**: `GateServiceTest` — fix mock (`checkPaymentStatusByTicket`), remove unused stubs
+- 🛠️ **New script**: `devops/run-e2e-tests.ps1` — standalone E2E runner with Docker check
+- 📖 **Session Report**: [docs/sessions/SESSION_DEVELOPMENT_2026-03-07.md](./docs/sessions/SESSION_DEVELOPMENT_2026-03-07.md)
+
+### 2026-02-14 — E2E Testing Infrastructure Complete (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor) ✅
+
+✅ **E2E Tests - One-Time Visitor Scenario** (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor)
+- ✅ `OneTimeVisitorE2ETest` - complete parking cycle (Entry → Payment → Exit)
+- ✅ Testcontainers integration with docker-compose orchestration
+- ✅ 9 microservices tested in isolated environment
+- ✅ Test duration: ~2 minutes | Success rate: 100%
+- ✅ Windows 11 Home Edition support (Docker API compatibility fix)
+- ✅ Automated build script: `build-e2e-images.ps1`
+- 📊 **Test Coverage**: Entry gate, payment processing, exit gate, service discovery
+- 🏗️ **Architecture Improvements**:
+  - Ticket-based payment flow (ticketCode as natural key)
+  - Database schema synchronization (init.sql updated to match V8/V9 migrations)
+  - New endpoints: `/api/v1/billing/pay-test`, `/api/v1/billing/status-by-ticket`
+  - Support for nullable `vehicle_id` (one-time visitors without registration)
+- 📖 **Documentation**: [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
+- 📖 **Session Report**: [docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md](./docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md)
+- 🎯 **Next Steps**: Subscriber test scenario, subscription management tests
 
 ### 2026-01-27 - Gate Control Service: Exit & Manual Control Endpoints (Issue #52) ✅
 
@@ -157,12 +189,12 @@ Modern parking lot management system built on microservices architecture using S
 ### Current Status: Phase 2 - COMPLETE 🚀
 
 ```
-Фаза 0: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 1: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 2: ████████████████████ 100% ✅ ЗАВЕРШЕНА
-Фаза 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
-Фаза 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
-Фаза 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ ОЖИДАЕТ
+Phase 0: ████████████████████ 100% ✅ COMPLETE
+Phase 1: ████████████████████ 100% ✅ COMPLETE
+Phase 2: ████████████████████ 100% ✅ COMPLETE
+Phase 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
+Phase 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
+Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
 ```
 
 ### 📋 Project Phases Overview
@@ -221,17 +253,30 @@ Modern parking lot management system built on microservices architecture using S
 
 | Metric | Value |
 |--------|-------|
-| **Total Issues** | 35 |
-| **Closed Issues** | 30 (86%) |
+| **Total Issues** | 70 |
+| **Closed Issues** | 53 (76%) |
 | **Microservices** | 9 |
 | **Phase 1** | ✅ 100% Complete |
-| **Phase 2** | 🔄 85% In Progress |
+| **Phase 2** | ✅ 100% Complete |
+| **E2E Tests** | ✅ Implemented |
 | **API Endpoints** | 54+ |
-| **Tests** | 100+ |
-| **DB Migrations** | 8 |
+| **Tests** | 100+ (unit + integration + E2E) |
+| **DB Migrations** | 9 (V0-V9) |
 | **Code Coverage** | ~90% avg |
 
 ### Recent Achievements
+
+**2026-02-14 - E2E Testing Infrastructure (Issue #70)**
+- ✅ OneTimeVisitorE2ETest - complete parking cycle test
+- ✅ Testcontainers integration with docker-compose
+- ✅ 9 microservices tested in isolated environment
+- ✅ Test duration: ~2 minutes | Success rate: 100%
+- ✅ Windows 11 Home Edition support (Docker API compatibility)
+- ✅ Ticket-based payment flow implementation
+- ✅ Database schema synchronization (init.sql updated to V8/V9)
+- ✅ New endpoints: `/api/v1/billing/pay-test`, `/api/v1/billing/status-by-ticket`
+- 📖 **Test:** [OneTimeVisitorE2ETest.java](./backend/e2e-tests/src/test/java/com/parking/e2e/OneTimeVisitorE2ETest.java)
+- 📖 **Documentation:** [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
 
 **2026-01-24 - Billing Service REST API Complete (Issues #34, #35, #36)**
 - ✅ OpenAPI-first BillingController implementing BillingApi interface
@@ -603,6 +648,7 @@ services:
 
 ### Development History
 - **[Session Logs](./docs/sessions/)** - Detailed development session logs
+  - [2026-02-14 - E2E Testing Implementation](./docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md)
   - [2025-12-25 - Project Setup](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
   - [2026-01-03 - Issue #16 Client CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-03_EN.md)
   - [2026-01-04 - Issue #17 Vehicle CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-04_EN.md)
@@ -631,7 +677,29 @@ services:
 
 ## 🧪 Testing
 
-### Automated Tests
+### E2E Tests (End-to-End)
+```bash
+# Prerequisites
+cd backend/e2e-tests
+.\build-e2e-images.ps1  # Build Docker images
+
+# Run tests
+mvn test
+
+# Run specific test
+mvn test -Dtest=OneTimeVisitorE2ETest
+```
+
+**Test Coverage:**
+- ✅ One-time visitor full cycle (Entry → Payment → Exit)
+- ✅ All 9 microservices integration
+- ✅ Database operations (PostgreSQL)
+- ✅ Service discovery (Eureka)
+- ✅ API Gateway routing
+
+📖 **Documentation**: [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
+
+### Unit & Integration Tests
 ```bash
 # Unit tests
 mvn test

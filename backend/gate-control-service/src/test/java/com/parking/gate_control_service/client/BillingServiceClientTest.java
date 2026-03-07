@@ -32,11 +32,11 @@ class BillingServiceClientTest {
 
     @Test
     void checkPaymentStatus_Paid_ReturnsIsPaidTrue() {
-        String ticketCode = "TICKET-123";
+        Long parkingEventId = 123L;
         String responseJson = "{\"isPaid\":true,\"remainingFee\":0}";
         mockWebServer.enqueue(new MockResponse().setBody(responseJson).addHeader("Content-Type", "application/json"));
 
-        PaymentStatusResponse response = billingServiceClient.checkPaymentStatus(ticketCode);
+        PaymentStatusResponse response = billingServiceClient.checkPaymentStatus(parkingEventId);
         assertThat(response).isNotNull();
         assertThat(response.getIsPaid()).isTrue();
         assertThat(response.getRemainingFee()).isEqualTo(BigDecimal.ZERO);
@@ -44,22 +44,22 @@ class BillingServiceClientTest {
 
     @Test
     void checkPaymentStatus_NotPaid_ReturnsIsPaidFalse() {
-        String ticketCode = "TICKET-456";
+        Long parkingEventId = 456L;
         String responseJson = "{\"isPaid\":false,\"remainingFee\":15.5}";
         mockWebServer.enqueue(new MockResponse().setBody(responseJson).addHeader("Content-Type", "application/json"));
 
-        PaymentStatusResponse response = billingServiceClient.checkPaymentStatus(ticketCode);
+        PaymentStatusResponse response = billingServiceClient.checkPaymentStatus(parkingEventId);
         assertThat(response).isNotNull();
         assertThat(response.getIsPaid()).isFalse();
         assertThat(response.getRemainingFee()).isEqualTo(new BigDecimal("15.5"));
     }
 
     @Test
-    void checkPaymentStatus_TicketNotFound_ReturnsNull() {
-        String ticketCode = "TICKET-404";
+    void checkPaymentStatus_EventNotFound_ReturnsNull() {
+        Long parkingEventId = 404L;
         mockWebServer.enqueue(new MockResponse().setResponseCode(404));
 
-        PaymentStatusResponse response = billingServiceClient.checkPaymentStatus(ticketCode);
+        PaymentStatusResponse response = billingServiceClient.checkPaymentStatus(parkingEventId);
         assertThat(response).isNull();
     }
 }

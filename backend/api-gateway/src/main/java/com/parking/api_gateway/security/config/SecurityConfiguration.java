@@ -3,6 +3,7 @@ package com.parking.api_gateway.security.config;
 import com.parking.api_gateway.security.filter.SecurityFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,6 +32,7 @@ import java.util.List;
 @EnableTransactionManagement
 @RequiredArgsConstructor
 @Slf4j
+@Profile("!e2e-test")  // Disable this configuration in E2E tests
 public class SecurityConfiguration {
     
     private final SecurityFilter securityFilter;

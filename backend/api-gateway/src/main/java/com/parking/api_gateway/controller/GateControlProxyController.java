@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * Routes gate control requests from API Gateway to Gate Control Service
  */
 @RestController
-@RequestMapping("/api/gate")
+@RequestMapping("/api/v1/gate")
 @RequiredArgsConstructor
 @Slf4j
 public class GateControlProxyController {
@@ -27,8 +27,8 @@ public class GateControlProxyController {
      */
     @PostMapping("/entry")
     public ResponseEntity<?> openEntryGate(@RequestBody String entryData, HttpServletRequest request) {
-        log.info("Proxying POST request to Gate Control Service: /api/gate/entry");
-        return proxyRequest(HttpMethod.POST, "/api/gate/entry", entryData, request);
+        log.info("Proxying POST request to Gate Control Service: /api/v1/gate/entry");
+        return proxyRequest(HttpMethod.POST, "/api/v1/gate/entry", entryData, request);
     }
 
     /**
@@ -36,8 +36,8 @@ public class GateControlProxyController {
      */
     @PostMapping("/exit")
     public ResponseEntity<?> openExitGate(@RequestBody String exitData, HttpServletRequest request) {
-        log.info("Proxying POST request to Gate Control Service: /api/gate/exit");
-        return proxyRequest(HttpMethod.POST, "/api/gate/exit", exitData, request);
+        log.info("Proxying POST request to Gate Control Service: /api/v1/gate/exit");
+        return proxyRequest(HttpMethod.POST, "/api/v1/gate/exit", exitData, request);
     }
 
     /**
@@ -45,8 +45,8 @@ public class GateControlProxyController {
      */
     @GetMapping("/events")
     public ResponseEntity<?> getAllGateEvents(HttpServletRequest request) {
-        log.info("Proxying GET request to Gate Control Service: /api/gate/events");
-        return proxyRequest(HttpMethod.GET, "/api/gate/events", null, request);
+        log.info("Proxying GET request to Gate Control Service: /api/v1/gate/events");
+        return proxyRequest(HttpMethod.GET, "/api/v1/gate/events", null, request);
     }
 
     /**
@@ -54,8 +54,8 @@ public class GateControlProxyController {
      */
     @GetMapping("/events/{id}")
     public ResponseEntity<?> getGateEventById(@PathVariable Long id, HttpServletRequest request) {
-        log.info("Proxying GET request to Gate Control Service: /api/gate/events/{}", id);
-        return proxyRequest(HttpMethod.GET, "/api/gate/events/" + id, null, request);
+        log.info("Proxying GET request to Gate Control Service: /api/v1/gate/events/{}", id);
+        return proxyRequest(HttpMethod.GET, "/api/v1/gate/events/" + id, null, request);
     }
 
     /**
@@ -63,8 +63,8 @@ public class GateControlProxyController {
      */
     @GetMapping("/status")
     public ResponseEntity<?> getGateStatus(HttpServletRequest request) {
-        log.info("Proxying GET request to Gate Control Service: /api/gate/status");
-        return proxyRequest(HttpMethod.GET, "/api/gate/status", null, request);
+        log.info("Proxying GET request to Gate Control Service: /api/v1/gate/status");
+        return proxyRequest(HttpMethod.GET, "/api/v1/gate/status", null, request);
     }
 
     /**
@@ -72,8 +72,8 @@ public class GateControlProxyController {
      */
     @GetMapping("/clients/{clientId}/history")
     public ResponseEntity<?> getClientGateHistory(@PathVariable Long clientId, HttpServletRequest request) {
-        log.info("Proxying GET request to Gate Control Service: /api/gate/clients/{}/history", clientId);
-        return proxyRequest(HttpMethod.GET, "/api/gate/clients/" + clientId + "/history", null, request);
+        log.info("Proxying GET request to Gate Control Service: /api/v1/gate/clients/{}/history", clientId);
+        return proxyRequest(HttpMethod.GET, "/api/v1/gate/clients/" + clientId + "/history", null, request);
     }
 
     /**
@@ -82,6 +82,11 @@ public class GateControlProxyController {
     private ResponseEntity<?> proxyRequest(HttpMethod method, String path, String body,
                                           HttpServletRequest request) {
         try {
+            log.info("Proxying request: {} {} to {}", method, path, GATE_SERVICE_URL + path);
+            if (body != null) {
+                log.info("Request body: {}", body);
+            }
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -100,7 +105,8 @@ public class GateControlProxyController {
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("Gate Control Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
+            log.error("Gate Control Service returned error: {} - {}. Response: {}",
+                e.getStatusCode(), e.getMessage(), e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             log.error("Error proxying request to Gate Control Service", e);

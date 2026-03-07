@@ -240,6 +240,8 @@
             <button class="tab active" onclick="switchTab('login')">🔐 Login</button>
             <button class="tab" onclick="switchTab('clients')">👥 Clients</button>
             <button class="tab" onclick="switchTab('vehicles')">🚗 Vehicles</button>
+            <button class="tab" onclick="switchTab('gate')">🚪 Gate Control</button>
+            <button class="tab" onclick="switchTab('billing')">💳 Billing</button>
             <button class="tab" onclick="switchTab('management')">🅿️ Parking Spaces</button>
             <button class="tab" onclick="switchTab('reporting')">📊 Reporting</button>
             <button class="tab" onclick="switchTab('quick')">⚡ Quick Test</button>
@@ -393,6 +395,149 @@
             </div>
             <button onclick="addVehicleToClient()">
                 <span class="method-badge method-post">POST</span> Add Vehicle to Client
+            </button>
+        </div>
+
+        <!-- Gate Control Tab -->
+        <div id="gate-tab" class="tab-content">
+            <h2>🚪 Gate Control Service</h2>
+            <p>Test entry and exit gate operations.</p>
+
+            <h3>Vehicle Entry</h3>
+            <div class="form-group">
+                <label for="entryLicensePlate">License Plate:</label>
+                <input type="text" id="entryLicensePlate" placeholder="AA1234BB" value="AA1234BB">
+            </div>
+            <div class="form-group">
+                <label for="entryMethod">Entry Method:</label>
+                <select id="entryMethod">
+                    <option value="SCAN">SCAN (Camera)</option>
+                    <option value="MANUAL">MANUAL (Guard)</option>
+                    <option value="AUTO">AUTO (Barrier)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="entryGateId">Gate ID:</label>
+                <input type="text" id="entryGateId" placeholder="ENTRY-1" value="ENTRY-1">
+            </div>
+            <button onclick="testGateEntry()">
+                <span class="method-badge method-post">POST</span> Process Entry
+            </button>
+
+            <h3>Vehicle Exit</h3>
+            <div class="form-group">
+                <label for="exitLicensePlate">License Plate:</label>
+                <input type="text" id="exitLicensePlate" placeholder="AA1234BB" value="AA1234BB">
+            </div>
+            <div class="form-group">
+                <label for="exitTicketCode">Ticket Code (if available):</label>
+                <input type="text" id="exitTicketCode" placeholder="TICKET-12345...">
+            </div>
+            <div class="form-group">
+                <label for="exitMethod">Exit Method:</label>
+                <select id="exitMethod">
+                    <option value="SCAN">SCAN (Camera)</option>
+                    <option value="MANUAL">MANUAL (Guard)</option>
+                    <option value="AUTO">AUTO (Barrier)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="exitGateId">Gate ID:</label>
+                <input type="text" id="exitGateId" placeholder="EXIT-1" value="EXIT-1">
+            </div>
+            <button onclick="testGateExit()">
+                <span class="method-badge method-post">POST</span> Process Exit
+            </button>
+
+            <h3>Manual Gate Control</h3>
+            <div class="form-group">
+                <label for="manualGateId">Gate ID:</label>
+                <input type="text" id="manualGateId" placeholder="ENTRY-1" value="ENTRY-1">
+            </div>
+            <div class="form-group">
+                <label for="manualAction">Action:</label>
+                <select id="manualAction">
+                    <option value="OPEN">OPEN</option>
+                    <option value="CLOSE">CLOSE</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="manualOperatorId">Operator ID:</label>
+                <input type="number" id="manualOperatorId" placeholder="1" value="1">
+            </div>
+            <div class="form-group">
+                <label for="manualReason">Reason:</label>
+                <input type="text" id="manualReason" placeholder="Emergency override" value="Manual test">
+            </div>
+            <button onclick="testManualGateControl()">
+                <span class="method-badge method-post">POST</span> Manual Control
+            </button>
+        </div>
+
+        <!-- Billing Tab -->
+        <div id="billing-tab" class="tab-content">
+            <h2>💳 Billing Service</h2>
+            <p>Test fee calculation and payment processing.</p>
+
+            <h3>Calculate Parking Fee</h3>
+            <div class="form-group">
+                <label for="feeTicketCode">Ticket Code:</label>
+                <input type="text" id="feeTicketCode" placeholder="TICKET-12345...">
+            </div>
+            <div class="form-group">
+                <label for="feeEntryTime">Entry Time (ISO format):</label>
+                <input type="text" id="feeEntryTime" placeholder="2026-02-14T10:00:00Z">
+            </div>
+            <div class="form-group">
+                <label for="feeExitTime">Exit Time (ISO format, optional):</label>
+                <input type="text" id="feeExitTime" placeholder="Leave empty for current time">
+            </div>
+            <button onclick="calculateFee()">
+                <span class="method-badge method-post">POST</span> Calculate Fee
+            </button>
+
+            <h3>Process Payment</h3>
+            <div class="form-group">
+                <label for="paymentParkingEventId">Parking Event ID:</label>
+                <input type="number" id="paymentParkingEventId" placeholder="1" min="1">
+            </div>
+            <div class="form-group">
+                <label for="paymentAmount">Amount:</label>
+                <input type="number" id="paymentAmount" placeholder="100.00" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label for="paymentMethod">Payment Method:</label>
+                <select id="paymentMethod">
+                    <option value="CASH">CASH</option>
+                    <option value="CARD">CARD</option>
+                    <option value="MOBILE">MOBILE</option>
+                    <option value="SUBSCRIPTION">SUBSCRIPTION</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="paymentTransactionId">Transaction ID (optional):</label>
+                <input type="text" id="paymentTransactionId" placeholder="Auto-generated if empty">
+            </div>
+            <button onclick="processPayment()">
+                <span class="method-badge method-post">POST</span> Process Payment
+            </button>
+
+            <h3>Check Payment Status</h3>
+            <div class="form-group">
+                <label for="statusParkingEventId">Parking Event ID:</label>
+                <input type="number" id="statusParkingEventId" placeholder="1" min="1">
+            </div>
+            <button onclick="checkPaymentStatus()">
+                <span class="method-badge method-get">GET</span> Get Payment Status
+            </button>
+
+            <h3>Check Payment Status by Ticket</h3>
+            <div class="form-group">
+                <label for="statusTicketCode">Ticket Code:</label>
+                <input type="text" id="statusTicketCode" placeholder="TICKET-12345...">
+            </div>
+            <button onclick="checkPaymentStatusByTicket()">
+                <span class="method-badge method-get">GET</span> Get Status by Ticket
             </button>
         </div>
 
@@ -1023,6 +1168,113 @@
             getFilteredLogs();
         }
 
+        // ============================================
+        // GATE CONTROL FUNCTIONS
+        // ============================================
+
+        function testGateEntry() {
+            const licensePlate = document.getElementById('entryLicensePlate').value;
+            const entryMethod = document.getElementById('entryMethod').value;
+            const gateId = document.getElementById('entryGateId').value;
+
+            const entryData = {
+                licensePlate: licensePlate,
+                entryMethod: entryMethod,
+                gateId: gateId
+            };
+
+            testEndpointWithData('POST', '/api/v1/gate/entry', entryData);
+        }
+
+        function testGateExit() {
+            const licensePlate = document.getElementById('exitLicensePlate').value;
+            const ticketCode = document.getElementById('exitTicketCode').value;
+            const exitMethod = document.getElementById('exitMethod').value;
+            const gateId = document.getElementById('exitGateId').value;
+
+            const exitData = {
+                licensePlate: licensePlate,
+                exitMethod: exitMethod,
+                gateId: gateId
+            };
+
+            if (ticketCode) {
+                exitData.ticketCode = ticketCode;
+            }
+
+            testEndpointWithData('POST', '/api/v1/gate/exit', exitData);
+        }
+
+        function testManualGateControl() {
+            const gateId = document.getElementById('manualGateId').value;
+            const action = document.getElementById('manualAction').value;
+            const operatorId = document.getElementById('manualOperatorId').value;
+            const reason = document.getElementById('manualReason').value;
+
+            const controlData = {
+                gateId: gateId,
+                action: action,
+                operatorId: parseInt(operatorId),
+                reason: reason
+            };
+
+            testEndpointWithData('POST', '/api/v1/gate/control', controlData);
+        }
+
+        // ============================================
+        // BILLING FUNCTIONS
+        // ============================================
+
+        function calculateFee() {
+            const ticketCode = document.getElementById('feeTicketCode').value;
+            const entryTime = document.getElementById('feeEntryTime').value;
+            const exitTime = document.getElementById('feeExitTime').value;
+
+            const feeData = {
+                ticketCode: ticketCode,
+                entryTime: entryTime
+            };
+
+            if (exitTime) {
+                feeData.exitTime = exitTime;
+            }
+
+            testEndpointWithData('POST', '/api/v1/billing/calculate', feeData);
+        }
+
+        function processPayment() {
+            const parkingEventId = document.getElementById('paymentParkingEventId').value;
+            const amount = document.getElementById('paymentAmount').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const transactionId = document.getElementById('paymentTransactionId').value;
+
+            const paymentData = {
+                parkingEventId: parseInt(parkingEventId),
+                amount: parseFloat(amount),
+                paymentMethod: paymentMethod
+            };
+
+            if (transactionId) {
+                paymentData.transactionId = transactionId;
+            }
+
+            testEndpointWithData('POST', '/api/v1/billing/pay', paymentData);
+        }
+
+        function checkPaymentStatus() {
+            const parkingEventId = document.getElementById('statusParkingEventId').value;
+            testEndpoint('GET', `/api/v1/billing/status?parkingEventId=${parkingEventId}`);
+        }
+
+        function checkPaymentStatusByTicket() {
+            const ticketCode = document.getElementById('statusTicketCode').value;
+            testEndpoint('GET', `/api/v1/billing/status-by-ticket?ticketCode=${encodeURIComponent(ticketCode)}`);
+        }
+
+        // ============================================
+        // QUICK TEST (UPDATED)
+        // ============================================
+
         // Quick filter: Last 10 logs
         function quickFilterLast10() {
             document.getElementById('filterLevel').value = '';
@@ -1051,110 +1303,166 @@
             progressDiv.style.display = 'block';
             resultDiv.style.display = 'none';
 
-            const tests = [
-                // Client endpoints
+            // Unique suffix to avoid conflicts on repeated test runs
+            const ts = Date.now();
+            const testPhone = `+38050${String(ts).slice(-7)}`;
+            const testEmail = `quicktest.${ts}@parking.com`;
+            const testUpdEmail = `updated.${ts}@parking.com`;
+            const testPlate = `QT${String(ts).slice(-6)}`;
+            const testPlateUpd = `QU${String(ts).slice(-6)}`;
+
+            // Will be populated after Create steps
+            let createdClientId = null;
+            let createdVehicleId = null;
+
+            // --- Step 1: static tests (no created IDs needed) ---
+            const staticTests = [
                 { method: 'GET', endpoint: '/api/clients', name: 'List all clients' },
-                { method: 'POST', endpoint: '/api/clients', name: 'Create client', body: {
-                    fullName: 'Test User',
-                    phoneNumber: '+380501234567',
-                    email: 'test.quicktest@parking.com'
-                }},
-                { method: 'GET', endpoint: '/api/clients/1', name: 'Get client by ID' },
-                { method: 'PUT', endpoint: '/api/clients/1', name: 'Update client', body: {
-                    fullName: 'Updated User',
-                    phoneNumber: '+380501234567',
-                    email: 'updated.quicktest@parking.com'
-                }},
-                { method: 'GET', endpoint: '/api/clients/search?phone=%2B380501234567', name: 'Search by phone' },
-
-                // Vehicle endpoints
-                { method: 'GET', endpoint: '/api/vehicles', name: 'List all vehicles' },
-                { method: 'POST', endpoint: '/api/vehicles', name: 'Create vehicle', body: {
-                    licensePlate: 'TEST1234',
-                    clientId: 1,
-                    isAllowed: true
-                }},
-                { method: 'GET', endpoint: '/api/vehicles/1', name: 'Get vehicle by ID' },
-                { method: 'PUT', endpoint: '/api/vehicles/1', name: 'Update vehicle', body: {
-                    licensePlate: 'TEST5678',
-                    isAllowed: false
-                }},
-                { method: 'GET', endpoint: '/api/clients/1/vehicles', name: 'Get client\'s vehicles' },
-                { method: 'DELETE', endpoint: '/api/vehicles/1', name: 'Delete vehicle' },
-
-                // Management Service endpoints
-                { method: 'GET', endpoint: '/api/management/spots/available', name: 'Get available parking spaces' },
-                { method: 'GET', endpoint: '/api/management/spots', name: 'Get all parking spaces' },
-                { method: 'GET', endpoint: '/api/management/spots/available/count', name: 'Count available spaces' },
-                { method: 'GET', endpoint: '/api/management/spots/available/lot/1', name: 'Get spaces by lot' },
-                { method: 'GET', endpoint: '/api/management/spots/search?type=STANDARD&status=AVAILABLE', name: 'Search parking spaces' },
-
-                // Reporting Service endpoints
-                { method: 'POST', endpoint: '/api/reporting/log', name: 'Create log entry', body: {
-                    timestamp: new Date().toISOString(),
-                    level: 'INFO',
-                    service: 'test-ui',
-                    message: 'Test log entry from UI',
-                    userId: 1,
-                    meta: { action: 'TEST', source: 'test-login.html' }
-                }},
-                { method: 'GET', endpoint: '/api/reporting/logs', name: 'Get all log entries' }
             ];
+
+            // --- Step 2: create + dynamic tests built after creation ---
+            // We run tests sequentially, resolving dynamic endpoints on the fly
 
             const results = [];
             let passed = 0;
             let failed = 0;
 
-            for (let i = 0; i < tests.length; i++) {
-                const test = tests[i];
-                progressText.textContent = `${i + 1} / ${tests.length} - ${test.name}`;
-                progressBar.style.width = `${((i + 1) / tests.length) * 100}%`;
-
+            async function runRequest(method, endpoint, body, name) {
+                progressText.textContent = `${name}`;
                 try {
                     const options = {
-                        method: test.method,
+                        method,
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
                         }
                     };
+                    if (body) options.body = JSON.stringify(body);
 
-                    if (test.body) {
-                        options.body = JSON.stringify(test.body);
-                    }
-
-                    const response = await fetch(`${API_BASE}${test.endpoint}`, options);
-
+                    const response = await fetch(`${API_BASE}${endpoint}`, options);
                     let data;
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        data = await response.json();
-                    } else {
-                        data = await response.text();
-                    }
+                    const ct = response.headers.get('content-type');
+                    if (ct && ct.includes('application/json')) data = await response.json();
+                    else data = await response.text();
 
                     if (response.ok) {
-                        results.push(`✅ ${test.name}: OK`);
+                        results.push(`✅ ${name}: OK`);
                         passed++;
+                        return { ok: true, status: response.status, data };
                     } else {
-                        results.push(`❌ ${test.name}: FAIL (${response.status})`);
+                        results.push(`❌ ${name}: FAIL (${response.status})`);
                         failed++;
+                        return { ok: false, status: response.status, data };
                     }
                 } catch (error) {
-                    results.push(`❌ ${test.name}: ERROR (${error.message})`);
+                    results.push(`❌ ${name}: ERROR (${error.message})`);
                     failed++;
+                    return { ok: false, error: error.message };
+                } finally {
+                    await new Promise(r => setTimeout(r, 200));
                 }
-
-                // Small delay between requests
-                await new Promise(resolve => setTimeout(resolve, 200));
             }
+
+            const totalSteps = 18;
+            let step = 0;
+            function progress(name) {
+                step++;
+                progressBar.style.width = `${(step / totalSteps) * 100}%`;
+                progressText.textContent = `${step} / ${totalSteps} - ${name}`;
+            }
+
+            // Client tests
+            progress('List all clients');
+            await runRequest('GET', '/api/clients', null, 'List all clients');
+
+            progress('Create client');
+            const createClientRes = await runRequest('POST', '/api/clients', {
+                fullName: 'Quick Test User',
+                phoneNumber: testPhone,
+                email: testEmail
+            }, 'Create client');
+            if (createClientRes.ok && createClientRes.data && createClientRes.data.id) {
+                createdClientId = createClientRes.data.id;
+            }
+
+            progress('Get client by ID');
+            await runRequest('GET', `/api/clients/${createdClientId || 1}`, null, 'Get client by ID');
+
+            progress('Update client');
+            await runRequest('PUT', `/api/clients/${createdClientId || 1}`, {
+                fullName: 'Updated Quick Test User',
+                phoneNumber: testPhone,
+                email: testUpdEmail
+            }, 'Update client');
+
+            progress('Search by phone');
+            await runRequest('GET', `/api/clients/search?phone=${encodeURIComponent(testPhone)}`, null, 'Search by phone');
+
+            // Vehicle tests
+            progress('List all vehicles');
+            await runRequest('GET', '/api/vehicles', null, 'List all vehicles');
+
+            progress('Create vehicle');
+            const createVehicleRes = await runRequest('POST', '/api/vehicles', {
+                licensePlate: testPlate,
+                clientId: createdClientId || 1,
+                isAllowed: true
+            }, 'Create vehicle');
+            if (createVehicleRes.ok && createVehicleRes.data && createVehicleRes.data.id) {
+                createdVehicleId = createVehicleRes.data.id;
+            }
+
+            progress('Get vehicle by ID');
+            await runRequest('GET', `/api/vehicles/${createdVehicleId || 1}`, null, 'Get vehicle by ID');
+
+            progress('Update vehicle');
+            await runRequest('PUT', `/api/vehicles/${createdVehicleId || 1}`, {
+                licensePlate: testPlateUpd,
+                isAllowed: false
+            }, 'Update vehicle');
+
+            progress("Get client's vehicles");
+            await runRequest('GET', `/api/clients/${createdClientId || 1}/vehicles`, null, "Get client's vehicles");
+
+            progress('Delete vehicle');
+            await runRequest('DELETE', `/api/vehicles/${createdVehicleId || 1}`, null, 'Delete vehicle');
+
+            // Management Service tests
+            progress('Get available parking spaces');
+            await runRequest('GET', '/api/management/spots/available', null, 'Get available parking spaces');
+
+            progress('Get all parking spaces');
+            await runRequest('GET', '/api/management/spots', null, 'Get all parking spaces');
+
+            progress('Count available spaces');
+            await runRequest('GET', '/api/management/spots/available/count', null, 'Count available spaces');
+
+            progress('Get spaces by lot');
+            await runRequest('GET', '/api/management/spots/available/lot/1', null, 'Get spaces by lot');
+
+            progress('Search parking spaces');
+            await runRequest('GET', '/api/management/spots/search?type=STANDARD&status=AVAILABLE', null, 'Search parking spaces');
+
+            // Reporting Service tests
+            progress('Create log entry');
+            await runRequest('POST', '/api/reporting/log', {
+                timestamp: new Date().toISOString(),
+                level: 'INFO',
+                service: 'test-ui',
+                message: `Test log entry from UI [${ts}]`,
+                userId: 1,
+                meta: { action: 'TEST', source: 'test-login.html' }
+            }, 'Create log entry');
+
+            progress('Get all log entries');
+            await runRequest('GET', '/api/reporting/logs', null, 'Get all log entries');
 
             progressText.textContent = 'Test completed!';
 
             resultDiv.className = failed === 0 ? 'success' : 'error';
             resultDiv.innerHTML = `
                 <strong>${failed === 0 ? '✅ All Tests Passed!' : '⚠️ Tests Completed with Errors'}</strong><br>
-                <strong>Summary:</strong> ${passed} passed, ${failed} failed (Total: ${tests.length})<br><br>
+                <strong>Summary:</strong> ${passed} passed, ${failed} failed (Total: 18)<br><br>
                 <strong>Details:</strong><br>
                 <div class="token">${results.join('\n')}</div>
             `;

@@ -1,6 +1,12 @@
 # ============================================
 #  FULL PROJECT REBUILD FROM SCRATCH
 # ============================================
+# Parameters:
+#   -SkipMavenBuild : Skip Maven build if JARs already exist
+
+param(
+    [switch]$SkipMavenBuild
+)
 
 Write-Host "`n============================================" -ForegroundColor Cyan
 Write-Host "   FULL PROJECT REBUILD" -ForegroundColor Cyan
@@ -24,6 +30,8 @@ function Get-ContainerName {
         "eureka-server" = "eureka-server"
         "api-gateway" = "api-gateway"
         "client-service" = "client-service"
+        "gate-control-service" = "gate-control-service"
+        "billing-service" = "billing-service"
         "management-service" = "management-service"
         "reporting-service" = "reporting-service"
         "pgadmin" = "parking_pgadmin"
@@ -73,7 +81,10 @@ $imagesToRemove = @(
     "parking-system-api-gateway:latest",
     "parking-system-eureka-server:latest",
     "parking-system-client-service:latest",
-    "parking-system-management-service:latest"
+    "parking-system-gate-control-service:latest",
+    "parking-system-billing-service:latest",
+    "parking-system-management-service:latest",
+    "parking-system-reporting-service:latest"
 )
 foreach ($image in $imagesToRemove) {
     docker rmi $image -f 2>&1 | Out-Null
@@ -81,20 +92,43 @@ foreach ($image in $imagesToRemove) {
 Start-Sleep -Seconds 1
 Write-Host "   OK - Old images removed`n" -ForegroundColor Green
 
-# Step 3: Clean Maven artifacts
-Write-Host "Step 3: Cleaning Maven artifacts..." -ForegroundColor Yellow
-mvn clean -q -DskipTests
-Write-Host "   OK - Maven artifacts cleaned`n" -ForegroundColor Green
-
-# Step 4: Build all services
-Write-Host "Step 4: Building all Maven services..." -ForegroundColor Yellow
-Write-Host "   This may take 2-3 minutes..." -ForegroundColor Gray
-mvn package -DskipTests -q
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "   ERROR: Maven build failed!" -ForegroundColor Red
-    exit 1
+# Step 3: Clean Maven artifacts (if not skipping)
+if (-not $SkipMavenBuild) {
+    Write-Host "Step 3: Cleaning Maven artifacts..." -ForegroundColor Yellow
+    mvn clean -q -DskipTests
+    Write-Host "   OK - Maven artifacts cleaned`n" -ForegroundColor Green
+} else {
+    Write-Host "Step 3: Skipping Maven clean (SkipMavenBuild flag set)`n" -ForegroundColor Gray
 }
-Write-Host "   OK - All services built successfully`n" -ForegroundColor Green
+
+# Step 4: Build all services (if not skipping)
+if (-not $SkipMavenBuild) {
+    Write-Host "Step 4: Building all Maven services..." -ForegroundColor Yellow
+    Write-Host "   This may take 2-3 minutes..." -ForegroundColor Gray
+    mvn package -DskipTests -q
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "   ERROR: Maven build failed!" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "   OK - All services built successfully`n" -ForegroundColor Green
+} else {
+    Write-Host "Step 4: Skipping Maven build (SkipMavenBuild flag set)" -ForegroundColor Gray
+    # Verify that JARs exist
+    $jarsExist = $true
+    $services = @("api-gateway", "client-service", "gate-control-service", "billing-service", "management-service", "reporting-service", "eureka-server")
+    foreach ($svc in $services) {
+        $jarPath = "$projectRoot\backend\$svc\target\$svc-0.0.1-SNAPSHOT.jar"
+        if (-not (Test-Path $jarPath)) {
+            Write-Host "   WARNING: JAR not found: $jarPath" -ForegroundColor Yellow
+            $jarsExist = $false
+        }
+    }
+    if (-not $jarsExist) {
+        Write-Host "   ERROR: Some JARs are missing. Run without -SkipMavenBuild flag first." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "   OK - All JAR files found`n" -ForegroundColor Green
+}
 
 # Step 5: Start database and cache
 Write-Host "Step 5: Starting database and cache services..." -ForegroundColor Yellow
@@ -167,43 +201,95 @@ Write-Host "   OK - Observability stack started`n" -ForegroundColor Green
 # Step 8: Start Eureka Server
 Write-Host "Step 8: Starting Eureka Server..." -ForegroundColor Yellow
 docker-compose -f docker-compose.yml up -d eureka-server
-Write-Host "   Waiting for Eureka to start (20 seconds)..." -ForegroundColor Gray
-Start-Sleep -Seconds 20
+Write-Host "   Waiting for Eureka to become healthy..." -ForegroundColor Gray
+
+# Wait for Eureka health check with timeout
+$maxWait = 60
+$waited = 0
+$eurekaHealthy = $false
+
+while (-not $eurekaHealthy -and $waited -lt $maxWait) {
+    Start-Sleep -Seconds 2
+    $waited += 2
+    $status = docker inspect --format='{{.State.Health.Status}}' eureka-server 2>$null
+    if ($status -eq "healthy") {
+        $eurekaHealthy = $true
+        Write-Host "   Eureka Server is healthy (waited ${waited}s)" -ForegroundColor Gray
+    }
+}
+
+if (-not $eurekaHealthy) {
+    Write-Host "   WARNING: Eureka Server did not become healthy in time" -ForegroundColor Yellow
+}
 Write-Host "   OK - Eureka Server started`n" -ForegroundColor Green
 
 # Step 9: Start API Gateway
 Write-Host "Step 9: Starting API Gateway..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml up -d --build api-gateway
-Write-Host "   Waiting for API Gateway to register with Eureka (25 seconds)..." -ForegroundColor Gray
-Start-Sleep -Seconds 25
+docker-compose -f docker-compose.yml up -d api-gateway
+Write-Host "   Waiting for API Gateway to become healthy..." -ForegroundColor Gray
+
+# Wait for API Gateway health check with timeout
+$maxWait = 60
+$waited = 0
+$apiHealthy = $false
+
+while (-not $apiHealthy -and $waited -lt $maxWait) {
+    Start-Sleep -Seconds 2
+    $waited += 2
+    $status = docker inspect --format='{{.State.Health.Status}}' api-gateway 2>$null
+    if ($status -eq "healthy") {
+        $apiHealthy = $true
+        Write-Host "   API Gateway is healthy (waited ${waited}s)" -ForegroundColor Gray
+    }
+}
+
+if (-not $apiHealthy) {
+    Write-Host "   WARNING: API Gateway did not become healthy in time" -ForegroundColor Yellow
+}
 Write-Host "   OK - API Gateway started`n" -ForegroundColor Green
 
-# Step 10: Start Client Service
-Write-Host "Step 10: Starting Client Service..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml up -d --build client-service
-Write-Host "   Waiting for Client Service to register (20 seconds)..." -ForegroundColor Gray
-Start-Sleep -Seconds 20
-Write-Host "   OK - Client Service started`n" -ForegroundColor Green
+# Step 10: Start all microservices
+Write-Host "Step 10: Starting all microservices..." -ForegroundColor Yellow
+Write-Host "   Starting: client-service, gate-control-service, billing-service, management-service, reporting-service" -ForegroundColor Gray
+docker-compose -f docker-compose.yml up -d client-service gate-control-service billing-service management-service reporting-service
 
-# Step 11: Start Management Service
-Write-Host "Step 11: Starting Management Service..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml up -d --build management-service
-Write-Host "   Waiting for Management Service to register (20 seconds)..." -ForegroundColor Gray
-Start-Sleep -Seconds 20
-Write-Host "   OK - Management Service started`n" -ForegroundColor Green
+Write-Host "   Waiting for all services to become healthy (max 90s)..." -ForegroundColor Gray
 
-# Step 12: Start Reporting Service
-Write-Host "Step 12: Starting Reporting Service..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml up -d --build reporting-service
-Write-Host "   Waiting for Reporting Service to register (20 seconds)..." -ForegroundColor Gray
-Start-Sleep -Seconds 20
-Write-Host "   OK - Reporting Service started`n" -ForegroundColor Green
+$services = @("client-service", "gate-control-service", "billing-service", "management-service", "reporting-service")
+$maxWait = 90
+$waited = 0
+$allHealthy = $false
+
+while (-not $allHealthy -and $waited -lt $maxWait) {
+    Start-Sleep -Seconds 5
+    $waited += 5
+
+    $healthyCount = 0
+    foreach ($svc in $services) {
+        $status = docker inspect --format='{{.State.Health.Status}}' $svc 2>$null
+        if ($status -eq "healthy") {
+            $healthyCount++
+        }
+    }
+
+    Write-Host "   Progress: $healthyCount/$($services.Count) services healthy (waited ${waited}s)" -ForegroundColor Gray
+
+    if ($healthyCount -eq $services.Count) {
+        $allHealthy = $true
+    }
+}
+
+if ($allHealthy) {
+    Write-Host "   OK - All microservices are healthy!`n" -ForegroundColor Green
+} else {
+    Write-Host "   WARNING: Not all services became healthy in time`n" -ForegroundColor Yellow
+}
 
 # ============================================
 # VERIFICATION
 # ============================================
 
-Write-Host "Step 13: Verifying all services..." -ForegroundColor Yellow
+Write-Host "Step 11: Verifying all services..." -ForegroundColor Yellow
 Write-Host ""
 
 # Get all services from docker-compose.yml
@@ -213,8 +299,10 @@ $allServices = @(
     @{Service="eureka-server"; Container="eureka-server"; Port="8761"},
     @{Service="api-gateway"; Container="api-gateway"; Port="8086"},
     @{Service="client-service"; Container="client-service"; Port="8081"},
-    @{Service="management-service"; Container="management-service"; Port="8083"},
-    @{Service="reporting-service"; Container="reporting-service"; Port="8084"},
+    @{Service="gate-control-service"; Container="gate-control-service"; Port="8082"},
+    @{Service="billing-service"; Container="billing-service"; Port="8083"},
+    @{Service="management-service"; Container="management-service"; Port="8084"},
+    @{Service="reporting-service"; Container="reporting-service"; Port="8087"},
     @{Service="pgadmin"; Container="parking_pgadmin"; Port="5050"},
     @{Service="prometheus"; Container="parking_prometheus"; Port="9090"},
     @{Service="grafana"; Container="parking_grafana"; Port="3000"},
@@ -244,6 +332,8 @@ try {
 
     $apiGatewayRegistered = $eurekaResponse.Content -match "API-GATEWAY"
     $clientServiceRegistered = $eurekaResponse.Content -match "CLIENT-SERVICE"
+    $gateControlRegistered = $eurekaResponse.Content -match "GATE-CONTROL-SERVICE"
+    $billingServiceRegistered = $eurekaResponse.Content -match "BILLING-SERVICE"
     $managementServiceRegistered = $eurekaResponse.Content -match "MANAGEMENT-SERVICE"
     $reportingServiceRegistered = $eurekaResponse.Content -match "REPORTING-SERVICE"
 
@@ -252,6 +342,12 @@ try {
 
     Write-Host "      CLIENT-SERVICE: " -NoNewline -ForegroundColor White
     Write-Host $(if ($clientServiceRegistered) { "REGISTERED" } else { "NOT REGISTERED" }) -ForegroundColor $(if ($clientServiceRegistered) { "Green" } else { "Yellow" })
+
+    Write-Host "      GATE-CONTROL-SERVICE: " -NoNewline -ForegroundColor White
+    Write-Host $(if ($gateControlRegistered) { "REGISTERED" } else { "NOT REGISTERED" }) -ForegroundColor $(if ($gateControlRegistered) { "Green" } else { "Yellow" })
+
+    Write-Host "      BILLING-SERVICE: " -NoNewline -ForegroundColor White
+    Write-Host $(if ($billingServiceRegistered) { "REGISTERED" } else { "NOT REGISTERED" }) -ForegroundColor $(if ($billingServiceRegistered) { "Green" } else { "Yellow" })
 
     Write-Host "      MANAGEMENT-SERVICE: " -NoNewline -ForegroundColor White
     Write-Host $(if ($managementServiceRegistered) { "REGISTERED" } else { "NOT REGISTERED" }) -ForegroundColor $(if ($managementServiceRegistered) { "Green" } else { "Yellow" })
@@ -263,8 +359,8 @@ try {
 }
 Write-Host ""
 
-# Step 14: Test authentication
-Write-Host "Step 14: Testing authentication..." -ForegroundColor Yellow
+# Step 16: Test authentication
+Write-Host "Step 16: Testing authentication..." -ForegroundColor Yellow
 try {
     $body = @{
         username = "admin"
@@ -289,7 +385,7 @@ try {
         # ============================================
         # TEST CLIENT API ENDPOINTS
         # ============================================
-        Write-Host "`nStep 15: Testing All API endpoints (21 total)..." -ForegroundColor Yellow
+        Write-Host "`nStep 17: Testing All API endpoints (21 total)..." -ForegroundColor Yellow
         $testsPassed = 0
         $testsFailed = 0
         $createdClientId = $null
@@ -308,13 +404,17 @@ try {
         }
 
         # Test 2: POST /api/clients (create client)
+        $ts = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+        $testPhone = "+38050" + ($ts.ToString().Substring($ts.ToString().Length - 7))
+        $testEmail = "rebuild.$ts@parking.com"
+        $testEmailUpd = "updated.$ts@parking.com"
+
         Write-Host "   [2/21] POST /api/clients (create): " -NoNewline -ForegroundColor White
         try {
             $newClient = @{
-                firstName = "Test"
-                lastName = "User"
-                phoneNumber = "+380501234567"
-                email = "test.rebuild@parking.com"
+                fullName    = "Test User"
+                phoneNumber = $testPhone
+                email       = $testEmail
             } | ConvertTo-Json
 
             $createResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients" `
@@ -349,10 +449,9 @@ try {
             Write-Host "   [4/21] PUT /api/clients/$createdClientId (update): " -NoNewline -ForegroundColor White
             try {
                 $updateClient = @{
-                    firstName = "Updated"
-                    lastName = "User"
-                    phoneNumber = "+380501234567"
-                    email = "updated.rebuild@parking.com"
+                    fullName    = "Updated User"
+                    phoneNumber = $testPhone
+                    email       = $testEmailUpd
                 } | ConvertTo-Json
 
                 $updateResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/$createdClientId" `
@@ -370,7 +469,8 @@ try {
         # Test 5: GET /api/clients/search?phone=... (search by phone)
         Write-Host "   [5/21] GET /api/clients/search (by phone): " -NoNewline -ForegroundColor White
         try {
-            $searchResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/search?phone=%2B380501234567" `
+            $encodedPhone = [Uri]::EscapeDataString($testPhone)
+            $searchResponse = Invoke-RestMethod -Uri "http://localhost:8086/api/clients/search?phone=$encodedPhone" `
                 -Method GET -Headers $headers -TimeoutSec 10
             Write-Host "OK" -ForegroundColor Green
             $testsPassed++
@@ -401,7 +501,7 @@ try {
             Write-Host "   [7/21] POST /api/vehicles (create): " -NoNewline -ForegroundColor White
             try {
                 $newVehicle = @{
-                    licensePlate = "TEST1234"
+                    licensePlate = "RB" + ($ts.ToString().Substring($ts.ToString().Length - 6))
                     clientId = $createdClientId
                     isAllowed = $true
                 } | ConvertTo-Json
