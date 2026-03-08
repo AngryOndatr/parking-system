@@ -15,9 +15,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD integration for E2E tests (GitHub Actions)
 
 ### Recently Completed
+- ✅ **[Phase 3] E2E test: subscriber full parking cycle** (Issue #73) — 2026-03-08
 - ✅ **[Phase 3] Subscription check: real DB logic in client-service** (Issue #72) — 2026-03-08
 - ✅ **[Phase 3] Add default OPERATOR user on application startup** (Issue #80) — 2026-03-08
 - ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
+
+---
+
+## [0.14.0] - 2026-03-08
+
+### Added — E2E test: subscriber full parking cycle (Issue #73)
+
+#### `SubscriberE2ETest.java` (new, e2e-tests)
+- Same structure as `OneTimeVisitorE2ETest` — spins up full stack via `docker-compose-e2e.yml`
+- Pre-condition: `licensePlate=AA1234BB` seeded in `init.sql` with active ANNUAL subscription
+- **Step 1** — `POST /api/v1/gate/entry`: expects `201`, `isSubscriber=true`, `gateStatus=OPENED`, `ticketCode=null`
+- **Step 2** — `POST /api/v1/gate/exit` (no ticketCode): expects `200`, `paymentRequired=false`, `gateStatus=OPENED`
+- **Step 3** — `GET /api/v1/billing/status?parkingEventId=N`: expects `404` (no payment record for subscriber)
+- `waitForServices()` includes additional check for Client Service (`/api/v1/clients/subscriptions/check`)
+- Discovered by surefire pattern `**/*E2ETest.java` — runs sequentially after `OneTimeVisitorE2ETest`
+- No changes to `docker-compose-e2e.yml` — `client-service` and `CLIENT_SERVICE_URL` already configured
+
+#### Run
+```
+mvn test -Pe2e
+```
 
 ---
 
