@@ -15,7 +15,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD integration for E2E tests (GitHub Actions)
 
 ### Recently Completed
+- ✅ **[Phase 3] Add default OPERATOR user on application startup** (Issue #80) — 2026-03-08
 - ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
+
+---
+
+## [0.12.0] - 2026-03-08
+
+### Added — Default OPERATOR user on startup (Issue #80)
+
+#### `UserSecurityService.java` (api-gateway)
+- Refactored `initializeDefaultUsers()`: replaced `countActiveUsers() == 0` check with
+  per-user `existsByUsername()` guards — each user is created independently and idempotently
+- Added `createDefaultOperatorUser()`:
+  - `username=operator`, `password=ParkingOperator2025!` (BCrypt-hashed)
+  - `role=OPERATOR`, `forcePasswordChange=true`, `enabled=true`
+  - Logs a WARNING with the temporary password on first creation
+
+#### `UserSecurityServiceDefaultUsersTest.java` (new)
+- `createsBothUsersWhenDbIsEmpty` — verifies both admin + operator saved with correct roles and BCrypt hashes
+- `doesNotCreateDuplicatesWhenUsersExist` — verifies `save()` is never called when both users exist
+- `createsOnlyOperatorWhenAdminExists` — verifies partial creation is independent
+
+#### Test Results
+```
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0  (UserSecurityServiceDefaultUsersTest)
+Total project: 168 tests, 0 failures, BUILD SUCCESS
+```
 
 ---
 

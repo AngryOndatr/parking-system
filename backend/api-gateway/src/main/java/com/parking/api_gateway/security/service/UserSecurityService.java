@@ -354,9 +354,18 @@ public class UserSecurityService {
     @PostConstruct
     public void initializeDefaultUsers() {
         try {
-            if (userRepository.countActiveUsers() == 0) {
+            if (!userRepository.existsByUsername("admin")) {
                 createDefaultAdminUser();
                 log.info("Default admin user created");
+            } else {
+                log.info("Default admin user already exists, skipping creation");
+            }
+
+            if (!userRepository.existsByUsername("operator")) {
+                createDefaultOperatorUser();
+                log.info("Default operator user created");
+            } else {
+                log.info("Default operator user already exists, skipping creation");
             }
         } catch (Exception e) {
             log.error("Error initializing default users: {}", e.getMessage());
@@ -389,6 +398,35 @@ public class UserSecurityService {
         userRepository.save(admin);
         
         log.warn("Default admin user created with username 'admin' and temporary password '{}'. " +
+                "CHANGE THIS PASSWORD IMMEDIATELY!", defaultPassword);
+    }
+
+    /**
+     * Create default operator user for gate/billing operations
+     */
+    private void createDefaultOperatorUser() {
+        String defaultPassword = "ParkingOperator2025!";
+        String hashedPassword = passwordEncoder.encode(defaultPassword);
+
+        UserSecurityEntity operator = UserSecurityEntity.builder()
+                .username("operator")
+                .password(hashedPassword)
+                .email("operator@parking.local")
+                .firstName("Default")
+                .lastName("Operator")
+                .role(UserSecurityEntity.Role.OPERATOR)
+                .enabled(true)
+                .emailVerified(true)
+                .accountNonExpired(true)
+                .accountNonLocked(true)
+                .credentialsNonExpired(true)
+                .forcePasswordChange(true) // Force password change on first login
+                .passwordChangedAt(LocalDateTime.now())
+                .build();
+
+        userRepository.save(operator);
+
+        log.warn("Default operator user created with username 'operator' and temporary password '{}'. " +
                 "CHANGE THIS PASSWORD IMMEDIATELY!", defaultPassword);
     }
 }
