@@ -15,7 +15,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD integration for E2E tests (GitHub Actions)
 
 ### Recently Completed
-- ✅ **E2E Tests Fully Green** (Issue #70) — One-Time Visitor full cycle 100% passing - 2026-03-07
+- ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
+
+---
+
+## [0.11.0] - 2026-03-08
+
+### Added — RBAC: Role-Based Route Protection in SecurityFilter (Issue #78)
+
+#### `SecurityFilter.java` (api-gateway)
+- Added `ROUTE_ROLES` static map defining allowed roles per `METHOD:/path-prefix` rule:
+  - `POST|PUT|DELETE /api/v1/gate/**` → `{OPERATOR, ADMIN}`
+  - `POST|PUT|DELETE /api/v1/billing/**` → `{OPERATOR, ADMIN}`
+  - `GET|POST|PUT|DELETE /api/clients/**` → `{ADMIN, MANAGER, OPERATOR}`
+  - `POST|PUT|DELETE /api/management/**` → `{ADMIN, MANAGER}`
+  - `GET|POST|PUT|DELETE /api/reporting/**` → `{ADMIN, MANAGER, OPERATOR}`
+- Added **step 4.5** in `doFilterInternal` — RBAC check after JWT validation; returns **HTTP 403** with JSON body `{"error":"Forbidden","message":"Access denied: insufficient role for this operation"}` on role mismatch
+- Added `isRoleAllowed(method, path, roleStr)` — package-private for unit-testing; first-match-wins prefix scan against `ROUTE_ROLES`
+- **Fixed bug**: `validateJwtToken()` was reading wrong JWT claim names (`user_id` → `userId`, `roles` → `role`); request attribute renamed from `roles` to `role` accordingly
+- Backward-compatible: public paths, Docker-bypass (whitelisted/internal IPs), and E2E profile (`SPRING_AUTOCONFIGURE_EXCLUDE`) are **not affected**
+
+#### `SecurityFilterRbacTest.java` (new)
+- `operatorDeniedOnManagementWriteRoute()` — pure unit test: `isRoleAllowed("POST", "/api/management/…", "OPERATOR")` → `false`
+- `adminAllowedOnAllProtectedRoutes()` — pure unit test: ADMIN passes all 6 protected route patterns
+- `operatorGets403OnManagementWrite()` — full HTTP pipeline: mocked JWT returning role=OPERATOR → filter returns 403
+- `adminPassesManagementWrite()` — full HTTP pipeline: mocked JWT returning role=ADMIN → filter chain invoked → 200
+
+#### Test Results
+```
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0  (SecurityFilterRbacTest)
+Total project: 165 tests, 0 failures, BUILD SUCCESS
+```
 - ✅ Bug Fix: `BillingController.getPaymentStatus` — restored 404 for unknown events - 2026-03-07
 - ✅ Bug Fix: `JacksonConfig` — removed `Jackson2ObjectMapperBuilder` dependency (broke `@DataJpaTest`) - 2026-03-07
 - ✅ Bug Fix: `PaymentStatusResponse.remainingFee` — restored `BigDecimal` type - 2026-03-07

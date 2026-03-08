@@ -2,6 +2,7 @@ package com.parking.api_gateway.security.filter;
 
 import com.parking.api_gateway.security.service.JwtTokenService;
 import com.parking.api_gateway.security.service.SecurityAuditService;
+import com.parking.api_gateway.security.entity.UserSecurityEntity.Role;
 import com.parking.api_gateway.observability.service.ObservabilityService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +20,11 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -74,6 +78,37 @@ public class SecurityFilter extends OncePerRequestFilter {
             "/api/management/spots/search"                  // Search spots with filters
             // Reporting Service endpoints require JWT authentication
     );
+
+    // RBAC: route prefix → allowed roles (checked after JWT validation)
+    // Key format: "METHOD:/path/prefix"
+    // Rules applied in order; first match wins.
+    private static final Map<String, Set<Role>> ROUTE_ROLES;
+    static {
+        Map<String, Set<Role>> m = new HashMap<>();
+        // Gate Control Service — write operations
+        m.put("POST:/api/v1/gate/",    EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("PUT:/api/v1/gate/",     EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("DELETE:/api/v1/gate/",  EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        // Billing Service — write operations
+        m.put("POST:/api/v1/billing/",    EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("PUT:/api/v1/billing/",     EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("DELETE:/api/v1/billing/",  EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        // Client Service — all methods
+        m.put("GET:/api/clients/",    EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
+        m.put("POST:/api/clients/",   EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
+        m.put("PUT:/api/clients/",    EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
+        m.put("DELETE:/api/clients/", EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
+        // Management Service — write operations
+        m.put("POST:/api/management/",   EnumSet.of(Role.ADMIN, Role.MANAGER));
+        m.put("PUT:/api/management/",    EnumSet.of(Role.ADMIN, Role.MANAGER));
+        m.put("DELETE:/api/management/", EnumSet.of(Role.ADMIN, Role.MANAGER));
+        // Reporting Service — read only
+        m.put("GET:/api/reporting/",    EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
+        m.put("POST:/api/reporting/",   EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
+        m.put("PUT:/api/reporting/",    EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
+        m.put("DELETE:/api/reporting/", EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
+        ROUTE_ROLES = Map.copyOf(m);
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
@@ -141,6 +176,17 @@ public class SecurityFilter extends OncePerRequestFilter {
             if (validateJwtToken(request, clientIp)) {
                 log.info("✅ [STEP 4/4] JWT token validated successfully");
                 log.info("👤 [SECURITY FILTER] User authenticated: {}", request.getAttribute("username"));
+
+                // 4.5 RBAC: check that the authenticated user's role is allowed for this route
+                String userRole = (String) request.getAttribute("role");
+                if (!isRoleAllowed(method, path, userRole)) {
+                    log.warn("🚫 [STEP 4.5] RBAC denied: role='{}' method='{}' path='{}'", userRole, method, path);
+                    sendErrorResponse(response, HttpStatus.FORBIDDEN,
+                            "Access denied: insufficient role for this operation");
+                    return;
+                }
+                log.info("✅ [STEP 4.5] RBAC check passed for role='{}' on {} {}", userRole, method, path);
+
                 log.info("🚀 [SECURITY FILTER] Passing request to next filter in chain");
                 filterChain.doFilter(request, response);
                 log.info("✅ [SECURITY FILTER END] Request completed with status: {}", response.getStatus());
@@ -274,14 +320,14 @@ public class SecurityFilter extends OncePerRequestFilter {
             String username = claims.getSubject();
             log.info("🔐 [JWT VALIDATION] Claims retrieved successfully");
             log.info("🔐 [JWT VALIDATION] Username from token: {}", username);
-            log.info("🔐 [JWT VALIDATION] User ID: {}", claims.get("user_id"));
-            log.info("🔐 [JWT VALIDATION] Roles: {}", claims.get("roles"));
+            log.info("🔐 [JWT VALIDATION] User ID: {}", claims.get("userId"));
+            log.info("🔐 [JWT VALIDATION] Role: {}", claims.get("role"));
 
             // Add user info to request attributes for downstream services
             request.setAttribute("username", username);
-            request.setAttribute("user_id", claims.get("user_id"));
-            request.setAttribute("roles", claims.get("roles"));
-            
+            request.setAttribute("userId", claims.get("userId"));
+            request.setAttribute("role", claims.get("role"));
+
             log.info("🔐 [JWT VALIDATION] SUCCESS - User '{}' authenticated from IP: {}", username, clientIp);
             return true;
             
@@ -293,6 +339,40 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
     }
     
+    /**
+     * RBAC check: returns true if no rule exists for this route (open) or
+     * if the user's role is in the allowed set for the matched rule.
+     *
+     * @param method   HTTP method (GET, POST, …)
+     * @param path     request URI
+     * @param roleStr  role string extracted from JWT claim "role" (may be null)
+     * @return true → allow, false → deny with 403
+     */
+    boolean isRoleAllowed(String method, String path, String roleStr) {
+        for (Map.Entry<String, Set<Role>> entry : ROUTE_ROLES.entrySet()) {
+            String key = entry.getKey();
+            int sep = key.indexOf(':');
+            String ruleMethod = key.substring(0, sep);
+            String rulePrefix = key.substring(sep + 1);
+
+            if (ruleMethod.equalsIgnoreCase(method) && path.startsWith(rulePrefix)) {
+                // Rule matched — check role
+                if (roleStr == null) {
+                    return false;
+                }
+                try {
+                    Role userRole = Role.valueOf(roleStr);
+                    return entry.getValue().contains(userRole);
+                } catch (IllegalArgumentException e) {
+                    log.warn("🚫 [RBAC] Unknown role in JWT: '{}'", roleStr);
+                    return false;
+                }
+            }
+        }
+        // No rule matched → no restriction → allow
+        return true;
+    }
+
     private void incrementFailedAttempts(String clientIp) {
         RateLimitInfo info = rateLimitCache.computeIfAbsent(clientIp, k -> new RateLimitInfo());
         int failures = info.failedAttempts.incrementAndGet();
