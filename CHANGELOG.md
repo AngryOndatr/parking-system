@@ -15,8 +15,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD integration for E2E tests (GitHub Actions)
 
 ### Recently Completed
+- ✅ **[Phase 3] Subscription check: real DB logic in client-service** (Issue #72) — 2026-03-08
 - ✅ **[Phase 3] Add default OPERATOR user on application startup** (Issue #80) — 2026-03-08
 - ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
+
+---
+
+## [0.13.0] - 2026-03-08
+
+### Added — Subscription check: real DB logic in client-service (Issue #72)
+
+#### `Subscription.java` (new, parking-common)
+- JPA entity mapped to existing `subscriptions` table
+- Fields: `id`, `client` (ManyToOne → Client), `startDate`, `endDate`, `type`, `isActive`
+
+#### `SubscriptionRepository.java` (new, client-service)
+- JPQL query `findActiveByLicensePlate(licensePlate, now)`:
+  traverses `vehicles → clients → subscriptions` with `isActive = true AND endDate > :now`
+
+#### `SubscriptionCheckController.java` (client-service)
+- Replaced hardcoded stub (always `false`) with real DB lookup via `SubscriptionRepository`
+- Returns `isAccessGranted=true` + `subscriptionId` when active subscription found
+- Returns `isAccessGranted=false` + `subscriptionId=null` when not found
+- Added `@RequiredArgsConstructor` for constructor injection
+
+#### Tests (new)
+- `SubscriptionRepositoryTest` (`@DataJpaTest`, 3 tests):
+  - `findActiveByLicensePlate_activeSubscription_returnsPresent` — plate AA1234BB → present
+  - `findActiveByLicensePlate_expiredSubscription_returnsEmpty` — expired/inactive → empty
+  - `findActiveByLicensePlate_unknownPlate_returnsEmpty` — unknown plate → empty
+- `SubscriptionCheckControllerTest` (MockMvc, 2 tests):
+  - `checkSubscription_activeSubscription_returnsAccessGranted` — mock returns subscription → 200 + `isAccessGranted=true`
+  - `checkSubscription_noSubscription_returnsAccessDenied` — mock returns empty → 200 + `isAccessGranted=false`
+
+#### Test Results
+```
+Tests run: 5 new (3 repo + 2 controller), Failures: 0
+client-service total: 31 tests, 0 failures
+Full project: 173 tests, 0 failures, BUILD SUCCESS
+```
 
 ---
 

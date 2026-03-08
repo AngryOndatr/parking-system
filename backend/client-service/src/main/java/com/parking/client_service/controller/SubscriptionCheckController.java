@@ -1,42 +1,53 @@
 package com.parking.client_service.controller;
 
+import com.parking.client_service.generated.controller.SubscriptionApi;
+import com.parking.client_service.generated.model.SubscriptionCheckResponse;
+import com.parking.client_service.repository.SubscriptionRepository;
+import com.parking.common.entity.Subscription;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
- * Controller for subscription checks (used by Gate Control Service)
- * This is a simplified version for E2E tests - always returns no subscription
+ * Implements the OpenAPI-generated SubscriptionApi interface.
+ * Returns real DB result: isAccessGranted=true when an active subscription
+ * exists for the given license plate.
  */
 @RestController
-@RequestMapping("/api/v1/clients/subscriptions")
+@RequiredArgsConstructor
 @Slf4j
-public class SubscriptionCheckController {
+public class SubscriptionCheckController implements SubscriptionApi {
 
-    /**
-     * Check if a vehicle has an active subscription
-     * For E2E tests, this always returns false (no subscription)
-     * so that the visitor flow is tested
-     */
-    @GetMapping("/check")
-    public ResponseEntity<Map<String, Object>> checkSubscription(
-            @RequestParam String licensePlate) {
+    private final SubscriptionRepository subscriptionRepository;
+
+    @Override
+    public ResponseEntity<SubscriptionCheckResponse> checkSubscription(String licensePlate) {
 
         log.info("🔍 [SUBSCRIPTION CHECK] Checking subscription for license plate: {}", licensePlate);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("isAccessGranted", false);
-        response.put("licensePlate", licensePlate);
-        response.put("subscriptionId", null);
-        response.put("message", "No active subscription found");
+        Optional<Subscription> subscription =
+                subscriptionRepository.findActiveByLicensePlate(licensePlate, LocalDateTime.now());
 
-        log.info("✅ [SUBSCRIPTION CHECK] No subscription for {}", licensePlate);
+        SubscriptionCheckResponse response = new SubscriptionCheckResponse();
+        response.setLicensePlate(licensePlate);
+
+        if (subscription.isPresent()) {
+            response.setIsAccessGranted(true);
+            response.setSubscriptionId(JsonNullable.of(subscription.get().getId()));
+            response.setMessage("Active subscription found");
+            log.info("✅ [SUBSCRIPTION CHECK] Active subscription #{} found for {}",
+                    subscription.get().getId(), licensePlate);
+        } else {
+            response.setIsAccessGranted(false);
+            response.setSubscriptionId(JsonNullable.undefined());
+            response.setMessage("No active subscription found");
+            log.info("ℹ️ [SUBSCRIPTION CHECK] No active subscription for {}", licensePlate);
+        }
 
         return ResponseEntity.ok(response);
     }

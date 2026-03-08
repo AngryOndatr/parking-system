@@ -18,6 +18,9 @@ tags:
   - name: Vehicle
     description: Operations with vehicles
     x-interface-name: VehicleApi
+  - name: Subscription
+    description: Subscription check operations for gate access control
+    x-interface-name: SubscriptionApi
 
 paths:
   # =================================================================
@@ -322,6 +325,55 @@ paths:
                 items:
                   $ref: '#/components/schemas/VehicleResponse'
 
+  # =================================================================
+  # SUBSCRIPTIONS
+  # =================================================================
+  /api/v1/clients/subscriptions/check:
+    get:
+      tags:
+        - Subscription
+      summary: Check if a vehicle has an active subscription
+      description: |
+        Used by Gate Control Service to decide whether to open the gate
+        without issuing a ticket. Returns isAccessGranted=true only when
+        an active (isActive=true, endDate > now) subscription is found
+        for the given license plate via vehicles → clients → subscriptions.
+      operationId: checkSubscription
+      parameters:
+        - name: licensePlate
+          in: query
+          required: true
+          description: Vehicle license plate to look up
+          schema:
+            type: string
+            example: AA1234BB
+      responses:
+        '200':
+          description: Subscription check result (always 200, see isAccessGranted)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionCheckResponse'
+              examples:
+                active:
+                  summary: Active subscription found
+                  value:
+                    isAccessGranted: true
+                    licensePlate: AA1234BB
+                    subscriptionId: 1
+                    message: Active subscription found
+                notFound:
+                  summary: No active subscription
+                  value:
+                    isAccessGranted: false
+                    licensePlate: ZZ0000ZZ
+                    subscriptionId: null
+                    message: No active subscription found
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   schemas:
     # --- Schemas for Client (DTO) ---
@@ -436,6 +488,33 @@ components:
         message:
           type: string
           example: Client with ID 123 not found.
+
+    # --- Schema for Subscription Check ---
+    SubscriptionCheckResponse:
+      type: object
+      properties:
+        isAccessGranted:
+          type: boolean
+          description: true if an active subscription was found for the given license plate
+          example: true
+        licensePlate:
+          type: string
+          description: License plate that was checked
+          example: AA1234BB
+        subscriptionId:
+          type: integer
+          format: int64
+          nullable: true
+          description: ID of the found subscription, null when not found
+          example: 1
+        message:
+          type: string
+          description: Human-readable result message
+          example: Active subscription found
+      required:
+        - isAccessGranted
+        - licensePlate
+        - message
 
   responses:
     NotFoundError:
