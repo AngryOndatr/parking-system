@@ -110,25 +110,30 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Configure CORS settings
+     * Configure CORS settings.
+     * Mirrors CorsFilter.java — specific origins, no credentials (JWT via Authorization header).
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow null origin for file:// protocol testing (local HTML files)
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedOrigins(List.of("null")); // Explicitly allow null origin
+        // Exact origins — Vite dev server, CRA dev server, and file:// (devops tools)
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "null"                    // file:// protocol — devops/test-login.html
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setExposedHeaders(List.of("Authorization"));
+        // false: JWT is stored in localStorage and sent via Authorization header — no cookies
+        configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
-        log.info("✓ CORS configuration created (allowing null origin for file:// testing)");
+        log.info("✓ CORS configuration: origins=localhost:5173,localhost:3000, allowCredentials=false");
         return source;
     }
 

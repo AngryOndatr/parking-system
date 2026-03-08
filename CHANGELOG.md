@@ -15,10 +15,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD integration for E2E tests (GitHub Actions)
 
 ### Recently Completed
+- ✅ **[Phase 3] CORS configuration in api-gateway** (Issue #79) — 2026-03-08
 - ✅ **[Phase 3] E2E test: subscriber full parking cycle** (Issue #73) — 2026-03-08
 - ✅ **[Phase 3] Subscription check: real DB logic in client-service** (Issue #72) — 2026-03-08
 - ✅ **[Phase 3] Add default OPERATOR user on application startup** (Issue #80) — 2026-03-08
 - ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
+
+---
+
+## [0.15.0] - 2026-03-08
+
+### Added — CORS configuration in api-gateway (Issue #79)
+
+#### `CorsFilter.java` (new, api-gateway)
+- Registered at `@Order(0)` — executes before `SecurityFilter` (`@Order(1)`)
+- `ALLOWED_ORIGINS`: `http://localhost:5173` (Vite), `http://localhost:3000` (CRA)
+- Sets headers: `Access-Control-Allow-Origin`, `Allow-Methods`, `Allow-Headers`, `Expose-Headers`, `Max-Age`
+- `allowCredentials` intentionally **omitted** (`false`) — JWT stored in `localStorage`, sent via `Authorization` header; no cookies
+- OPTIONS preflight: returns **HTTP 200 immediately**, does NOT invoke `filterChain.doFilter()` (SecurityFilter bypassed)
+
+#### `SecurityFilter.java` (api-gateway)
+- Added step **0.5**: bypass OPTIONS requests — `filterChain.doFilter()` called without JWT check, CORS headers already set by `CorsFilter`
+
+#### `SecurityConfiguration.java` (api-gateway)
+- Replaced `allowedOriginPatterns("*")` + `allowCredentials(true)` with exact origins `localhost:5173`, `localhost:3000` and `allowCredentials=false`
+- Aligns Spring Security CORS config with `CorsFilter` as single source of truth
+
+#### `CorsFilterTest.java` (new, 4 tests)
+- `preflight_allowedOrigin_returns200WithCorsHeaders` — OPTIONS from `localhost:5173` → 200, correct headers, chain NOT invoked
+- `preflight_port3000_returns200` — OPTIONS from `localhost:3000` → 200, chain NOT invoked
+- `get_allowedOrigin_addsCorsHeadersAndPassesThrough` — GET from allowed origin → headers added, chain invoked
+- `request_unknownOrigin_noCorsHeaders` — unknown origin → no CORS headers
+
+#### Test Results
+```
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0  (CorsFilterTest)
+api-gateway total: 12 tests, 0 failures
+Full project: 177 tests, 0 failures, BUILD SUCCESS
+```
 
 ---
 

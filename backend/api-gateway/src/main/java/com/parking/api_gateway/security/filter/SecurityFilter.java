@@ -138,6 +138,14 @@ public class SecurityFilter extends OncePerRequestFilter {
                 return;
             }
 
+            // 0.5 CORS preflight: OPTIONS requests are fully handled by CorsFilter (@Order 0).
+            // SecurityFilter must not block them (no JWT is present in a preflight).
+            if ("OPTIONS".equalsIgnoreCase(method)) {
+                log.debug("✅ [STEP 0.5] OPTIONS preflight — already handled by CorsFilter, passing through");
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             // 1. Rate limiting check
             log.info("✓ [STEP 1/4] Checking rate limit for IP: {}", clientIp);
             if (!checkRateLimit(clientIp, path)) {
