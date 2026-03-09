@@ -335,6 +335,14 @@ INSERT INTO users (
     true, true, true, true,
     0, false, false, 3,
     0, CURRENT_TIMESTAMP, 'en', 'UTC'
+),
+(
+    'operator',
+    '$2b$10$HITz9qxFZst9oIlk5dt9m.c/sRssa30q0jCjBHT3rF/.trtYv6hj.',  -- operator123 (PROVEN WORKING)
+    'operator@parking.com', 'Default', 'Operator', 'OPERATOR', true,
+    true, true, true, true,
+    0, false, false, 3,
+    0, CURRENT_TIMESTAMP, 'en', 'UTC'
 );
 
 -- Инициализация тестовых данных для парковки

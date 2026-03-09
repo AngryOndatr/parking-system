@@ -11,7 +11,7 @@ The Reporting Service is responsible for:
 
 ## Technology Stack
 
-- **Spring Boot 3.5.8**
+- **Spring Boot 3.2.8**
 - **Spring Data JPA** - Database access
 - **PostgreSQL** - Production database
 - **H2** - Testing database

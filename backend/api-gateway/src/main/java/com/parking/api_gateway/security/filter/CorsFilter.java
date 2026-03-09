@@ -11,7 +11,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * CORS filter registered at Order(0) — runs before SecurityFilter (Order 1).
@@ -36,12 +38,34 @@ import java.util.Set;
 @Slf4j
 public class CorsFilter extends OncePerRequestFilter {
 
-    /** Origins allowed to call the api-gateway. */
-    private static final Set<String> ALLOWED_ORIGINS = Set.of(
-            "http://localhost:5173",   // Vite dev server (React default)
-            "http://localhost:3000",   // CRA / alternative dev port
-            "null"                     // file:// protocol — devops/test-login.html opened locally
-    );
+    @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://192.168.*,null}")
+    private String corsAllowedOrigins;
+
+    private Set<String> getAllowedOrigins() {
+        return Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Returns true if the origin matches any allowed origin entry.
+     * Entries ending with "*" are treated as prefix wildcards
+     * (e.g. "http://192.168.1.*" matches any IP in that subnet on any port).
+     */
+    private boolean isOriginAllowed(String origin) {
+        for (String allowed : getAllowedOrigins()) {
+            if (allowed.endsWith("*")) {
+                String prefix = allowed.substring(0, allowed.length() - 1);
+                if (origin.startsWith(prefix)) {
+                    return true;
+                }
+            } else if (allowed.equals(origin)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private static final String ALLOWED_METHODS  = "GET, POST, PUT, DELETE, PATCH, OPTIONS";
     private static final String ALLOWED_HEADERS  = "Authorization, Content-Type, X-Requested-With";
@@ -57,25 +81,21 @@ public class CorsFilter extends OncePerRequestFilter {
         String origin = request.getHeader("Origin");
         String method = request.getMethod();
 
-        // Only add CORS headers when the request carries a recognised Origin
-        if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
+        if (origin != null && isOriginAllowed(origin)) {
             response.setHeader("Access-Control-Allow-Origin",  origin);
             response.setHeader("Access-Control-Allow-Methods", ALLOWED_METHODS);
             response.setHeader("Access-Control-Allow-Headers", ALLOWED_HEADERS);
             response.setHeader("Access-Control-Expose-Headers", EXPOSED_HEADERS);
             response.setHeader("Access-Control-Max-Age",       MAX_AGE);
-            // allowCredentials intentionally omitted / false — JWT via Authorization header
             log.debug("✅ [CORS] Headers added for origin: {}", origin);
         }
 
-        // Handle OPTIONS preflight: respond 200 immediately, skip SecurityFilter
         if ("OPTIONS".equalsIgnoreCase(method)) {
             log.debug("✅ [CORS] OPTIONS preflight for {} — returning 200, bypassing SecurityFilter", request.getRequestURI());
             response.setStatus(HttpStatus.OK.value());
-            return; // do NOT call filterChain.doFilter()
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
 }
-

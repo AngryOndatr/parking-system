@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### In Progress
 
-- Subscriber E2E test scenario
-- CI/CD integration for E2E tests (GitHub Actions)
+- Gate Control UI page (Issue #76)
+- Clients UI page (Issue #77)
 
 ### Recently Completed
+- ✅ **[Phase 3] CORS wildcard for dynamic LAN IP** (Issue #79 fix) — 2026-03-09
+- ✅ **[Phase 3] React frontend: project init, auth, base layout** (Issue #74) — 2026-03-08
 - ✅ **[Phase 3] CORS configuration in api-gateway** (Issue #79) — 2026-03-08
 - ✅ **[Phase 3] E2E test: subscriber full parking cycle** (Issue #73) — 2026-03-08
 - ✅ **[Phase 3] Subscription check: real DB logic in client-service** (Issue #72) — 2026-03-08
@@ -22,6 +24,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
 
 ---
+
+## [0.15.1] - 2026-03-09
+
+### Fixed — CORS wildcard for dynamic LAN IP (Issue #79 fix)
+
+**Problem:** `setAllowedOrigins()` in Spring Security does not support wildcard patterns —
+`http://192.168.*` was silently ignored, so CORS preflight returned 403 whenever the
+machine's DHCP address changed.
+
+#### `SecurityConfiguration.java` (api-gateway)
+- `setAllowedOrigins(origins)` → `setAllowedOriginPatterns(originPatterns)` — native Spring
+  wildcard support (`http://192.168.*` matches any IP + any port in that subnet)
+- Updated `@Value` default to include `http://192.168.*`
+
+#### `CorsFilter.java` (api-gateway)
+- Added `isOriginAllowed(origin)` with prefix-wildcard logic (entries ending with `*`
+  are matched as prefix, e.g. `http://192.168.*` matches `http://192.168.1.42:5173`)
+- Updated `@Value` default to include `http://192.168.*`
+
+#### `application.yml` (api-gateway)
+- Default `cors.allowed-origins` updated: `http://192.168.*` replaces hard-coded IP
+
+#### `docker-compose.yml`
+- `CORS_ALLOWED_ORIGINS` updated: removed `192.168.1.5:5173` / `192.168.1.5:3000`,
+  replaced with single `http://192.168.*` wildcard — no more manual IP updates on DHCP change
+
+
 
 ## [0.15.0] - 2026-03-08
 

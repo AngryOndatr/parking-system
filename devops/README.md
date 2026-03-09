@@ -6,20 +6,17 @@ This directory contains Docker Compose configurations for deploying the parking-
 
 ### Docker Compose Files
 
-1. **docker-compose.infrastructure.yml** — Base infrastructure
-   - PostgreSQL (database)
-   - Redis (cache and sessions)
-   - Eureka Server (service discovery)
+> **Primary file:** `../docker-compose.yml` (project root) — use this for normal development.  
+> The split files below are legacy/alternative configurations.
 
-2. **docker-compose.services.yml** — Application microservices
-   - API Gateway
-   - Client Service
-   - Gate Control Service
-   - Billing Service
-   - Management Service
-   - Reporting Service
+1. **docker-compose.infrastructure.yml** — Base infrastructure only
+   - PostgreSQL, Redis, Eureka Server
 
-3. **docker-compose.yml** — Full configuration (legacy, for backwards compatibility)
+2. **docker-compose.services.yml** — Application microservices only
+   - API Gateway, Client Service, Gate Control, Billing, Management, Reporting
+
+3. **docker-compose.yml** (project root) — ⭐ **Primary** — full stack including observability
+   - All infrastructure + all services + Prometheus + Grafana + Jaeger + OTel Collector + pgAdmin
 
 ### Management Scripts
 
@@ -52,7 +49,6 @@ This directory contains Docker Compose configurations for deploying the parking-
 |----------|-------------|-------------|
 | Web API tester guide | [TEST_LOGIN_README_EN.md](TEST_LOGIN_README_EN.md) | [TEST_LOGIN_README_RU.md](TEST_LOGIN_README_RU.md) |
 | Monitoring & tracing | [OBSERVABILITY_README_EN.md](OBSERVABILITY_README_EN.md) | [OBSERVABILITY_README_RU.md](OBSERVABILITY_README_RU.md) |
-| Script fix notes | [README_SCRIPT_FIX_EN.md](README_SCRIPT_FIX_EN.md) | [README_SCRIPT_FIX_RU.md](README_SCRIPT_FIX_RU.md) |
 
 ## Quick Start
 
@@ -155,7 +151,12 @@ After startup the following endpoints are available:
 - **Gate Control Service**: http://localhost:8082
 - **Billing Service**: http://localhost:8083
 - **Management Service**: http://localhost:8084
-- **Reporting Service**: http://localhost:8085
+- **Reporting Service**: http://localhost:8087
+- **Grafana**: http://localhost:3000
+- **Prometheus**: http://localhost:9090
+- **Jaeger**: http://localhost:16686
+- **pgAdmin**: http://localhost:5050
+- **React Frontend** (dev): http://localhost:5173
 
 ### Health Checks
 

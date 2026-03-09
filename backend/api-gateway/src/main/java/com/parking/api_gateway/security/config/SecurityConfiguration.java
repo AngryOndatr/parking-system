@@ -1,6 +1,7 @@
 package com.parking.api_gateway.security.config;
 
 import com.parking.api_gateway.security.filter.SecurityFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -36,6 +37,9 @@ import java.util.List;
 public class SecurityConfiguration {
     
     private final SecurityFilter securityFilter;
+
+    @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://192.168.*,null}")
+    private String corsAllowedOrigins;
 
     /**
      * Configure Security Filter Chain
@@ -117,12 +121,14 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Exact origins — Vite dev server, CRA dev server, and file:// (devops tools)
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "null"                    // file:// protocol — devops/test-login.html
-        ));
+        List<String> originPatterns = Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+
+        // setAllowedOriginPatterns supports wildcards like "http://192.168.*"
+        // whereas setAllowedOrigins does not
+        configuration.setAllowedOriginPatterns(originPatterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Authorization"));
@@ -133,7 +139,7 @@ public class SecurityConfiguration {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
-        log.info("✓ CORS configuration: origins=localhost:5173,localhost:3000, allowCredentials=false");
+        log.info("✓ CORS configuration: originPatterns={}, allowCredentials=false", originPatterns);
         return source;
     }
 
@@ -150,4 +156,3 @@ public class SecurityConfiguration {
         }
     }
 }
-

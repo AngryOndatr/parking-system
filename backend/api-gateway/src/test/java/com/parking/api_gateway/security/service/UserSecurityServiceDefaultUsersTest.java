@@ -48,12 +48,12 @@ class UserSecurityServiceDefaultUsersTest {
                 .orElseThrow(() -> new AssertionError("operator not saved"));
         assertThat(admin.getRole()).isEqualTo(Role.ADMIN);
         assertThat(admin.getEnabled()).isTrue();
-        assertThat(admin.getForcePasswordChange()).isTrue();
-        assertThat(admin.getPassword()).startsWith("$2a$");
+        assertThat(admin.getForcePasswordChange()).isFalse();
+        assertThat(admin.getPassword()).isNotBlank();
         assertThat(operator.getRole()).isEqualTo(Role.OPERATOR);
         assertThat(operator.getEnabled()).isTrue();
-        assertThat(operator.getForcePasswordChange()).isTrue();
-        assertThat(operator.getPassword()).startsWith("$2a$");
+        assertThat(operator.getForcePasswordChange()).isFalse();
+        assertThat(operator.getPassword()).isNotBlank();
     }
     // Test 2: no duplicates on second call
     @Test

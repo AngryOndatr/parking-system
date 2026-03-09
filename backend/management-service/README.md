@@ -17,7 +17,7 @@ Management Service provides endpoints for parking space management and monitorin
 - ✅ OpenAPI-first design (contract-driven development)
 
 ## Technology Stack
-- **Framework**: Spring Boot 3.5.8
+- **Framework**: Spring Boot 3.2.8
 - **Language**: Java 21
 - **Database**: PostgreSQL (production), H2 (tests)
 - **ORM**: Spring Data JPA / Hibernate
@@ -132,9 +132,9 @@ spring:
   application: 
     name: management-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:parking_db}
-    username: ${DB_USER:parking_user}
-    password: ${DB_PASSWORD:parking_pass}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/parking_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
   jpa:
     hibernate:
       ddl-auto: validate  # Only validate, don't modify schema
@@ -294,12 +294,10 @@ parking_spaces table
 - [ ] Add pagination support for large datasets
 - [ ] Implement caching (Redis) for frequently accessed data
 - [ ] Add real-time WebSocket updates for space availability
-- [ ] Add metrics and monitoring (Micrometer)
-- [ ] Add rate limiting for public API access
-- [ ] Implement API versioning
 
 ## Related Issues
 - #18 - MANAGEMENT-SVC — GET /available (list available parking spaces) ✅
+- #19 - MANAGEMENT-SVC — additional endpoints (count, search, by-lot) ✅
 
 ## Contact
 Part of the Parking Lot Management System microservices architecture.

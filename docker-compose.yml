@@ -164,6 +164,8 @@ services:
       SPRING_APPLICATION_NAME: api-gateway
       # JWT Configuration - Master key used by all services
       JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
+      # CORS - wildcard covers any LAN IP (dynamic DHCP), no need to update on IP change
+      CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:3000,http://192.168.*,null"
       # OpenTelemetry configuration
       MANAGEMENT_TRACING_ENABLED: "true"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces

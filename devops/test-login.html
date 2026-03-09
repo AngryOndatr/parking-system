@@ -232,7 +232,11 @@
 
         <div class="info">
             <strong>Gateway:</strong> http://localhost:8086<br>
-            <strong>Credentials:</strong> admin / parking123 (or user / user1234)
+            <strong>Credentials (from init.sql):</strong>
+            admin / parking123 &nbsp;|&nbsp;
+            operator / operator123 &nbsp;|&nbsp;
+            manager / manager123 &nbsp;|&nbsp;
+            user / user1234
         </div>
 
         <!-- Tabs -->
@@ -250,6 +254,12 @@
         <!-- Login Tab -->
         <div id="login-tab" class="tab-content active">
             <h2>Authentication</h2>
+            <div class="quick-actions" style="margin-bottom:10px;">
+                <button type="button" class="secondary" onclick="fillCredentials('admin','parking123')">admin</button>
+                <button type="button" class="secondary" onclick="fillCredentials('operator','operator123')">operator</button>
+                <button type="button" class="secondary" onclick="fillCredentials('manager','manager123')">manager</button>
+                <button type="button" class="secondary" onclick="fillCredentials('user','user1234')">user</button>
+            </div>
             <form id="loginForm">
                 <div class="form-group">
                     <label for="username">Username:</label>
@@ -725,6 +735,11 @@
             // Add active class to selected tab and content
             event.target.classList.add('active');
             document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        function fillCredentials(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
         }
 
         // Update authentication status

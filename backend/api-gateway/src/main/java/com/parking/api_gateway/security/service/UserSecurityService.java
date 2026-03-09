@@ -376,13 +376,15 @@ public class UserSecurityService {
      * Create default admin user for initial system access
      */
     private void createDefaultAdminUser() {
-        String defaultPassword = "ParkingAdmin2025!";
+        // Fallback password used only when DB is not pre-seeded via init.sql.
+        // Primary credentials are defined in database/init.sql (password: parking123).
+        String defaultPassword = "parking123";
         String hashedPassword = passwordEncoder.encode(defaultPassword);
         
         UserSecurityEntity admin = UserSecurityEntity.builder()
                 .username("admin")
                 .password(hashedPassword)
-                .email("admin@parking.local")
+                .email("admin@parking.com")
                 .firstName("System")
                 .lastName("Administrator")
                 .role(UserSecurityEntity.Role.ADMIN)
@@ -391,13 +393,13 @@ public class UserSecurityService {
                 .accountNonExpired(true)
                 .accountNonLocked(true)
                 .credentialsNonExpired(true)
-                .forcePasswordChange(true) // Force password change on first login
+                .forcePasswordChange(false)
                 .passwordChangedAt(LocalDateTime.now())
                 .build();
         
         userRepository.save(admin);
         
-        log.warn("Default admin user created with username 'admin' and temporary password '{}'. " +
+        log.warn("Default admin user created with username 'admin' and password '{}'. " +
                 "CHANGE THIS PASSWORD IMMEDIATELY!", defaultPassword);
     }
 
@@ -405,13 +407,15 @@ public class UserSecurityService {
      * Create default operator user for gate/billing operations
      */
     private void createDefaultOperatorUser() {
-        String defaultPassword = "ParkingOperator2025!";
+        // Fallback password used only when DB is not pre-seeded via init.sql.
+        // Primary credentials are defined in database/init.sql (password: operator123).
+        String defaultPassword = "operator123";
         String hashedPassword = passwordEncoder.encode(defaultPassword);
 
         UserSecurityEntity operator = UserSecurityEntity.builder()
                 .username("operator")
                 .password(hashedPassword)
-                .email("operator@parking.local")
+                .email("operator@parking.com")
                 .firstName("Default")
                 .lastName("Operator")
                 .role(UserSecurityEntity.Role.OPERATOR)
@@ -420,13 +424,13 @@ public class UserSecurityService {
                 .accountNonExpired(true)
                 .accountNonLocked(true)
                 .credentialsNonExpired(true)
-                .forcePasswordChange(true) // Force password change on first login
+                .forcePasswordChange(false)
                 .passwordChangedAt(LocalDateTime.now())
                 .build();
 
         userRepository.save(operator);
 
-        log.warn("Default operator user created with username 'operator' and temporary password '{}'. " +
+        log.warn("Default operator user created with username 'operator' and password '{}'. " +
                 "CHANGE THIS PASSWORD IMMEDIATELY!", defaultPassword);
     }
 }

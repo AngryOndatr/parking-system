@@ -286,10 +286,9 @@ public class SecurityFilter extends OncePerRequestFilter {
     }
 
     private boolean isInternalDockerIp(String clientIp) {
-        // Check for common Docker internal networks
+        // Only true Docker/container networks — NOT LAN (192.168.x.x is end-user network)
         boolean isInternal = clientIp.startsWith("172.") ||
                              clientIp.startsWith("10.") ||
-                             clientIp.startsWith("192.168.") ||
                              clientIp.equals("127.0.0.1") ||
                              clientIp.equals("::1") ||
                              clientIp.equals("0:0:0:0:0:0:0:1");
