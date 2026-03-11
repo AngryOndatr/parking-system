@@ -48,7 +48,7 @@ public class ReportingProxyController {
 
             log.info("✅ [REPORTING PROXY] Reporting Service responded: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
@@ -122,7 +122,7 @@ public class ReportingProxyController {
 
             log.info("✅ [REPORTING PROXY] Reporting Service responded: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
@@ -136,7 +136,9 @@ public class ReportingProxyController {
     }
 
     /**
-     * Extract headers from incoming request
+     * Extract headers from incoming request.
+     * Hop-by-hop and Accept-Encoding headers are stripped via ProxyUtils so that
+     * RestTemplate can transparently decompress gzip and we avoid double-chunked encoding.
      */
     private HttpHeaders extractHeaders(HttpServletRequest request) {
         HttpHeaders headers = new HttpHeaders();
@@ -145,11 +147,8 @@ public class ReportingProxyController {
         if (headerNames != null) {
             while (headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
-                String headerValue = request.getHeader(headerName);
-
-                // Forward all headers except Host
-                if (!"host".equalsIgnoreCase(headerName)) {
-                    headers.add(headerName, headerValue);
+                if (ProxyUtils.shouldForwardRequestHeader(headerName)) {
+                    headers.put(headerName, Collections.list(request.getHeaders(headerName)));
                 }
             }
         }

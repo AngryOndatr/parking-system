@@ -29,21 +29,21 @@ public class ClientProxyController {
      */
     @GetMapping
     public ResponseEntity<?> getAllClients(HttpServletRequest request) {
-        log.info("🚀 [PROXY CONTROLLER START] Received GET /api/clients request");
-        log.info("📍 [PROXY CONTROLLER] Remote IP: {}", request.getRemoteAddr());
-        log.info("📍 [PROXY CONTROLLER] Request URI: {}", request.getRequestURI());
-        log.info("📍 [PROXY CONTROLLER] Username from request: {}", request.getAttribute("username"));
-        log.info("📍 [PROXY CONTROLLER] Roles from request: {}", request.getAttribute("roles"));
+        log.info("рџљЂ [PROXY CONTROLLER START] Received GET /api/clients request");
+        log.info("рџ“Ќ [PROXY CONTROLLER] Remote IP: {}", request.getRemoteAddr());
+        log.info("рџ“Ќ [PROXY CONTROLLER] Request URI: {}", request.getRequestURI());
+        log.info("рџ“Ќ [PROXY CONTROLLER] Username from request: {}", request.getAttribute("username"));
+        log.info("рџ“Ќ [PROXY CONTROLLER] Roles from request: {}", request.getAttribute("roles"));
 
         try {
             HttpHeaders headers = extractHeaders(request);
-            log.info("📦 [PROXY CONTROLLER] Headers extracted: {}", headers.keySet());
-            log.info("📦 [PROXY CONTROLLER] Authorization header present: {}", headers.containsKey("Authorization"));
+            log.info("рџ“¦ [PROXY CONTROLLER] Headers extracted: {}", headers.keySet());
+            log.info("рџ“¦ [PROXY CONTROLLER] Authorization header present: {}", headers.containsKey("Authorization"));
 
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             String targetUrl = CLIENT_SERVICE_URL + "/api/clients";
-            log.info("🎯 [PROXY CONTROLLER] Proxying GET request to: {}", targetUrl);
+            log.info("рџЋЇ [PROXY CONTROLLER] Proxying GET request to: {}", targetUrl);
 
             ResponseEntity<String> response = restTemplate.exchange(
                 targetUrl,
@@ -52,23 +52,23 @@ public class ClientProxyController {
                 String.class
             );
 
-            log.info("✅ [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
-            log.info("✅ [PROXY CONTROLLER] Response body length: {} bytes",
+            log.info("вњ… [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
+            log.info("вњ… [PROXY CONTROLLER] Response body length: {} bytes",
                 response.getBody() != null ? response.getBody().length() : 0);
 
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("❌ [PROXY CONTROLLER] Client Service returned error status: {}", e.getStatusCode());
-            log.error("❌ [PROXY CONTROLLER] Error message: {}", e.getMessage());
-            log.error("❌ [PROXY CONTROLLER] Response body: {}", e.getResponseBodyAsString());
+            log.error("вќЊ [PROXY CONTROLLER] Client Service returned error status: {}", e.getStatusCode());
+            log.error("вќЊ [PROXY CONTROLLER] Error message: {}", e.getMessage());
+            log.error("вќЊ [PROXY CONTROLLER] Response body: {}", e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("💥 [PROXY CONTROLLER] Exception occurred while proxying request", e);
-            log.error("💥 [PROXY CONTROLLER] Exception type: {}", e.getClass().getName());
-            log.error("💥 [PROXY CONTROLLER] Exception message: {}", e.getMessage());
+            log.error("рџ’Ґ [PROXY CONTROLLER] Exception occurred while proxying request", e);
+            log.error("рџ’Ґ [PROXY CONTROLLER] Exception type: {}", e.getClass().getName());
+            log.error("рџ’Ґ [PROXY CONTROLLER] Exception message: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error communicating with Client Service: " + e.getMessage());
         }
@@ -93,7 +93,7 @@ public class ClientProxyController {
             );
 
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
@@ -126,7 +126,7 @@ public class ClientProxyController {
             );
 
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
@@ -144,7 +144,7 @@ public class ClientProxyController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody String clientData, HttpServletRequest request) {
-        log.info("🚀 [PROXY CONTROLLER] Proxying PUT request to Client Service: /api/clients/{}", id);
+        log.info("рџљЂ [PROXY CONTROLLER] Proxying PUT request to Client Service: /api/clients/{}", id);
 
         try {
             HttpHeaders headers = extractHeaders(request);
@@ -152,7 +152,7 @@ public class ClientProxyController {
             HttpEntity<String> entity = new HttpEntity<>(clientData, headers);
 
             String targetUrl = CLIENT_SERVICE_URL + "/api/clients/" + id;
-            log.info("🎯 [PROXY CONTROLLER] Target URL: {}", targetUrl);
+            log.info("рџЋЇ [PROXY CONTROLLER] Target URL: {}", targetUrl);
 
             ResponseEntity<String> response = restTemplate.exchange(
                 targetUrl,
@@ -161,16 +161,16 @@ public class ClientProxyController {
                 String.class
             );
 
-            log.info("✅ [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
+            log.info("вњ… [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("❌ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
+            log.error("вќЊ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("💥 [PROXY CONTROLLER] Error proxying request to Client Service", e);
+            log.error("рџ’Ґ [PROXY CONTROLLER] Error proxying request to Client Service", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error communicating with Client Service: " + e.getMessage());
         }
@@ -181,8 +181,8 @@ public class ClientProxyController {
      */
     @GetMapping("/search")
     public ResponseEntity<?> searchClientByPhone(@RequestParam(required = false) String phone, HttpServletRequest request) {
-        log.info("🚀 [PROXY CONTROLLER] Proxying GET request to Client Service: /api/clients/search?phone={}", phone);
-        log.info("📞 [PROXY CONTROLLER] Phone parameter received: '{}', length: {}", phone, phone != null ? phone.length() : "null");
+        log.info("рџљЂ [PROXY CONTROLLER] Proxying GET request to Client Service: /api/clients/search?phone={}", phone);
+        log.info("рџ“ћ [PROXY CONTROLLER] Phone parameter received: '{}', length: {}", phone, phone != null ? phone.length() : "null");
 
         try {
             HttpHeaders headers = extractHeaders(request);
@@ -192,8 +192,8 @@ public class ClientProxyController {
             String encodedPhone = phone != null ? java.net.URLEncoder.encode(phone, java.nio.charset.StandardCharsets.UTF_8) : "";
             String targetUrl = CLIENT_SERVICE_URL + "/api/clients/search?phone=" + encodedPhone;
 
-            log.info("🎯 [PROXY CONTROLLER] Encoded phone: {}", encodedPhone);
-            log.info("🎯 [PROXY CONTROLLER] Target URL (encoded): {}", targetUrl);
+            log.info("рџЋЇ [PROXY CONTROLLER] Encoded phone: {}", encodedPhone);
+            log.info("рџЋЇ [PROXY CONTROLLER] Target URL (encoded): {}", targetUrl);
 
             ResponseEntity<String> response = restTemplate.exchange(
                 targetUrl,
@@ -202,16 +202,16 @@ public class ClientProxyController {
                 String.class
             );
 
-            log.info("✅ [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
+            log.info("вњ… [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("❌ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
+            log.error("вќЊ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("💥 [PROXY CONTROLLER] Error proxying request to Client Service", e);
+            log.error("рџ’Ґ [PROXY CONTROLLER] Error proxying request to Client Service", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error communicating with Client Service: " + e.getMessage());
         }
@@ -222,14 +222,14 @@ public class ClientProxyController {
      */
     @GetMapping("/{clientId}/vehicles")
     public ResponseEntity<?> getClientVehicles(@PathVariable Long clientId, HttpServletRequest request) {
-        log.info("🚀 [PROXY CONTROLLER] Proxying GET request to Client Service: /api/clients/{}/vehicles", clientId);
+        log.info("рџљЂ [PROXY CONTROLLER] Proxying GET request to Client Service: /api/clients/{}/vehicles", clientId);
 
         try {
             HttpHeaders headers = extractHeaders(request);
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             String targetUrl = CLIENT_SERVICE_URL + "/api/clients/" + clientId + "/vehicles";
-            log.info("🎯 [PROXY CONTROLLER] Target URL: {}", targetUrl);
+            log.info("рџЋЇ [PROXY CONTROLLER] Target URL: {}", targetUrl);
 
             ResponseEntity<String> response = restTemplate.exchange(
                 targetUrl,
@@ -238,16 +238,16 @@ public class ClientProxyController {
                 String.class
             );
 
-            log.info("✅ [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
+            log.info("вњ… [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("❌ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
+            log.error("вќЊ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("💥 [PROXY CONTROLLER] Error proxying request to Client Service", e);
+            log.error("рџ’Ґ [PROXY CONTROLLER] Error proxying request to Client Service", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error communicating with Client Service: " + e.getMessage());
         }
@@ -258,7 +258,7 @@ public class ClientProxyController {
      */
     @PostMapping("/{clientId}/vehicles")
     public ResponseEntity<?> addVehicleToClient(@PathVariable Long clientId, @RequestBody String vehicleData, HttpServletRequest request) {
-        log.info("🚀 [PROXY CONTROLLER] Proxying POST request to Client Service: /api/clients/{}/vehicles", clientId);
+        log.info("рџљЂ [PROXY CONTROLLER] Proxying POST request to Client Service: /api/clients/{}/vehicles", clientId);
 
         try {
             HttpHeaders headers = extractHeaders(request);
@@ -266,7 +266,7 @@ public class ClientProxyController {
             HttpEntity<String> entity = new HttpEntity<>(vehicleData, headers);
 
             String targetUrl = CLIENT_SERVICE_URL + "/api/clients/" + clientId + "/vehicles";
-            log.info("🎯 [PROXY CONTROLLER] Target URL: {}", targetUrl);
+            log.info("рџЋЇ [PROXY CONTROLLER] Target URL: {}", targetUrl);
 
             ResponseEntity<String> response = restTemplate.exchange(
                 targetUrl,
@@ -275,16 +275,16 @@ public class ClientProxyController {
                 String.class
             );
 
-            log.info("✅ [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
+            log.info("вњ… [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("❌ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
+            log.error("вќЊ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("💥 [PROXY CONTROLLER] Error proxying request to Client Service", e);
+            log.error("рџ’Ґ [PROXY CONTROLLER] Error proxying request to Client Service", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error communicating with Client Service: " + e.getMessage());
         }
@@ -292,35 +292,32 @@ public class ClientProxyController {
 
 
     /**
-     * Extract headers from incoming request
+     * Extract headers from incoming request.
+     * Uses ProxyUtils to skip hop-by-hop and Accept-Encoding headers.
      */
     private HttpHeaders extractHeaders(HttpServletRequest request) {
-        log.info("🔧 [EXTRACT HEADERS] Starting header extraction");
+        log.info("рџ”§ [EXTRACT HEADERS] Starting header extraction");
         HttpHeaders headers = new HttpHeaders();
         Enumeration<String> headerNames = request.getHeaderNames();
 
         if (headerNames != null) {
             while (headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
-                // Forward important headers, skip host-specific ones
-                if (!headerName.equalsIgnoreCase("host") &&
-                    !headerName.equalsIgnoreCase("connection")) {
-
-                    String headerValue = request.getHeader(headerName);
+                if (ProxyUtils.shouldForwardRequestHeader(headerName)) {
                     headers.put(headerName, Collections.list(request.getHeaders(headerName)));
 
-                    // Mask sensitive data in logs
                     if (headerName.equalsIgnoreCase("Authorization")) {
-                        log.info("🔧 [EXTRACT HEADERS] {}: Bearer ***", headerName);
+                        log.info("рџ”§ [EXTRACT HEADERS] {}: Bearer ***", headerName);
                     } else {
-                        log.info("🔧 [EXTRACT HEADERS] {}: {}", headerName, headerValue);
+                        log.info("рџ”§ [EXTRACT HEADERS] {}: {}", headerName, request.getHeader(headerName));
                     }
                 }
             }
         }
 
-        log.info("🔧 [EXTRACT HEADERS] Total headers extracted: {}", headers.size());
+        log.info("рџ”§ [EXTRACT HEADERS] Total headers extracted: {}", headers.size());
         return headers;
     }
 }
+
 

@@ -45,7 +45,7 @@ public class BillingProxyController {
      */
     @PostMapping("/pay-test")
     public ResponseEntity<?> processTestPayment(@RequestBody String paymentData, HttpServletRequest request) {
-        log.info("🧪 Proxying POST request to Billing Service TEST endpoint: /api/v1/billing/pay-test");
+        log.info("рџ§Є Proxying POST request to Billing Service TEST endpoint: /api/v1/billing/pay-test");
         return proxyRequest(HttpMethod.POST, "/api/v1/billing/pay-test", paymentData, request);
     }
 
@@ -147,7 +147,7 @@ public class BillingProxyController {
 
             log.info("Billing Service responded with status: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
@@ -160,4 +160,5 @@ public class BillingProxyController {
         }
     }
 }
+
 

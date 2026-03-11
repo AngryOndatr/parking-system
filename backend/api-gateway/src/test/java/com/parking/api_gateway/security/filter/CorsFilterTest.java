@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.util.ReflectionTestUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Unit tests for CorsFilter (Issue #79).
@@ -21,6 +22,9 @@ class CorsFilterTest {
     @BeforeEach
     void setUp() {
         corsFilter = new CorsFilter();
+        // Inject @Value field that Spring would normally set
+        ReflectionTestUtils.setField(corsFilter, "corsAllowedOrigins",
+                "http://localhost:5173,http://localhost:3000,http://192.168.*,null");
     }
     // -----------------------------------------------------------------------
     // Test 1: OPTIONS preflight from allowed origin -> 200, correct headers,

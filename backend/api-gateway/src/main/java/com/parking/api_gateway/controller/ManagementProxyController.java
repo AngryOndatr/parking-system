@@ -154,7 +154,7 @@ public class ManagementProxyController {
 
             log.info("Management Service responded with status: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
@@ -167,4 +167,5 @@ public class ManagementProxyController {
         }
     }
 }
+
 
