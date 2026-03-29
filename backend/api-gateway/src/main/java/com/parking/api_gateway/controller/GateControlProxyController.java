@@ -6,6 +6,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -38,6 +39,15 @@ public class GateControlProxyController {
     public ResponseEntity<?> openExitGate(@RequestBody String exitData, HttpServletRequest request) {
         log.info("Proxying POST request to Gate Control Service: /api/v1/gate/exit");
         return proxyRequest(HttpMethod.POST, "/api/v1/gate/exit", exitData, request);
+    }
+
+    /**
+     * Proxy POST request to manual gate control
+     */
+    @PostMapping("/control")
+    public ResponseEntity<?> manualGateControl(@RequestBody String controlData, HttpServletRequest request) {
+        log.info("Proxying POST request to Gate Control Service: /api/v1/gate/control");
+        return proxyRequest(HttpMethod.POST, "/api/v1/gate/control", controlData, request);
     }
 
     /**
@@ -105,7 +115,11 @@ public class GateControlProxyController {
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
-            log.error("Gate Control Service returned error: {} - {}. Response: {}",
+            log.error("Gate Control Service returned client error: {} - {}. Response: {}",
+                e.getStatusCode(), e.getMessage(), e.getResponseBodyAsString());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (HttpServerErrorException e) {
+            log.error("Gate Control Service returned server error: {} - {}. Response: {}",
                 e.getStatusCode(), e.getMessage(), e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {

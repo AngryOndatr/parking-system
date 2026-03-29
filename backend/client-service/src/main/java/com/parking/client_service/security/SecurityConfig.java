@@ -29,6 +29,8 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // Called by gate-control-service directly (no JWT forwarded)
+                .requestMatchers("/api/clients/subscriptions/check").permitAll()
                 // All other requests require JWT authentication
                 .anyRequest().authenticated()
             )

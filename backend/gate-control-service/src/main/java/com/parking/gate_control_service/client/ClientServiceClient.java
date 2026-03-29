@@ -34,7 +34,7 @@ public class ClientServiceClient {
             SubscriptionCheckResponse response = clientServiceWebClient
                     .get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/api/v1/clients/subscriptions/check")
+                            .path("/api/clients/subscriptions/check")
                             .queryParam("licensePlate", licensePlate)
                             .build())
                     .retrieve()

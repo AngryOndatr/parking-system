@@ -56,7 +56,8 @@ public class SubscriberE2ETest {
                 return false;
             }
         });
-        // Gate Control Service
+        // Gate Control Service — docker-compose guarantees client-service is healthy
+        // before gate-control-service starts (depends_on: client-service: service_healthy)
         System.out.println("Waiting for Gate Control Service...");
         await().atMost(Duration.ofMinutes(3)).pollInterval(Duration.ofSeconds(10)).until(() -> {
             try {
@@ -65,27 +66,10 @@ public class SubscriberE2ETest {
                     System.out.println("Gate Control Service is ready (status=" + status + ")");
                     return true;
                 }
+                System.out.println("Gate Control Service returned: " + status);
                 return false;
             } catch (Exception e) {
                 System.out.println("Gate Control Service not ready: " + e.getMessage());
-                return false;
-            }
-        });
-        // Client Service (subscription check)
-        System.out.println("Waiting for Client Service...");
-        await().atMost(Duration.ofMinutes(3)).pollInterval(Duration.ofSeconds(10)).until(() -> {
-            try {
-                int status = given()
-                        .queryParam("licensePlate", "PROBE")
-                        .when().get("/api/v1/clients/subscriptions/check")
-                        .getStatusCode();
-                if (status == 200) {
-                    System.out.println("Client Service is ready (status=" + status + ")");
-                    return true;
-                }
-                return false;
-            } catch (Exception e) {
-                System.out.println("Client Service not ready: " + e.getMessage());
                 return false;
             }
         });
@@ -115,7 +99,8 @@ public class SubscriberE2ETest {
                 // ticketCode must be absent (JsonNullable.undefined serialises as absent key)
                 .body("ticketCode",    nullValue())
                 .extract();
-        Long parkingEventId = entryResponse.path("parkingEventId");
+        Long parkingEventId = entryResponse.path("parkingEventId") == null
+                ? null : ((Number) entryResponse.path("parkingEventId")).longValue();
         System.out.println("Parking event ID: " + parkingEventId);
         // ----------------------------------------------------------------
         // Step 2: Subscriber Exit — no payment required

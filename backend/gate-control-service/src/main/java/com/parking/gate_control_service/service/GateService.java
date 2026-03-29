@@ -64,8 +64,8 @@ public class GateService {
      * @return EntryDecision with OPEN action
      */
     private EntryDecision processSubscriberEntry(String licensePlate, SubscriptionCheckResponse subscriptionCheck) {
-        log.info("Subscriber entry for license plate: {}, subscription ID: {}",
-                licensePlate, subscriptionCheck.getSubscriptionId());
+        Long subId = subscriptionCheck.getSubscriptionId();
+        log.info("Subscriber entry for license plate: {}, subscription ID: {}", licensePlate, subId);
 
         // Save gate event
         GateEvent event = new GateEvent();
@@ -73,7 +73,7 @@ public class GateService {
         event.setLicensePlate(licensePlate);
         event.setGateId(GATE_ID_ENTRY);
         event.setDecision(GateEvent.Decision.OPEN);
-        event.setReason("Valid subscription (ID: " + subscriptionCheck.getSubscriptionId() + ")");
+        event.setReason("Valid subscription (ID: " + subId + ")");
         event.setTimestamp(LocalDateTime.now());
         GateEvent saved = gateEventRepository.save(event);
 

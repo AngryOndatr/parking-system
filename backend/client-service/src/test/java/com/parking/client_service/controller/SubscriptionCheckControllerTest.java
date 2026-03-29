@@ -42,9 +42,9 @@ class SubscriptionCheckControllerTest {
         sub.setType("ANNUAL");
         sub.setStartDate(LocalDateTime.now().minusDays(1));
         sub.setEndDate(LocalDateTime.now().plusDays(364));
-        when(subscriptionRepository.findActiveByLicensePlate(eq("AA1234BB"), any(LocalDateTime.class)))
+        when(subscriptionRepository.findActiveByLicensePlate(eq("AA1234BB")))
                 .thenReturn(Optional.of(sub));
-        mockMvc.perform(get("/api/v1/clients/subscriptions/check")
+        mockMvc.perform(get("/api/clients/subscriptions/check")
                         .param("licensePlate", "AA1234BB"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isAccessGranted").value(true))
@@ -54,9 +54,9 @@ class SubscriptionCheckControllerTest {
     @Test
     @DisplayName("GET /check?licensePlate=ZZ0000ZZ returns isAccessGranted=false when no subscription")
     void checkSubscription_noSubscription_returnsAccessDenied() throws Exception {
-        when(subscriptionRepository.findActiveByLicensePlate(eq("ZZ0000ZZ"), any(LocalDateTime.class)))
+        when(subscriptionRepository.findActiveByLicensePlate(eq("ZZ0000ZZ")))
                 .thenReturn(Optional.empty());
-        mockMvc.perform(get("/api/v1/clients/subscriptions/check")
+        mockMvc.perform(get("/api/clients/subscriptions/check")
                         .param("licensePlate", "ZZ0000ZZ"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isAccessGranted").value(false))

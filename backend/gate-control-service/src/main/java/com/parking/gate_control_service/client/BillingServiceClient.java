@@ -1,8 +1,8 @@
 package com.parking.gate_control_service.client;
 
 import com.parking.gate_control_service.dto.PaymentStatusResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -12,9 +12,12 @@ import java.util.Map;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class BillingServiceClient {
     private final WebClient billingServiceWebClient;
+
+    public BillingServiceClient(@Qualifier("billingServiceWebClient") WebClient billingServiceWebClient) {
+        this.billingServiceWebClient = billingServiceWebClient;
+    }
 
     public PaymentStatusResponse checkPaymentStatus(Long parkingEventId) {
         try {

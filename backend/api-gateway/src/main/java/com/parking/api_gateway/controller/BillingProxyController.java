@@ -50,6 +50,15 @@ public class BillingProxyController {
     }
 
     /**
+     * Proxy POST request to create unpaid parking event for billing quick tests
+     */
+    @PostMapping("/test-event")
+    public ResponseEntity<?> createTestEvent(@RequestBody String eventData, HttpServletRequest request) {
+        log.info("Proxying POST request to Billing Service TEST endpoint: /api/v1/billing/test-event");
+        return proxyRequest(HttpMethod.POST, "/api/v1/billing/test-event", eventData, request);
+    }
+
+    /**
      * Proxy GET request to check payment status
      */
     @GetMapping("/status")
@@ -160,5 +169,4 @@ public class BillingProxyController {
         }
     }
 }
-
 

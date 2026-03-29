@@ -25,6 +25,33 @@ public class ClientProxyController {
     private static final String CLIENT_SERVICE_URL = "http://client-service:8081";
 
     /**
+     * Proxy GET /api/clients/subscriptions/check?licensePlate=...
+     * Called by full-rebuild smoke tests and future frontend.
+     * gate-control-service calls client-service directly (not through api-gateway).
+     */
+    @GetMapping("/subscriptions/check")
+    public ResponseEntity<?> checkSubscription(@RequestParam String licensePlate, HttpServletRequest request) {
+        log.info("🔍 [PROXY] GET /api/clients/subscriptions/check?licensePlate={}", licensePlate);
+        try {
+            HttpHeaders headers = extractHeaders(request);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            String encoded = java.net.URLEncoder.encode(licensePlate, java.nio.charset.StandardCharsets.UTF_8);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    CLIENT_SERVICE_URL + "/api/clients/subscriptions/check?licensePlate=" + encoded,
+                    HttpMethod.GET, entity, String.class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
+                    .body(response.getBody());
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("Error proxying subscription check", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error communicating with Client Service: " + e.getMessage());
+        }
+    }
+
+    /**
      * Proxy GET request to fetch all clients
      */
     @GetMapping

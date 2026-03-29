@@ -328,7 +328,7 @@ paths:
   # =================================================================
   # SUBSCRIPTIONS
   # =================================================================
-  /api/v1/clients/subscriptions/check:
+  /api/clients/subscriptions/check:
     get:
       tags:
         - Subscription

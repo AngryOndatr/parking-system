@@ -10,7 +10,6 @@ import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -31,7 +30,7 @@ public class SubscriptionCheckController implements SubscriptionApi {
         log.info("🔍 [SUBSCRIPTION CHECK] Checking subscription for license plate: {}", licensePlate);
 
         Optional<Subscription> subscription =
-                subscriptionRepository.findActiveByLicensePlate(licensePlate, LocalDateTime.now());
+                subscriptionRepository.findActiveByLicensePlate(licensePlate);
 
         SubscriptionCheckResponse response = new SubscriptionCheckResponse();
         response.setLicensePlate(licensePlate);

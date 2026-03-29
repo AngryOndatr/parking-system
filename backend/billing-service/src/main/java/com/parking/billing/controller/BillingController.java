@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -258,6 +259,47 @@ public class BillingController implements BillingApi {
         } catch (Exception e) {
             log.error("❌ Error in test payment endpoint: {}", e.getMessage(), e);
             throw new RuntimeException("Test payment failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Test endpoint to create a ParkingEvent without payment.
+     * Useful for UI to request tariff calculation without paying.
+     *
+     * @param request contains ticketCode, licensePlate, and optional entryMinutesAgo
+     * @return created parking event details
+     */
+    @PostMapping("/api/v1/billing/test-event")
+    public ResponseEntity<Map<String, Object>> createTestParkingEvent(@RequestBody Map<String, Object> request) {
+        log.info("🧪 TEST ENDPOINT: Preparing parking event: {}", request);
+        try {
+            String ticketCode = (String) request.getOrDefault("ticketCode", "TEST-" + System.currentTimeMillis());
+            String licensePlate = (String) request.getOrDefault("licensePlate", "E2E-TEST");
+            int entryMinutesAgo = request.containsKey("entryMinutesAgo")
+                    ? Math.max(((Number) request.get("entryMinutesAgo")).intValue(), 0)
+                    : 120;
+
+            ParkingEvent parkingEvent = parkingEventRepository.findByTicketCode(ticketCode)
+                    .orElseGet(() -> {
+                        ParkingEvent event = new ParkingEvent();
+                        event.setTicketCode(ticketCode);
+                        event.setLicensePlate(licensePlate);
+                        event.setEntryTime(LocalDateTime.now().minusMinutes(entryMinutesAgo));
+                        event.setIsSubscriber(false);
+                        event.setEntryMethod(ParkingEvent.EntryMethod.SCAN);
+                        return parkingEventRepository.save(event);
+                    });
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("parkingEventId", parkingEvent.getId());
+            response.put("ticketCode", parkingEvent.getTicketCode());
+            response.put("licensePlate", parkingEvent.getLicensePlate());
+            response.put("entryTime", parkingEvent.getEntryTime());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("❌ Error creating test parking event: {}", e.getMessage(), e);
+            throw new RuntimeException("Test parking event creation failed: " + e.getMessage(), e);
         }
     }
 }

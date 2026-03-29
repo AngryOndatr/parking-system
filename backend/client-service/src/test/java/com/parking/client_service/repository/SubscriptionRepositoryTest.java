@@ -82,7 +82,7 @@ class SubscriptionRepositoryTest {
     @DisplayName("Returns active subscription for plate AA1234BB")
     void findActiveByLicensePlate_activeSubscription_returnsPresent() {
         Optional<Subscription> result =
-                subscriptionRepository.findActiveByLicensePlate(ACTIVE_PLATE, LocalDateTime.now());
+                subscriptionRepository.findActiveByLicensePlate(ACTIVE_PLATE);
         assertThat(result).isPresent();
         assertThat(result.get().getIsActive()).isTrue();
         assertThat(result.get().getEndDate()).isAfter(LocalDateTime.now());
@@ -92,14 +92,14 @@ class SubscriptionRepositoryTest {
     void findActiveByLicensePlate_expiredSubscription_returnsEmpty() {
         // Only expired/inactive subs exist for INACTIVE_PLATE
         Optional<Subscription> result =
-                subscriptionRepository.findActiveByLicensePlate(INACTIVE_PLATE, LocalDateTime.now());
+                subscriptionRepository.findActiveByLicensePlate(INACTIVE_PLATE);
         assertThat(result).isEmpty();
     }
     @Test
     @DisplayName("Returns empty for completely unknown license plate")
     void findActiveByLicensePlate_unknownPlate_returnsEmpty() {
         Optional<Subscription> result =
-                subscriptionRepository.findActiveByLicensePlate(UNKNOWN_PLATE, LocalDateTime.now());
+                subscriptionRepository.findActiveByLicensePlate(UNKNOWN_PLATE);
         assertThat(result).isEmpty();
     }
 }

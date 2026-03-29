@@ -248,3 +248,4 @@ class GateServiceTest {
         assertThat(decision.getMessage()).contains("No valid ticket or subscription");
     }
 }
+

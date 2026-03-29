@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -14,18 +13,20 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     /**
      * Find an active, non-expired subscription for a vehicle identified by license plate.
-     * Traverses: vehicles → clients → subscriptions.
+     * Uses native SQL to avoid Hibernate 6 entity-join / lazy-association quirks.
+     * Path: vehicles.license_plate → vehicles.client_id → subscriptions.client_id
      */
-    @Query("""
-            SELECT s FROM Subscription s
-            JOIN s.client c
-            JOIN Vehicle v ON v.client = c
-            WHERE v.licensePlate = :licensePlate
-              AND s.isActive = true
-              AND s.endDate > :now
-            """)
+    @Query(value = """
+            SELECT s.* FROM subscriptions s
+            WHERE s.is_active = true
+              AND s.end_date > NOW()
+              AND s.client_id = (
+                  SELECT v.client_id FROM vehicles v
+                  WHERE v.license_plate = :licensePlate
+                  LIMIT 1
+              )
+            LIMIT 1
+            """, nativeQuery = true)
     Optional<Subscription> findActiveByLicensePlate(
-            @Param("licensePlate") String licensePlate,
-            @Param("now") LocalDateTime now);
+            @Param("licensePlate") String licensePlate);
 }
-
