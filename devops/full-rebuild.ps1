@@ -802,7 +802,7 @@ try {
         # Test 25: Operator JWT has correct role claim (RBAC HTTP enforcement
         #          is bypassed for 172.18.0.1 = Docker bridge/host machine;
         #          RBAC logic is covered by SecurityFilterRbacTest unit tests)
-        Write-Host "   [25/25] Operator JWT role claim = OPERATOR: " -NoNewline -ForegroundColor White
+        Write-Host "   [25/28] Operator JWT role claim = OPERATOR: " -NoNewline -ForegroundColor White
         try {
             $operatorLogin = Invoke-RestMethod -Uri "http://localhost:8086/api/auth/login" `
                 -Method POST -ContentType "application/json" `
@@ -819,11 +819,71 @@ try {
             $testsFailed++
         }
 
+        # ============================================
+        # TEST SUBSCRIPTION MANAGEMENT ENDPOINTS
+        # ============================================
+        Write-Host "`n   Testing Subscription Management endpoints..." -ForegroundColor Cyan
+        $createdSubId = $null
+        $subStart = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+        $subEnd   = (Get-Date).AddDays(30).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+
+        # Test 26: POST /api/clients/{clientId}/subscriptions (create)
+        Write-Host "   [26/28] POST /api/clients/$createdClientId/subscriptions (create MONTHLY): " -NoNewline -ForegroundColor White
+        try {
+            $newSub = @{
+                type      = "MONTHLY"
+                startDate = $subStart
+                endDate   = $subEnd
+            } | ConvertTo-Json
+
+            $clientIdForSub = if ($createdClientId) { $createdClientId } else { 1 }
+            $createSubResponse = Invoke-RestMethod `
+                -Uri "http://localhost:8086/api/clients/$clientIdForSub/subscriptions" `
+                -Method POST -Headers $headers -Body $newSub -TimeoutSec 10
+            $createdSubId = $createSubResponse.id
+            Write-Host "OK (ID: $createdSubId, type=$($createSubResponse.type), isActive=$($createSubResponse.isActive))" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 27: GET /api/clients/{clientId}/subscriptions (list)
+        Write-Host "   [27/28] GET /api/clients/$createdClientId/subscriptions (list): " -NoNewline -ForegroundColor White
+        try {
+            $clientIdForSub = if ($createdClientId) { $createdClientId } else { 1 }
+            $listSubResponse = Invoke-RestMethod `
+                -Uri "http://localhost:8086/api/clients/$clientIdForSub/subscriptions" `
+                -Method GET -Headers $headers -TimeoutSec 10
+            Write-Host "OK (Found: $($listSubResponse.Count) subscription(s))" -ForegroundColor Green
+            $testsPassed++
+        } catch {
+            Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+            $testsFailed++
+        }
+
+        # Test 28: DELETE /api/clients/subscriptions/{id} (deactivate)
+        if ($createdSubId) {
+            Write-Host "   [28/28] DELETE /api/clients/subscriptions/$createdSubId (deactivate): " -NoNewline -ForegroundColor White
+            try {
+                Invoke-RestMethod `
+                    -Uri "http://localhost:8086/api/clients/subscriptions/$createdSubId" `
+                    -Method DELETE -Headers $headers -TimeoutSec 10
+                Write-Host "OK (subscription deactivated)" -ForegroundColor Green
+                $testsPassed++
+            } catch {
+                Write-Host "FAIL - $($_.Exception.Message)" -ForegroundColor Red
+                $testsFailed++
+            }
+        } else {
+            Write-Host "   [28/28] DELETE /api/clients/subscriptions/{id}: SKIPPED (no subscription created)" -ForegroundColor Yellow
+        }
+
         # Test summary
         Write-Host "`n   API Tests Summary:" -ForegroundColor Cyan
         Write-Host "      Passed: $testsPassed" -ForegroundColor Green
         Write-Host "      Failed: $testsFailed" -ForegroundColor $(if ($testsFailed -gt 0) { "Red" } else { "Gray" })
-        Write-Host "      Total:  $($testsPassed + $testsFailed)" -ForegroundColor White
+        Write-Host "      Total:  28" -ForegroundColor White
 
         if ($testsFailed -eq 0) {
             Write-Host "`n   OK - All API endpoints working correctly!" -ForegroundColor Green

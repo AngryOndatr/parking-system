@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PageHeader } from '@/components/PageHeader'
 import { calculateFee, processPayment, getBillingStatus } from '@/api/billing'
 import type { BillingCalculateResponse, BillingStatusResponse } from '@/api/billing'
 
@@ -56,10 +57,7 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <CreditCard size={24} className="text-primary" />
-        <h1 className="text-2xl font-bold text-slate-800">Billing & Payments</h1>
-      </div>
+      <PageHeader icon={<CreditCard size={24} />} title="Billing & Payments" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Calculate fee */}
@@ -69,7 +67,7 @@ export default function BillingPage() {
             <CardDescription>Calculate parking fee for an event</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Event ID</Label>
                 <Input type="number" placeholder="12345" value={calcForm.parkingEventId}
@@ -87,7 +85,7 @@ export default function BillingPage() {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Entry Time</Label>
                 <Input type="datetime-local" value={calcForm.entryTime}
@@ -135,7 +133,7 @@ export default function BillingPage() {
             <CardDescription>Register payment for a parking event</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Event ID</Label>
                 <Input type="number" placeholder="12345" value={payForm.parkingEventId}
@@ -184,8 +182,8 @@ export default function BillingPage() {
           <CardDescription>Check payment status by parking event ID</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex gap-2">
-            <Input type="number" placeholder="Event ID" className="max-w-xs" value={statusEventId}
+          <div className="grid grid-cols-[1fr_auto] xs:flex gap-2">
+            <Input type="number" placeholder="Event ID" value={statusEventId}
               onChange={(e) => { setStatusEventId(e.target.value); setStatusResult(null); setStatusError(null) }} />
             <Button variant="outline" onClick={handleStatus} disabled={!statusEventId}>
               <Search size={16} className="mr-1" /> Check

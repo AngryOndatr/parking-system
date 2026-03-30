@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -13,8 +14,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     /**
      * Find an active, non-expired subscription for a vehicle identified by license plate.
-     * Uses native SQL to avoid Hibernate 6 entity-join / lazy-association quirks.
-     * Path: vehicles.license_plate → vehicles.client_id → subscriptions.client_id
+     * Used by gate-control-service subscription check.
      */
     @Query(value = """
             SELECT s.* FROM subscriptions s
@@ -29,4 +29,17 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
             """, nativeQuery = true)
     Optional<Subscription> findActiveByLicensePlate(
             @Param("licensePlate") String licensePlate);
+
+    // ── Subscription management queries ───────────────────────────
+
+    /** All subscriptions for a client, newest first. */
+    List<Subscription> findByClientIdOrderByStartDateDesc(Long clientId);
+
+    /**
+     * Returns true when the client already has an active subscription of the given type.
+     * Used to enforce one-active-per-type constraint.
+     */
+    boolean existsByClientIdAndTypeAndIsActiveTrue(Long clientId, String type);
 }
+
+

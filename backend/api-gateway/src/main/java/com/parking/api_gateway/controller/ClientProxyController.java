@@ -280,6 +280,84 @@ public class ClientProxyController {
         }
     }
 
+    // ── Subscription Management ──────────────────────────────────────
+
+    /**
+     * Proxy POST /api/clients/{clientId}/subscriptions — create subscription
+     */
+    @PostMapping("/{clientId}/subscriptions")
+    public ResponseEntity<?> createSubscription(@PathVariable Long clientId, @RequestBody String body, HttpServletRequest request) {
+        log.info("🔁 [PROXY] POST /api/clients/{}/subscriptions", clientId);
+        try {
+            HttpHeaders headers = extractHeaders(request);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> entity = new HttpEntity<>(body, headers);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    CLIENT_SERVICE_URL + "/api/clients/" + clientId + "/subscriptions",
+                    HttpMethod.POST, entity, String.class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
+                    .body(response.getBody());
+        } catch (HttpClientErrorException e) {
+            log.error("❌ [PROXY] client-service error: {} - {}", e.getStatusCode(), e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("💥 [PROXY] Exception creating subscription", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error communicating with Client Service: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Proxy GET /api/clients/{clientId}/subscriptions — list subscriptions
+     */
+    @GetMapping("/{clientId}/subscriptions")
+    public ResponseEntity<?> getSubscriptionsByClient(@PathVariable Long clientId, HttpServletRequest request) {
+        log.info("🔁 [PROXY] GET /api/clients/{}/subscriptions", clientId);
+        try {
+            HttpHeaders headers = extractHeaders(request);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    CLIENT_SERVICE_URL + "/api/clients/" + clientId + "/subscriptions",
+                    HttpMethod.GET, entity, String.class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
+                    .body(response.getBody());
+        } catch (HttpClientErrorException e) {
+            log.error("❌ [PROXY] client-service error: {} - {}", e.getStatusCode(), e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("💥 [PROXY] Exception listing subscriptions", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error communicating with Client Service: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Proxy DELETE /api/clients/subscriptions/{id} — deactivate subscription
+     */
+    @DeleteMapping("/subscriptions/{id}")
+    public ResponseEntity<?> deactivateSubscription(@PathVariable Long id, HttpServletRequest request) {
+        log.info("🔁 [PROXY] DELETE /api/clients/subscriptions/{}", id);
+        try {
+            HttpHeaders headers = extractHeaders(request);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    CLIENT_SERVICE_URL + "/api/clients/subscriptions/" + id,
+                    HttpMethod.DELETE, entity, String.class);
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
+                    .body(response.getBody());
+        } catch (HttpClientErrorException e) {
+            log.error("❌ [PROXY] client-service error: {} - {}", e.getStatusCode(), e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("💥 [PROXY] Exception deactivating subscription", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error communicating with Client Service: " + e.getMessage());
+        }
+    }
+
     /**
      * Proxy POST request to add a vehicle to a client
      */

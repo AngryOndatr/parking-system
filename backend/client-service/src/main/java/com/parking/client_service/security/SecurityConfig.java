@@ -31,6 +31,9 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 // Called by gate-control-service directly (no JWT forwarded)
                 .requestMatchers("/api/clients/subscriptions/check").permitAll()
+                // Subscription management requires authentication (ADMIN / MANAGER)
+                .requestMatchers("/api/clients/*/subscriptions").authenticated()
+                .requestMatchers("/api/clients/subscriptions/*").authenticated()
                 // All other requests require JWT authentication
                 .anyRequest().authenticated()
             )

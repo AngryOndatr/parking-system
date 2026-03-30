@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { LayoutDashboard, Car, Users, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/PageHeader'
 import { useAuthStore } from '@/store/authStore'
 import { getAvailableCount, getAllSpots } from '@/api/management'
 import { getClients } from '@/api/clients'
@@ -40,18 +41,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <LayoutDashboard size={24} className="text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-            <p className="text-sm text-slate-500">Welcome back, <span className="font-medium">{username}</span> · {role}</p>
-          </div>
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleRefresh}>
-          <RefreshCw size={16} className="mr-1" /> Refresh
-        </Button>
-      </div>
+      <PageHeader
+        icon={<LayoutDashboard size={24} />}
+        title="Dashboard"
+        description={`Welcome back, ${username ?? '…'} · ${role ?? ''}`}
+        actions={
+          <Button variant="ghost" size="sm" onClick={handleRefresh}>
+            <RefreshCw size={16} className="mr-1" /> Refresh
+          </Button>
+        }
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

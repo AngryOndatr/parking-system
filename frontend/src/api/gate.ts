@@ -2,6 +2,8 @@ import apiClient from '@/lib/apiClient'
 
 export interface GateEntryRequest {
   licensePlate: string
+  entryMethod: 'SCAN' | 'MANUAL'
+  gateId: string
 }
 
 export interface GateEntryResponse {
@@ -14,15 +16,22 @@ export interface GateEntryResponse {
 }
 
 export interface GateExitRequest {
-  licensePlate: string
+  licensePlate?: string
   ticketCode?: string
+  exitMethod: 'SCAN' | 'MANUAL' | 'AUTO'
+  gateId: string
 }
 
 export interface GateExitResponse {
+  parkingEventId: number
   licensePlate: string
-  gateStatus: 'OPENED' | 'DENIED'
+  entryTime: string
+  exitTime: string
+  durationMinutes: number
+  fee: number
+  isPaid: boolean
   paymentRequired: boolean
-  amountDue?: number
+  gateStatus: 'OPENED' | 'CLOSED' | 'ERROR'
   message: string
 }
 
@@ -35,4 +44,3 @@ export async function gateExit(data: GateExitRequest): Promise<GateExitResponse>
   const res = await apiClient.post<GateExitResponse>('/v1/gate/exit', data)
   return res.data
 }
-

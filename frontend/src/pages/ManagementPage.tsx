@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Settings, Loader2, RefreshCw, Filter } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/PageHeader'
 import { getAllSpots, getAvailableCount, searchSpots } from '@/api/management'
 import type { ParkingSpot } from '@/api/management'
 
@@ -43,15 +44,15 @@ export default function ManagementPage() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-2">
-					<Settings size={24} className="text-primary" />
-					<h1 className="text-2xl font-bold text-slate-800">Parking Management</h1>
-				</div>
-				<Button variant="ghost" size="sm" onClick={() => refetch()}>
-					<RefreshCw size={16} className="mr-1" /> Refresh
-				</Button>
-			</div>
+			<PageHeader
+				icon={<Settings size={24} />}
+				title="Parking Management"
+				actions={
+					<Button variant="ghost" size="sm" onClick={() => refetch()}>
+						<RefreshCw size={16} className="mr-1" /> Refresh
+					</Button>
+				}
+			/>
 
 			{/* Stats */}
 			<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -89,11 +90,11 @@ export default function ManagementPage() {
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<div className="flex flex-wrap gap-3">
+					<div className="grid grid-cols-1 xs:grid-cols-2 sm:flex flex-wrap gap-3 items-center">
 						<div className="flex items-center gap-2">
-							<span className="text-sm text-slate-500">Status:</span>
+							<span className="text-sm text-slate-500 shrink-0">Status:</span>
 							<select
-								className="border rounded px-2 py-1 text-sm"
+								className="flex-1 border rounded px-2 py-1 text-sm min-w-0"
 								value={filterStatus}
 								onChange={(e) => setFilterStatus(e.target.value)}
 							>
@@ -106,9 +107,9 @@ export default function ManagementPage() {
 							</select>
 						</div>
 						<div className="flex items-center gap-2">
-							<span className="text-sm text-slate-500">Type:</span>
+							<span className="text-sm text-slate-500 shrink-0">Type:</span>
 							<select
-								className="border rounded px-2 py-1 text-sm"
+								className="flex-1 border rounded px-2 py-1 text-sm min-w-0"
 								value={filterType}
 								onChange={(e) => setFilterType(e.target.value)}
 							>
@@ -142,7 +143,7 @@ export default function ManagementPage() {
 					) : spots.length === 0 ? (
 						<p className="text-sm text-muted-foreground py-4">No spaces found.</p>
 					) : (
-						<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+						<div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
 							{spots.map((spot) => (
 								<div
 									key={spot.id}

@@ -4,6 +4,7 @@ import { BarChart3, Loader2, RefreshCw, Filter } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/PageHeader'
 import { getLogs } from '@/api/reporting'
 import type { LogEntry } from '@/api/reporting'
 
@@ -35,18 +36,18 @@ export default function ReportingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BarChart3 size={24} className="text-primary" />
-          <h1 className="text-2xl font-bold text-slate-800">Reports & Logs</h1>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw size={16} className={`mr-1 ${isFetching ? 'animate-spin' : ''}`} /> Refresh
-        </Button>
-      </div>
+      <PageHeader
+        icon={<BarChart3 size={24} />}
+        title="Reports & Logs"
+        actions={
+          <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw size={16} className={`mr-1 ${isFetching ? 'animate-spin' : ''}`} /> Refresh
+          </Button>
+        }
+      />
 
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Summary — 1 col on phones, 3 cols from sm */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
             <p className="text-xs text-slate-500 uppercase tracking-wide">Total Logs</p>
@@ -73,22 +74,22 @@ export default function ReportingPage() {
           <CardTitle className="text-base flex items-center gap-2"><Filter size={16} /> Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:flex flex-wrap gap-3 items-center">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500">Level:</span>
-              <select className="border rounded px-2 py-1 text-sm" value={filterLevel}
+              <span className="text-sm text-slate-500 shrink-0">Level:</span>
+              <select className="flex-1 border rounded px-2 py-1 text-sm" value={filterLevel}
                 onChange={(e) => setFilterLevel(e.target.value)}>
                 <option value="">All</option>
                 {levels.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500">Service:</span>
-              <Input placeholder="e.g. client-service" className="w-40 h-8 text-sm"
+              <span className="text-sm text-slate-500 shrink-0">Service:</span>
+              <Input placeholder="e.g. client-service" className="flex-1 h-8 text-sm min-w-0"
                 value={filterService} onChange={(e) => setFilterService(e.target.value)} />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500">Limit:</span>
+              <span className="text-sm text-slate-500 shrink-0">Limit:</span>
               <select className="border rounded px-2 py-1 text-sm" value={filterLimit}
                 onChange={(e) => setFilterLimit(e.target.value)}>
                 <option value="25">25</option>
@@ -104,7 +105,7 @@ export default function ReportingPage() {
         </CardContent>
       </Card>
 
-      {/* Log table */}
+      {/* Log entries */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Log Entries</CardTitle>
@@ -118,34 +119,58 @@ export default function ReportingPage() {
           ) : logs.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">No logs found.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-slate-500">
-                    <th className="pb-2 pr-3 font-medium">Time</th>
-                    <th className="pb-2 pr-3 font-medium">Level</th>
-                    <th className="pb-2 pr-3 font-medium">Service</th>
-                    <th className="pb-2 font-medium">Message</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log) => (
-                    <tr key={log.id} className="border-b last:border-0 hover:bg-slate-50">
-                      <td className="py-1.5 pr-3 text-slate-400 text-xs whitespace-nowrap">
-                        {new Date(log.timestamp).toLocaleString()}
-                      </td>
-                      <td className="py-1.5 pr-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[log.level]}`}>
-                          {log.level}
-                        </span>
-                      </td>
-                      <td className="py-1.5 pr-3 text-slate-600 text-xs font-mono">{log.service}</td>
-                      <td className="py-1.5 text-slate-700 max-w-md truncate">{log.message}</td>
+            <>
+              {/* ── Mobile card list (hidden on lg+) ── */}
+              <div className="space-y-2 lg:hidden">
+                {logs.map((log) => (
+                  <div key={log.id} className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${LEVEL_COLORS[log.level]}`}>
+                        {log.level}
+                      </span>
+                      <span className="text-xs text-slate-400 truncate">{log.service}</span>
+                      <span className="text-xs text-slate-400 shrink-0 ml-auto">
+                        {new Date(log.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-700 line-clamp-2">{log.message}</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {new Date(log.timestamp).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── Desktop table (hidden below lg) ── */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-slate-500">
+                      <th className="pb-2 pr-3 font-medium">Time</th>
+                      <th className="pb-2 pr-3 font-medium">Level</th>
+                      <th className="pb-2 pr-3 font-medium">Service</th>
+                      <th className="pb-2 font-medium">Message</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {logs.map((log) => (
+                      <tr key={log.id} className="border-b last:border-0 hover:bg-slate-50">
+                        <td className="py-1.5 pr-3 text-slate-400 text-xs whitespace-nowrap">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </td>
+                        <td className="py-1.5 pr-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[log.level]}`}>
+                            {log.level}
+                          </span>
+                        </td>
+                        <td className="py-1.5 pr-3 text-slate-600 text-xs font-mono">{log.service}</td>
+                        <td className="py-1.5 text-slate-700 max-w-md truncate">{log.message}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

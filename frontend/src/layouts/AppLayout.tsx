@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   ParkingSquare,
@@ -8,6 +9,8 @@ import {
   CreditCard,
   Settings,
   LayoutDashboard,
+  Menu,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -63,6 +66,7 @@ const NAV_ITEMS: NavItem[] = [
 export default function AppLayout() {
   const { role, username, logout } = useAuthStore()
   const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => role && item.roles.includes(role)
@@ -81,12 +85,61 @@ export default function AppLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-100">
-      {/* Sidebar */}
-      <aside className="w-60 flex flex-col bg-[hsl(var(--sidebar))] text-[hsl(var(--sidebar-foreground))] shadow-lg">
-        {/* Logo */}
-        <div className="flex items-center gap-2 px-5 py-5 border-b border-[hsl(var(--sidebar-border))]">
-          <ParkingSquare size={24} strokeWidth={1.5} className="text-blue-400" />
-          <span className="font-bold text-base tracking-tight">Parking System</span>
+      {/* ── Mobile top bar (hidden on md+) ───────────────────────── */}
+      <header className="md:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between px-4 bg-[hsl(var(--sidebar))] text-white shadow-lg">
+        <button
+          className="p-1.5 rounded-md text-slate-300 hover:text-white hover:bg-[hsl(var(--sidebar-accent))] transition-colors"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open navigation"
+        >
+          <Menu size={22} />
+        </button>
+        <div className="flex items-center gap-2">
+          <ParkingSquare size={20} strokeWidth={1.5} className="text-blue-400" />
+          <span className="font-bold text-sm tracking-tight">Parking System</span>
+        </div>
+        <button
+          className="p-1.5 rounded-md text-slate-300 hover:text-white hover:bg-[hsl(var(--sidebar-accent))] transition-colors"
+          onClick={handleLogout}
+          aria-label="Logout"
+        >
+          <LogOut size={18} />
+        </button>
+      </header>
+
+      {/* ── Overlay backdrop (mobile only) ───────────────────────── */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Sidebar ──────────────────────────────────────────────── */}
+      <aside
+        className={cn(
+          'flex flex-col bg-[hsl(var(--sidebar))] text-[hsl(var(--sidebar-foreground))] shadow-lg',
+          // Mobile: fixed drawer, slides in/out
+          'fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 ease-in-out',
+          // Desktop: static, auto z-index, narrower
+          'md:relative md:z-auto md:w-60 md:translate-x-0',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        {/* Logo + mobile close button */}
+        <div className="flex items-center justify-between px-5 py-5 border-b border-[hsl(var(--sidebar-border))]">
+          <div className="flex items-center gap-2">
+            <ParkingSquare size={24} strokeWidth={1.5} className="text-blue-400" />
+            <span className="font-bold text-base tracking-tight">Parking System</span>
+          </div>
+          <button
+            className="md:hidden p-1 rounded text-slate-400 hover:text-white transition-colors"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Nav links */}
@@ -95,6 +148,7 @@ export default function AppLayout() {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
@@ -137,13 +191,13 @@ export default function AppLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 flex flex-col overflow-auto">
-        <div className="flex-1 p-6">
+      {/* ── Main content ─────────────────────────────────────────── */}
+      <main className="flex-1 min-w-0 flex flex-col overflow-auto">
+        {/* pt-14 on mobile clears the fixed top bar; md resets to normal padding */}
+        <div className="flex-1 p-4 pt-[4.5rem] md:pt-6 md:p-6">
           <Outlet />
         </div>
       </main>
     </div>
   )
 }
-
