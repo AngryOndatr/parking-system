@@ -1,11 +1,13 @@
 package com.parking.client_service.service;
 
+import com.parking.client_service.audit.AuditLogger;
 import com.parking.client_service.exception.ConflictException;
 import com.parking.client_service.exception.ResourceNotFoundException;
 import com.parking.client_service.generated.model.SubscriptionRequest;
 import com.parking.client_service.generated.model.SubscriptionResponse;
 import com.parking.client_service.mapper.SubscriptionMapper;
 import com.parking.client_service.repository.ClientRepository;
+import com.parking.client_service.repository.ParkingSpaceRepository;
 import com.parking.client_service.repository.SubscriptionRepository;
 import com.parking.common.entity.Client;
 import com.parking.common.entity.Subscription;
@@ -33,7 +35,9 @@ class SubscriptionServiceTest {
 
     @Mock private SubscriptionRepository subscriptionRepository;
     @Mock private ClientRepository       clientRepository;
+    @Mock private ParkingSpaceRepository parkingSpaceRepository;
     @Mock private SubscriptionMapper     subscriptionMapper;
+    @Mock private AuditLogger            auditLogger;
 
     @InjectMocks
     private SubscriptionService subscriptionService;

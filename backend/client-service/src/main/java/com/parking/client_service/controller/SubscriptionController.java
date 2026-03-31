@@ -65,4 +65,3 @@ public class SubscriptionController implements SubscriptionManagementApi {
         return ResponseEntity.noContent().build();
     }
 }
-

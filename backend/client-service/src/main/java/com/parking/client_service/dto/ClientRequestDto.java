@@ -24,4 +24,3 @@ public class ClientRequestDto {
     @Size(max = 255, message = "email must be at most 255 characters")
     private String email;
 }
-

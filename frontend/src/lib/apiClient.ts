@@ -1,6 +1,20 @@
 import axios from 'axios'
 import { useAuthStore, isTokenExpired } from '@/store/authStore'
 
+// Utility to unwrap JsonNullable and recurse
+function unwrapJsonNullables(obj: any): any {
+  if (obj === null || typeof obj !== 'object') return obj
+  if (Array.isArray(obj)) return obj.map(unwrapJsonNullables)
+  if (obj && typeof obj === 'object' && 'present' in obj) {
+    return obj.present ? unwrapJsonNullables(obj.value) : null
+  }
+  const result: any = {}
+  for (const key in obj) {
+    result[key] = unwrapJsonNullables(obj[key])
+  }
+  return result
+}
+
 const apiClient = axios.create({
   baseURL: '/api',
   headers: {
@@ -19,7 +33,11 @@ apiClient.interceptors.request.use((config) => {
 
 // Handle 401/403 — auto logout if token expired
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Unwrap JsonNullable in response data
+    response.data = unwrapJsonNullables(response.data)
+    return response
+  },
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
       const token = useAuthStore.getState().token
@@ -34,4 +52,3 @@ apiClient.interceptors.response.use(
 )
 
 export default apiClient
-

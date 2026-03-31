@@ -48,6 +48,11 @@ springdoc:
     version: 1.0.0
     description: API for gate control and vehicle management
 
+# Reporting / Audit trail
+reporting:
+  service:
+    url: ${REPORTING_SERVICE_URL:http://reporting-service:8084}
+
 # Inter-service communication URLs
 services:
   client:

@@ -132,6 +132,7 @@ CREATE TABLE subscriptions (
     end_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     type VARCHAR(50) NOT NULL, -- например, 'MONTHLY', 'ANNUAL', 'DAY_TIME'
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    parking_space_id BIGINT,   -- optional reserved parking space
 
     -- Внешний ключ на таблицу CLIENTS
     CONSTRAINT fk_subscription_client
@@ -228,6 +229,13 @@ CREATE TABLE logs (
     service VARCHAR(100),
     meta JSON,
 
+    -- Audit trail fields (added V10)
+    action        VARCHAR(100),
+    entity_type   VARCHAR(50),
+    entity_id     BIGINT,
+    client_id     BIGINT,
+    license_plate VARCHAR(20),
+
     -- Внешний ключ на пользователя (если действие совершено оператором)
     CONSTRAINT fk_log_user
         FOREIGN KEY (user_id)
@@ -274,7 +282,15 @@ CREATE INDEX idx_payments_event ON payments(parking_event_id);
 CREATE INDEX idx_payments_amount ON payments(amount);
 
 -- Индекс для логов по времени
-CREATE INDEX idx_logs_timestamp ON logs(timestamp);
+CREATE INDEX idx_logs_timestamp     ON logs(timestamp);
+CREATE INDEX idx_logs_action        ON logs(action);
+CREATE INDEX idx_logs_entity_type   ON logs(entity_type);
+CREATE INDEX idx_logs_entity_id     ON logs(entity_id);
+CREATE INDEX idx_logs_client_id     ON logs(client_id);
+CREATE INDEX idx_logs_license_plate ON logs(license_plate);
+-- Composite for efficient history queries
+CREATE INDEX idx_logs_client_ts     ON logs(client_id, timestamp DESC);
+CREATE INDEX idx_logs_plate_ts      ON logs(license_plate, timestamp DESC);
 
 -- ******************************************************
 -- 4. ИНИЦИАЛИЗАЦИЯ ДАННЫМИ

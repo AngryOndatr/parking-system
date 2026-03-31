@@ -1,67 +1,30 @@
 # Script to stop parking-system
-# Usage: .\stop-system.ps1 [infrastructure|services|all]
+# Usage: .\stop-system.ps1 [-RemoveVolumes]
 
 param(
-    [Parameter(Mandatory=$false)]
-    [ValidateSet("infrastructure", "services", "all")]
-    [string]$Mode = "all",
-
     [Parameter(Mandatory=$false)]
     [switch]$RemoveVolumes = $false
 )
 
-$InfrastructureFile = "docker-compose.infrastructure.yml"
-$ServicesFile = "docker-compose.services.yml"
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$composeFile = "$projectRoot\docker-compose.yml"
 
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host "  Parking System - Stopping" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
 
-$volumeFlag = if ($RemoveVolumes) { "-v" } else { "" }
-
-function Stop-Services {
-    Write-Host "Stopping microservices..." -ForegroundColor Yellow
-    if ($RemoveVolumes) {
-        docker-compose -f $ServicesFile down -v
-    } else {
-        docker-compose -f $ServicesFile down
-    }
-
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "[OK] Services stopped" -ForegroundColor Green
-    } else {
-        Write-Host "[ERROR] Failed to stop services" -ForegroundColor Red
-    }
+Write-Host "Stopping all containers..." -ForegroundColor Yellow
+if ($RemoveVolumes) {
+    docker-compose -f $composeFile down -v
+} else {
+    docker-compose -f $composeFile down
 }
 
-function Stop-Infrastructure {
-    Write-Host "Stopping infrastructure..." -ForegroundColor Yellow
-    if ($RemoveVolumes) {
-        docker-compose -f $InfrastructureFile down -v
-    } else {
-        docker-compose -f $InfrastructureFile down
-    }
-
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "[OK] Infrastructure stopped" -ForegroundColor Green
-    } else {
-        Write-Host "[ERROR] Failed to stop infrastructure" -ForegroundColor Red
-    }
-}
-
-# Main logic (stop services first, then infrastructure)
-switch ($Mode) {
-    "infrastructure" {
-        Stop-Infrastructure
-    }
-    "services" {
-        Stop-Services
-    }
-    "all" {
-        Stop-Services
-        Stop-Infrastructure
-    }
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "[OK] System stopped" -ForegroundColor Green
+} else {
+    Write-Host "[ERROR] Failed to stop system" -ForegroundColor Red
 }
 
 Write-Host ""
@@ -71,8 +34,5 @@ if ($RemoveVolumes) {
 
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host "Container status:" -ForegroundColor Yellow
-docker ps -a --filter "name=parking" --format "table {{.Names}}\t{{.Status}}"
+docker ps -a --filter "name=parking" --format "table {{.Names}}`t{{.Status}}"
 Write-Host "=====================================" -ForegroundColor Cyan
-
-
-

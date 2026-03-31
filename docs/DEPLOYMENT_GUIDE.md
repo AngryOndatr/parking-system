@@ -34,9 +34,8 @@
 ### 1. Start Database Container
 
 ```powershell
-# Start infrastructure (Postgres, Redis, Eureka)
-cd devops
-docker-compose -f docker-compose.infrastructure.yml up -d
+# Start infrastructure (Postgres, Redis, Eureka) — run from project root
+docker-compose -f docker-compose.yml up -d postgres redis eureka-server
 ```
 
 ### 2. Verify Database
@@ -58,7 +57,6 @@ Database is initialized automatically via **Flyway migrations** when API Gateway
 
 **Initial tables** (from V1__initial_schema.sql):
 - users
-- user_backup_codes
 - clients
 - vehicles
 - subscriptions
@@ -66,10 +64,12 @@ Database is initialized automatically via **Flyway migrations** when API Gateway
 - payments
 - logs
 
-**Additional tables** (from V2-V4 migrations):
-- parking_lots
-- parking_spaces
-- bookings
+**Additional tables** (from V2–V11 migrations):
+- parking_lots (V2)
+- parking_spaces (V3)
+- bookings (V4)
+- tariffs (V7)
+- gate_events (V9)
 
 ---
 
@@ -88,7 +88,7 @@ Flyway Initialization
     ↓
 Check flyway_schema_history
     ↓
-Detect Pending Migrations (V1, V2, V3, V4...)
+Detect Pending Migrations (V1 through V11)
     ↓
 Execute Migrations Sequentially
     ↓
@@ -103,59 +103,79 @@ Located in: `backend/api-gateway/src/main/resources/db/migration/`
 
 | File | Description |
 |------|-------------|
-| `V0__baseline.sql` | Baseline marker |
-| `V1__initial_schema.sql` | Core 8 tables |
-| `V2__add_parking_lots.sql` | Parking facilities |
-| `V3__add_parking_spaces.sql` | Individual spaces |
+| `V0__Baseline.sql` | Baseline marker |
+| `V1__initial_schema.sql` | Core tables: users, clients, vehicles, subscriptions, parking_events, payments, logs |
+| `V2__add_parking_lots.sql` | Parking lot facilities |
+| `V3__add_parking_spaces.sql` | Individual parking spaces |
 | `V4__add_bookings.sql` | Reservation system |
+| `V5__insert_test_parking_data.sql` | Dev/test seed data |
+| `V6__extend_logs_table.sql` | Extended audit fields in logs |
+| `V7__create_tariffs_table.sql` | Billing tariffs |
+| `V8__extend_parking_events_and_payments.sql` | license_plate, entry/exit_method, is_subscriber, transaction_id |
+| `V9__create_gate_events_table.sql` | gate_events table |
+| `V10__extend_logs_audit_trail.sql` | action, entity_type, entity_id, client_id, license_plate in logs |
+| `V11__add_parking_space_to_subscription.sql` | parking_space_id in subscriptions |
+
+> **Next migration:** V12. Add new scripts to `backend/api-gateway/src/main/resources/db/migration/` only — **never edit an existing migration file**.
 
 ### Configuration
 
-**Development** (`application-development.yml`):
+**Default (`application.yml`):**
 ```yaml
 spring:
   flyway:
     enabled: true
-    baseline-on-migrate: true   # Allow existing schema
-    baseline-version: 0
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: "Existing schema from init.sql"
     locations: classpath:db/migration
     schemas: public
+    validate-on-migrate: true
 ```
 
-**Production** (`application-production.yml`):
+**Production (`application-production.yml`):**
 ```yaml
 spring:
   flyway:
     enabled: true
-    baseline-on-migrate: false  # Strict mode
+    baseline-on-migrate: false  # Strict mode — no auto-baseline in production
+    baseline-version: 0
     validate-on-migrate: true   # Verify checksums
-    clean-disabled: true        # Prevent accidents
+    clean-disabled: true        # Prevent accidental database wipe
+    out-of-order: false
+    ignore-missing-migrations: false
 ```
 
 ### Verify Migrations
 
 ```powershell
-# Run test script
-cd devops
-.\test-flyway-migrations.ps1
+# View migration history via Docker
+docker exec parking_db psql -U postgres -d parking_db -c "SELECT version, description, installed_on FROM flyway_schema_history ORDER BY installed_rank;"
 ```
 
-Or manually:
+Or via psql:
 ```sql
 SELECT installed_rank, version, description, success 
 FROM flyway_schema_history 
 ORDER BY installed_rank;
 ```
 
-Expected output:
+Expected output (V0–V11):
 ```
- installed_rank | version | description           | success 
-----------------+---------+-----------------------+---------
-              1 | 0       | baseline              | t
-              2 | 1       | initial schema        | t
-              3 | 2       | add parking lots      | t
-              4 | 3       | add parking spaces    | t
-              5 | 4       | add bookings          | t
+ installed_rank | version | description                             | success 
+----------------+---------+-----------------------------------------+---------
+              1 | 0       | Baseline                                | t
+              2 | 1       | initial schema                          | t
+              3 | 2       | add parking lots                        | t
+              4 | 3       | add parking spaces                      | t
+              5 | 4       | add bookings                            | t
+              6 | 5       | insert test parking data                | t
+              7 | 6       | extend logs table                       | t
+              8 | 7       | create tariffs table                    | t
+              9 | 8       | extend parking events and payments      | t
+             10 | 9       | create gate events table                | t
+             11 | 10      | extend logs audit trail                 | t
+             12 | 11      | add parking space to subscription       | t
 ```
 
 ---
@@ -166,42 +186,52 @@ Expected output:
 
 **Database:**
 ```bash
-DB_HOST=parking_db
-DB_PORT=5432
-DB_NAME=parking_db
-DB_USER=postgres
-DB_PASSWORD=postgres
+SPRING_DATASOURCE_URL=jdbc:postgresql://parking_db:5432/parking_db
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=postgres
 ```
 
 **Redis:**
 ```bash
-REDIS_HOST=parking_redis
-REDIS_PORT=6379
-REDIS_PASSWORD=
+SPRING_REDIS_HOST=parking_redis
+SPRING_REDIS_PORT=6379
+SPRING_REDIS_PASSWORD=
 ```
 
 **Eureka:**
 ```bash
-EUREKA_SERVER_URL=http://eureka-server:8761/eureka/
+EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
 ```
 
-**Security:**
+**JWT (seconds-based, minimum 64-char secret for production):**
 ```bash
-JWT_SECRET=ParkingSystemSecretKey2025VeryLongAndSecureKey123456789
-JWT_EXPIRATION=3600000
-JWT_REFRESH_EXPIRATION=86400000
+JWT_SECRET=<YOUR_64_CHAR_SECRET>
+JWT_ACCESS_TOKEN_EXPIRATION=1800    # 30 minutes
+JWT_REFRESH_TOKEN_EXPIRATION=43200  # 12 hours
+```
+
+**Rate limiting & brute-force:**
+```bash
+RATE_LIMIT_MINUTE=60
+BRUTE_FORCE_THRESHOLD=10
+```
+
+**Service-to-service URLs (gate-control-service):**
+```bash
+CLIENT_SERVICE_URL=http://client-service:8081
+BILLING_SERVICE_URL=http://billing-service:8080
+REPORTING_SERVICE_URL=http://reporting-service:8080
 ```
 
 ### Application Profiles
 
-- `development` - Local development with relaxed security
-- `production` - Strict security, no auto-schema changes
+- `prod-security` — default, used in all environments (JWT auth + rate limiting active)
+- `production` — additional production hardening (stricter Flyway, no SQL logging)
 
-Switch profile:
-```yaml
-spring:
-  profiles:
-    active: development  # or production
+Active profile is set via:
+```bash
+SPRING_PROFILES_ACTIVE=prod-security          # default
+SPRING_PROFILES_ACTIVE=prod-security,production  # production deployment
 ```
 
 ---
@@ -240,8 +270,8 @@ mvn clean install -DskipTests
 #### 2. Start Infrastructure
 
 ```powershell
-cd devops
-docker-compose -f docker-compose.infrastructure.yml up -d
+# From project root
+docker-compose -f docker-compose.yml up -d postgres redis eureka-server pgadmin
 ```
 
 Wait for services:
@@ -255,7 +285,7 @@ docker logs parking_db
 #### 3. Start Application Services
 
 ```powershell
-docker-compose -f docker-compose.services.yml up -d
+docker-compose -f docker-compose.yml up -d
 ```
 
 #### 4. Verify Deployment
@@ -327,9 +357,13 @@ curl http://localhost:8081/actuator/health
 
 ### Service Registration
 
-Check Eureka dashboard to ensure:
-- ✅ API-GATEWAY is UP
-- ✅ CLIENT-SERVICE is UP
+Check Eureka dashboard to ensure all services are UP:
+- ✅ API-GATEWAY (port 8086)
+- ✅ CLIENT-SERVICE (port 8081)
+- ✅ GATE-CONTROL-SERVICE (port 8082)
+- ✅ BILLING-SERVICE (port 8083)
+- ✅ MANAGEMENT-SERVICE (port 8084)
+- ✅ REPORTING-SERVICE (port 8087)
 
 ---
 
@@ -622,7 +656,7 @@ Use:
 
 For deployment issues:
 1. Check logs: `docker logs [service-name]`
-2. Verify migrations: `.\test-flyway-migrations.ps1`
+2. Verify migrations: `docker exec parking_db psql -U postgres -d parking_db -c "SELECT version, description, installed_on FROM flyway_schema_history ORDER BY installed_rank;"`
 3. Review health checks
 4. Check GitHub Issues
 

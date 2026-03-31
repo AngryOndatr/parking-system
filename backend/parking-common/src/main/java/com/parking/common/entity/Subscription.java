@@ -31,5 +31,10 @@ public class Subscription {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
+
+    /** Optional reserved parking space for the subscription period. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parking_space_id")
+    private ParkingSpace parkingSpace;
 }
 

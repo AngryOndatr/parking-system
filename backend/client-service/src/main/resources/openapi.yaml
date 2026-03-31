@@ -610,6 +610,11 @@ components:
           format: date-time
           description: Subscription end (exclusive) — must be after startDate
           example: "2026-05-01T00:00:00Z"
+        parkingSpaceId:
+          type: integer
+          format: int64
+          description: Optional — reserve a specific parking space for the subscription period
+          example: 7
 
     SubscriptionResponse:
       type: object
@@ -636,6 +641,15 @@ components:
         isActive:
           type: boolean
           example: true
+        parkingSpaceId:
+          type: integer
+          format: int64
+          description: Reserved parking space ID (absent if none)
+          example: 7
+        spaceNumber:
+          type: string
+          description: Reserved parking space number (e.g. A-01)
+          example: "A-01"
 
     # --- Schema for Subscription Check ---
     SubscriptionCheckResponse:

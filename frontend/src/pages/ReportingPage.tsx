@@ -1,179 +1,469 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { BarChart3, Loader2, RefreshCw, Filter } from 'lucide-react'
+import {
+  BarChart3, Loader2, RefreshCw, Filter,
+  Shield, Car, User, Search, Clock,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/PageHeader'
-import { getLogs } from '@/api/reporting'
-import type { LogEntry } from '@/api/reporting'
+import { getLogs, getAuditLogs, getClientHistory, getVehicleHistory } from '@/api/reporting'
+import type { LogEntry, AuditEntry } from '@/api/reporting'
 
-const LEVEL_COLORS: Record<LogEntry['level'], string> = {
-  INFO: 'bg-blue-100 text-blue-700',
-  WARN: 'bg-yellow-100 text-yellow-700',
+// ─── colour maps ──────────────────────────────────────────────────────────────
+const LEVEL_COLORS: Record<string, string> = {
+  INFO:  'bg-blue-100 text-blue-700',
+  WARN:  'bg-yellow-100 text-yellow-700',
   ERROR: 'bg-red-100 text-red-700',
   DEBUG: 'bg-slate-100 text-slate-600',
   TRACE: 'bg-purple-100 text-purple-600',
 }
 
-export default function ReportingPage() {
-  const [filterLevel, setFilterLevel] = useState('')
-  const [filterService, setFilterService] = useState('')
-  const [filterLimit, setFilterLimit] = useState('50')
+const ACTION_COLORS: Record<string, string> = {
+  CLIENT_CREATED:           'bg-emerald-100 text-emerald-700',
+  CLIENT_UPDATED:           'bg-blue-100 text-blue-700',
+  CLIENT_DELETED:           'bg-red-100 text-red-700',
+  VEHICLE_CREATED:          'bg-emerald-100 text-emerald-700',
+  VEHICLE_UPDATED:          'bg-blue-100 text-blue-700',
+  VEHICLE_DELETED:          'bg-red-100 text-red-700',
+  SUBSCRIPTION_CREATED:     'bg-emerald-100 text-emerald-700',
+  SUBSCRIPTION_DEACTIVATED: 'bg-orange-100 text-orange-700',
+  GATE_ENTRY:               'bg-green-100 text-green-700',
+  GATE_EXIT:                'bg-cyan-100 text-cyan-700',
+  GATE_EXIT_DENIED:         'bg-red-100 text-red-700',
+  GATE_MANUAL_CONTROL:      'bg-purple-100 text-purple-700',
+  PAYMENT_PROCESSED:        'bg-teal-100 text-teal-700',
+}
 
-  const { data: logs = [], isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['logs', filterLevel, filterService, filterLimit],
-    queryFn: () => getLogs({
-      level: filterLevel || undefined,
-      service: filterService || undefined,
-      limit: Number(filterLimit) || 50,
-    }),
-  })
+function actionColor(action: string | null) {
+  if (!action) return 'bg-slate-100 text-slate-500'
+  return ACTION_COLORS[action] ?? 'bg-slate-100 text-slate-600'
+}
+
+// ─── AuditTable ───────────────────────────────────────────────────────────────
+function AuditTable({ entries }: { entries: AuditEntry[] }) {
+  if (entries.length === 0)
+    return <p className="text-sm text-muted-foreground py-4">No audit events found.</p>
+  return (
+    <>
+      <div className="space-y-2 lg:hidden">
+        {entries.map(e => (
+          <div key={e.id} className="rounded-lg border border-slate-200 bg-white p-3 space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              {e.action && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${actionColor(e.action)}`}>
+                  {e.action}
+                </span>
+              )}
+              {e.entityType && <span className="text-xs text-slate-500 font-mono shrink-0">{e.entityType}</span>}
+              {e.licensePlate && <span className="text-xs font-mono bg-slate-100 px-1 rounded">{e.licensePlate}</span>}
+              <span className="text-xs text-slate-400 ml-auto shrink-0">{new Date(e.timestamp).toLocaleString()}</span>
+            </div>
+            <p className="text-sm text-slate-700 line-clamp-2">{e.message}</p>
+            <p className="text-xs text-slate-400">{e.service}</p>
+          </div>
+        ))}
+      </div>
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left text-slate-500">
+              <th className="pb-2 pr-3 font-medium">Time</th>
+              <th className="pb-2 pr-3 font-medium">Action</th>
+              <th className="pb-2 pr-3 font-medium">Entity</th>
+              <th className="pb-2 pr-3 font-medium">Plate</th>
+              <th className="pb-2 pr-3 font-medium">Service</th>
+              <th className="pb-2 font-medium">Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map(e => (
+              <tr key={e.id} className="border-b last:border-0 hover:bg-slate-50">
+                <td className="py-1.5 pr-3 text-slate-400 text-xs whitespace-nowrap">{new Date(e.timestamp).toLocaleString()}</td>
+                <td className="py-1.5 pr-3">
+                  {e.action
+                    ? <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${actionColor(e.action)}`}>{e.action}</span>
+                    : '—'}
+                </td>
+                <td className="py-1.5 pr-3 text-xs font-mono text-slate-600">{e.entityType}{e.entityId ? `#${e.entityId}` : ''}</td>
+                <td className="py-1.5 pr-3 text-xs font-mono">{e.licensePlate ?? '—'}</td>
+                <td className="py-1.5 pr-3 text-xs text-slate-500">{e.service}</td>
+                <td className="py-1.5 text-slate-700 max-w-sm truncate">{e.message}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )
+}
+
+// ─── LogTable ─────────────────────────────────────────────────────────────────
+function LogTable({ logs }: { logs: LogEntry[] }) {
+  if (logs.length === 0)
+    return <p className="text-sm text-muted-foreground py-4">No logs found.</p>
+  return (
+    <>
+      <div className="space-y-2 lg:hidden">
+        {logs.map(l => (
+          <div key={l.id} className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${LEVEL_COLORS[l.level] ?? ''}`}>{l.level}</span>
+              <span className="text-xs text-slate-400 truncate">{l.service}</span>
+              <span className="text-xs text-slate-400 shrink-0 ml-auto">{new Date(l.timestamp).toLocaleTimeString()}</span>
+            </div>
+            <p className="text-sm text-slate-700 line-clamp-2">{l.message}</p>
+            <p className="text-xs text-slate-400 mt-1">{new Date(l.timestamp).toLocaleDateString()}</p>
+          </div>
+        ))}
+      </div>
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left text-slate-500">
+              <th className="pb-2 pr-3 font-medium">Time</th>
+              <th className="pb-2 pr-3 font-medium">Level</th>
+              <th className="pb-2 pr-3 font-medium">Service</th>
+              <th className="pb-2 font-medium">Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map(l => (
+              <tr key={l.id} className="border-b last:border-0 hover:bg-slate-50">
+                <td className="py-1.5 pr-3 text-slate-400 text-xs whitespace-nowrap">{new Date(l.timestamp).toLocaleString()}</td>
+                <td className="py-1.5 pr-3">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[l.level] ?? ''}`}>{l.level}</span>
+                </td>
+                <td className="py-1.5 pr-3 text-slate-600 text-xs font-mono">{l.service}</td>
+                <td className="py-1.5 text-slate-700 max-w-md truncate">{l.message}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )
+}
+
+// ─── DateRange ────────────────────────────────────────────────────────────────
+function DateRange({ from, to, onFrom, onTo }: { from: string; to: string; onFrom: (v: string) => void; onTo: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <Clock size={14} className="text-slate-400 shrink-0" />
+      <span className="text-sm text-slate-500 shrink-0">From:</span>
+      <input type="datetime-local" className="border rounded px-2 py-1 text-sm" value={from} onChange={e => onFrom(e.target.value)} />
+      <span className="text-sm text-slate-500 shrink-0">To:</span>
+      <input type="datetime-local" className="border rounded px-2 py-1 text-sm" value={to} onChange={e => onTo(e.target.value)} />
+      {(from || to) && <Button variant="ghost" size="sm" onClick={() => { onFrom(''); onTo('') }}>Clear</Button>}
+    </div>
+  )
+}
+
+type Tab = 'general' | 'audit' | 'client' | 'vehicle'
+
+export default function ReportingPage() {
+  const [activeTab, setActiveTab] = useState<Tab>('audit')
+
+  const [filterLevel, setFilterLevel]     = useState('')
+  const [filterService, setFilterService] = useState('')
+  const [filterLimit, setFilterLimit]     = useState('50')
+
+  const [auditService, setAuditService] = useState('')
+  const [auditFrom, setAuditFrom]       = useState('')
+  const [auditTo, setAuditTo]           = useState('')
+  const [auditLimit, setAuditLimit]     = useState('200')
+
+  const [clientIdInput, setClientIdInput] = useState('')
+  const [clientFrom, setClientFrom]       = useState('')
+  const [clientTo, setClientTo]           = useState('')
+  const [clientSearch, setClientSearch]   = useState(false)
+
+  const [plateInput, setPlateInput]       = useState('')
+  const [vehicleFrom, setVehicleFrom]     = useState('')
+  const [vehicleTo, setVehicleTo]         = useState('')
+  const [vehicleSearch, setVehicleSearch] = useState(false)
 
   const levels: LogEntry['level'][] = ['INFO', 'WARN', 'ERROR', 'DEBUG', 'TRACE']
-  const errorCount = logs.filter(l => l.level === 'ERROR').length
-  const warnCount = logs.filter(l => l.level === 'WARN').length
+
+  const logsQuery = useQuery({
+    queryKey: ['logs', filterLevel, filterService, filterLimit],
+    queryFn: () => getLogs({ level: filterLevel || undefined, service: filterService || undefined, limit: Number(filterLimit) || 50 }),
+    enabled: activeTab === 'general',
+  })
+
+  const auditQuery = useQuery({
+    queryKey: ['audit', auditService, auditFrom, auditTo, auditLimit],
+    queryFn: () => getAuditLogs({
+      service: auditService || undefined,
+      from: auditFrom ? new Date(auditFrom).toISOString() : undefined,
+      to:   auditTo   ? new Date(auditTo).toISOString()   : undefined,
+      limit: Number(auditLimit) || 200,
+    }),
+    enabled: activeTab === 'audit',
+  })
+
+  const clientId = Number(clientIdInput)
+  const clientQuery = useQuery({
+    queryKey: ['audit-client', clientId, clientFrom, clientTo],
+    queryFn: () => getClientHistory(clientId, {
+      from: clientFrom ? new Date(clientFrom).toISOString() : undefined,
+      to:   clientTo   ? new Date(clientTo).toISOString()   : undefined,
+      limit: 500,
+    }),
+    enabled: activeTab === 'client' && clientSearch && !isNaN(clientId) && clientId > 0,
+  })
+
+  const vehicleQuery = useQuery({
+    queryKey: ['audit-vehicle', plateInput, vehicleFrom, vehicleTo],
+    queryFn: () => getVehicleHistory(plateInput, {
+      from: vehicleFrom ? new Date(vehicleFrom).toISOString() : undefined,
+      to:   vehicleTo   ? new Date(vehicleTo).toISOString()   : undefined,
+      limit: 500,
+    }),
+    enabled: activeTab === 'vehicle' && vehicleSearch && plateInput.trim().length >= 2,
+  })
+
+  const auditEntries = auditQuery.data ?? []
+  const actionCounts = auditEntries.reduce<Record<string, number>>((acc, e) => {
+    if (e.action) acc[e.action] = (acc[e.action] ?? 0) + 1
+    return acc
+  }, {})
+
+  function refetchCurrent() {
+    if (activeTab === 'general') logsQuery.refetch()
+    if (activeTab === 'audit')   auditQuery.refetch()
+    if (activeTab === 'client')  clientQuery.refetch()
+    if (activeTab === 'vehicle') vehicleQuery.refetch()
+  }
+
+  const isFetching = logsQuery.isFetching || auditQuery.isFetching || clientQuery.isFetching || vehicleQuery.isFetching
+
+  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: 'audit',   label: 'Audit Trail',     icon: <Shield size={15} /> },
+    { id: 'client',  label: 'Client History',  icon: <User size={15} /> },
+    { id: 'vehicle', label: 'Vehicle History', icon: <Car size={15} /> },
+    { id: 'general', label: 'System Logs',     icon: <BarChart3 size={15} /> },
+  ]
 
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={<BarChart3 size={24} />}
-        title="Reports & Logs"
+        icon={<Shield size={24} />}
+        title="Audit Trail & Reports"
         actions={
-          <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
+          <Button variant="ghost" size="sm" onClick={refetchCurrent} disabled={isFetching}>
             <RefreshCw size={16} className={`mr-1 ${isFetching ? 'animate-spin' : ''}`} /> Refresh
           </Button>
         }
       />
 
-      {/* Summary — 1 col on phones, 3 cols from sm */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Total Logs</p>
-            <p className="text-3xl font-bold text-slate-700">{logs.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Errors</p>
-            <p className="text-3xl font-bold text-red-600">{errorCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Warnings</p>
-            <p className="text-3xl font-bold text-yellow-500">{warnCount}</p>
-          </CardContent>
-        </Card>
+      {/* Tab bar */}
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id)}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+              activeTab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}>
+            {t.icon} {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><Filter size={16} /> Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:flex flex-wrap gap-3 items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500 shrink-0">Level:</span>
-              <select className="flex-1 border rounded px-2 py-1 text-sm" value={filterLevel}
-                onChange={(e) => setFilterLevel(e.target.value)}>
-                <option value="">All</option>
-                {levels.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
+      {/* ── Audit Trail ── */}
+      {activeTab === 'audit' && (
+        <div className="space-y-4">
+          {Object.keys(actionCounts).length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(actionCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([action, count]) => (
+                <span key={action} className={`text-xs px-2 py-1 rounded-full font-medium ${actionColor(action)}`}>
+                  {action}: {count}
+                </span>
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500 shrink-0">Service:</span>
-              <Input placeholder="e.g. client-service" className="flex-1 h-8 text-sm min-w-0"
-                value={filterService} onChange={(e) => setFilterService(e.target.value)} />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500 shrink-0">Limit:</span>
-              <select className="border rounded px-2 py-1 text-sm" value={filterLimit}
-                onChange={(e) => setFilterLimit(e.target.value)}>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="200">200</option>
-              </select>
-            </div>
-            {(filterLevel || filterService) && (
-              <Button variant="ghost" size="sm" onClick={() => { setFilterLevel(''); setFilterService('') }}>Clear</Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Log entries */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Log Entries</CardTitle>
-          <CardDescription>Recent system events from all services</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
-              <Loader2 size={16} className="animate-spin" /> Loading…
-            </div>
-          ) : logs.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">No logs found.</p>
-          ) : (
-            <>
-              {/* ── Mobile card list (hidden on lg+) ── */}
-              <div className="space-y-2 lg:hidden">
-                {logs.map((log) => (
-                  <div key={log.id} className="rounded-lg border border-slate-200 bg-white p-3">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${LEVEL_COLORS[log.level]}`}>
-                        {log.level}
-                      </span>
-                      <span className="text-xs text-slate-400 truncate">{log.service}</span>
-                      <span className="text-xs text-slate-400 shrink-0 ml-auto">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-700 line-clamp-2">{log.message}</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {new Date(log.timestamp).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* ── Desktop table (hidden below lg) ── */}
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-slate-500">
-                      <th className="pb-2 pr-3 font-medium">Time</th>
-                      <th className="pb-2 pr-3 font-medium">Level</th>
-                      <th className="pb-2 pr-3 font-medium">Service</th>
-                      <th className="pb-2 font-medium">Message</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {logs.map((log) => (
-                      <tr key={log.id} className="border-b last:border-0 hover:bg-slate-50">
-                        <td className="py-1.5 pr-3 text-slate-400 text-xs whitespace-nowrap">
-                          {new Date(log.timestamp).toLocaleString()}
-                        </td>
-                        <td className="py-1.5 pr-3">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[log.level]}`}>
-                            {log.level}
-                          </span>
-                        </td>
-                        <td className="py-1.5 pr-3 text-slate-600 text-xs font-mono">{log.service}</td>
-                        <td className="py-1.5 text-slate-700 max-w-md truncate">{log.message}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
           )}
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2"><Filter size={15}/> Filters</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 shrink-0">Service:</span>
+                  <Input placeholder="e.g. gate-control-service" className="w-48 h-8 text-sm"
+                    value={auditService} onChange={e => setAuditService(e.target.value)} />
+                </div>
+                <DateRange from={auditFrom} to={auditTo} onFrom={setAuditFrom} onTo={setAuditTo} />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 shrink-0">Limit:</span>
+                  <select className="border rounded px-2 py-1 text-sm" value={auditLimit}
+                    onChange={e => setAuditLimit(e.target.value)}>
+                    {['100','200','500','1000'].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">All Business Events</CardTitle>
+              <CardDescription>All recorded business actions across services, newest first</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {auditQuery.isLoading
+                ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> Loading…</div>
+                : <AuditTable entries={auditQuery.data ?? []} />}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ── Client History ── */}
+      {activeTab === 'client' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2"><User size={15}/> Client History</CardTitle>
+              <CardDescription>Enter client ID to view all events related to this client</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 shrink-0">Client ID:</span>
+                  <Input type="number" placeholder="e.g. 1" className="w-28 h-8 text-sm"
+                    value={clientIdInput}
+                    onChange={e => { setClientIdInput(e.target.value); setClientSearch(false) }}
+                    onKeyDown={e => { if (e.key === 'Enter') setClientSearch(true) }} />
+                </div>
+                <DateRange from={clientFrom} to={clientTo} onFrom={setClientFrom} onTo={setClientTo} />
+                <Button size="sm" onClick={() => setClientSearch(true)} disabled={!clientIdInput}>
+                  <Search size={14} className="mr-1"/> Search
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          {clientSearch && clientId > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">History: Client #{clientId}</CardTitle>
+                <CardDescription>{clientQuery.data?.length ?? 0} events{(clientFrom || clientTo) && ' in selected period'}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {clientQuery.isLoading
+                  ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> Loading…</div>
+                  : <AuditTable entries={clientQuery.data ?? []} />}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ── Vehicle History ── */}
+      {activeTab === 'vehicle' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2"><Car size={15}/> Vehicle History</CardTitle>
+              <CardDescription>Enter license plate to view registrations, gate events and payments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 shrink-0">License Plate:</span>
+                  <Input placeholder="e.g. ABC123" className="w-36 h-8 text-sm uppercase"
+                    value={plateInput}
+                    onChange={e => { setPlateInput(e.target.value.toUpperCase()); setVehicleSearch(false) }}
+                    onKeyDown={e => { if (e.key === 'Enter') setVehicleSearch(true) }} />
+                </div>
+                <DateRange from={vehicleFrom} to={vehicleTo} onFrom={setVehicleFrom} onTo={setVehicleTo} />
+                <Button size="sm" onClick={() => setVehicleSearch(true)} disabled={plateInput.trim().length < 2}>
+                  <Search size={14} className="mr-1"/> Search
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          {vehicleSearch && plateInput.trim().length >= 2 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">History: {plateInput}</CardTitle>
+                <CardDescription>{vehicleQuery.data?.length ?? 0} events{(vehicleFrom || vehicleTo) && ' in selected period'}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {vehicleQuery.isLoading
+                  ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> Loading…</div>
+                  : <AuditTable entries={vehicleQuery.data ?? []} />}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ── System Logs ── */}
+      {activeTab === 'general' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Total Logs</p>
+                <p className="text-3xl font-bold text-slate-700">{logsQuery.data?.length ?? 0}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Errors</p>
+                <p className="text-3xl font-bold text-red-600">{(logsQuery.data ?? []).filter(l => l.level === 'ERROR').length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Warnings</p>
+                <p className="text-3xl font-bold text-yellow-500">{(logsQuery.data ?? []).filter(l => l.level === 'WARN').length}</p>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2"><Filter size={16}/> Filters</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 shrink-0">Level:</span>
+                  <select className="border rounded px-2 py-1 text-sm" value={filterLevel} onChange={e => setFilterLevel(e.target.value)}>
+                    <option value="">All</option>
+                    {levels.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 shrink-0">Service:</span>
+                  <Input placeholder="e.g. client-service" className="w-40 h-8 text-sm"
+                    value={filterService} onChange={e => setFilterService(e.target.value)} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 shrink-0">Limit:</span>
+                  <select className="border rounded px-2 py-1 text-sm" value={filterLimit} onChange={e => setFilterLimit(e.target.value)}>
+                    {['25','50','100','200'].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+                {(filterLevel || filterService) && (
+                  <Button variant="ghost" size="sm" onClick={() => { setFilterLevel(''); setFilterService('') }}>Clear</Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Log Entries</CardTitle>
+              <CardDescription>Recent system events from all services</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {logsQuery.isLoading
+                ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> Loading…</div>
+                : <LogTable logs={logsQuery.data ?? []} />}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

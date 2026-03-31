@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Menu,
   X,
+  BadgeCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Clients',
     to: '/clients',
     icon: <Users size={18} />,
+    roles: ['ADMIN', 'MANAGER', 'OPERATOR'],
+  },
+  {
+    label: 'Subscriptions',
+    to: '/subscriptions',
+    icon: <BadgeCheck size={18} />,
     roles: ['ADMIN', 'MANAGER', 'OPERATOR'],
   },
   {

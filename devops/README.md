@@ -6,17 +6,8 @@ This directory contains Docker Compose configurations for deploying the parking-
 
 ### Docker Compose Files
 
-> **Primary file:** `../docker-compose.yml` (project root) — use this for normal development.  
-> The split files below are legacy/alternative configurations.
-
-1. **docker-compose.infrastructure.yml** — Base infrastructure only
-   - PostgreSQL, Redis, Eureka Server
-
-2. **docker-compose.services.yml** — Application microservices only
-   - API Gateway, Client Service, Gate Control, Billing, Management, Reporting
-
-3. **docker-compose.yml** (project root) — ⭐ **Primary** — full stack including observability
-   - All infrastructure + all services + Prometheus + Grafana + Jaeger + OTel Collector + pgAdmin
+**`../docker-compose.yml`** (project root) — ⭐ **Primary** — full stack including observability  
+All infrastructure + all services + Prometheus + Grafana + Jaeger + OTel Collector + pgAdmin
 
 ### Management Scripts
 
@@ -109,12 +100,6 @@ test-login.html
 # Start the full system
 .\start-system.ps1
 
-# Infrastructure only
-.\start-system.ps1 infrastructure
-
-# Services only (if infrastructure is already running)
-.\start-system.ps1 services
-
 # Stop
 .\stop-system.ps1
 
@@ -125,17 +110,8 @@ test-login.html
 ### Option 2: Manual startup
 
 ```powershell
-# Create network (once)
-docker network create parking-network
-
-# Start infrastructure
-docker-compose -f docker-compose.infrastructure.yml up -d
-
-# Wait for Eureka to start (30 sec)
-Start-Sleep -Seconds 30
-
-# Start services
-docker-compose -f docker-compose.services.yml up -d
+# From project root
+docker-compose -f docker-compose.yml up -d
 
 # Check status
 docker ps
@@ -265,9 +241,7 @@ curl and PowerShell examples for all endpoints:
 docker system prune -f
 
 # Rebuild and start
-docker-compose -f docker-compose.infrastructure.yml build --no-cache
-docker-compose -f docker-compose.services.yml build --no-cache
-.\start-system.ps1
+.\full-rebuild.ps1
 ```
 
 ## Technologies

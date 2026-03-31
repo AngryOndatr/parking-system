@@ -10,6 +10,7 @@ import ManagementPage from '@/pages/ManagementPage'
 import BillingPage from '@/pages/BillingPage'
 import ReportingPage from '@/pages/ReportingPage'
 import DashboardPage from '@/pages/DashboardPage'
+import SubscriptionsPage from '@/pages/SubscriptionsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +83,16 @@ export default function App() {
                 }
               >
                 <Route index element={<ReportingPage />} />
+              </Route>
+
+              {/* ADMIN + MANAGER + OPERATOR — Subscriptions */}
+              <Route
+                path="subscriptions"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'OPERATOR']} />
+                }
+              >
+                <Route index element={<SubscriptionsPage />} />
               </Route>
 
               {/* ADMIN + MANAGER */}

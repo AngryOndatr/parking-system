@@ -5,10 +5,16 @@ import com.parking.reporting_service.domain.LogDomain;
 import com.parking.reporting_service.repository.LogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -19,6 +25,7 @@ import java.util.stream.Collectors;
 public class ReportingService {
 
     private static final Logger logger = LoggerFactory.getLogger(ReportingService.class);
+    private static final int DEFAULT_LIMIT = 100;
 
     private final LogRepository logRepository;
 
@@ -43,11 +50,23 @@ public class ReportingService {
             throw new IllegalArgumentException("Log entry must have timestamp, level, and message");
         }
 
-        // Save entity
-        Log savedEntity = logRepository.save(logDomain.getEntity());
-        logger.info("✅ [REPORTING SERVICE] Log entry created with ID: {}", savedEntity.getId());
+        Log entity = logDomain.getEntity();
 
-        return new LogDomain(savedEntity);
+        // ── Extract audit fields from meta ────────────────────────────
+        Map<String, Object> meta = entity.getMeta();
+        if (meta != null) {
+            entity.setAction(asString(meta.get("action")));
+            entity.setEntityType(asString(meta.get("entityType")));
+            entity.setEntityId(asLong(meta.get("entityId")));
+            entity.setClientId(asLong(meta.get("clientId")));
+            entity.setLicensePlate(asString(meta.get("licensePlate")));
+        }
+        // ─────────────────────────────────────────────────────────────
+
+        // Save entity
+        Log saved = logRepository.save(entity);
+        logger.info("✅ [REPORTING SERVICE] Log created id={}, action={}", saved.getId(), saved.getAction());
+        return new LogDomain(saved);
     }
 
     /**
@@ -80,8 +99,7 @@ public class ReportingService {
      */
     @Transactional(readOnly = true)
     public List<LogDomain> getLogsWithFilters(String level, String service, Long userId,
-                                               java.time.Instant fromDate, java.time.Instant toDate,
-                                               Integer limit) {
+                                               Instant fromDate, Instant toDate, Integer limit) {
         logger.info("🔍 [REPORTING SERVICE] Fetching logs with filters: level={}, service={}, userId={}, fromDate={}, toDate={}, limit={}",
                 level, service, userId, fromDate, toDate, limit);
 
@@ -90,13 +108,13 @@ public class ReportingService {
 
         // Apply filters
         var filtered = entities.stream()
-                .filter(log -> level == null || level.equalsIgnoreCase(log.getLogLevel()))
-                .filter(log -> service == null || service.equalsIgnoreCase(log.getService()))
-                .filter(log -> userId == null || (log.getUserId() != null && log.getUserId().equals(userId)))
-                .filter(log -> fromDate == null || log.getTimestamp().toInstant(java.time.ZoneOffset.UTC).isAfter(fromDate) || log.getTimestamp().toInstant(java.time.ZoneOffset.UTC).equals(fromDate))
-                .filter(log -> toDate == null || log.getTimestamp().toInstant(java.time.ZoneOffset.UTC).isBefore(toDate) || log.getTimestamp().toInstant(java.time.ZoneOffset.UTC).equals(toDate))
+                .filter(l -> level == null || level.equalsIgnoreCase(l.getLogLevel()))
+                .filter(l -> service == null || service.equalsIgnoreCase(l.getService()))
+                .filter(l -> userId == null || (l.getUserId() != null && l.getUserId().equals(userId)))
+                .filter(l -> fromDate == null || !l.getTimestamp().toInstant(ZoneOffset.UTC).isBefore(fromDate))
+                .filter(l -> toDate  == null || !l.getTimestamp().toInstant(ZoneOffset.UTC).isAfter(toDate))
                 .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp())) // Newest first
-                .limit(limit != null && limit > 0 ? limit : 100)
+                .limit(limit != null && limit > 0 ? limit : DEFAULT_LIMIT)
                 .map(LogDomain::new)
                 .collect(Collectors.toList());
 
@@ -140,5 +158,59 @@ public class ReportingService {
                 .map(LogDomain::new)
                 .collect(Collectors.toList());
     }
-}
 
+    // ── Audit trail methods ──────────────────────────────────────────
+
+    /**
+     * History of all business events for a given client.
+     */
+    @Transactional(readOnly = true)
+    public List<LogDomain> getClientHistory(Long clientId, LocalDateTime from, LocalDateTime to, int limit) {
+        logger.info("🔍 [REPORTING SERVICE] Client history clientId={}, from={}, to={}, limit={}", clientId, from, to, limit);
+        return logRepository.findClientHistory(clientId, from, to, limit, 0)
+                .stream().map(LogDomain::new).collect(Collectors.toList());
+    }
+
+    /**
+     * History of all business events for a given vehicle license plate.
+     */
+    @Transactional(readOnly = true)
+    public List<LogDomain> getVehicleHistory(String licensePlate, LocalDateTime from, LocalDateTime to, int limit) {
+        logger.info("🔍 [REPORTING SERVICE] Vehicle history plate={}, from={}, to={}, limit={}", licensePlate, from, to, limit);
+        return logRepository.findVehicleHistory(licensePlate.toUpperCase(), from, to, limit, 0)
+                .stream().map(LogDomain::new).collect(Collectors.toList());
+    }
+
+    /**
+     * History of all business events for a specific entity (type + id).
+     */
+    @Transactional(readOnly = true)
+    public List<LogDomain> getEntityHistory(String entityType, Long entityId, LocalDateTime from, LocalDateTime to, int limit) {
+        return logRepository.findEntityHistory(entityType.toUpperCase(), entityId, from, to, limit, 0)
+                .stream().map(LogDomain::new).collect(Collectors.toList());
+    }
+
+    /**
+     * All audit events (have non-null action field), optionally filtered by service and date.
+     */
+    @Transactional(readOnly = true)
+    public List<LogDomain> getAuditLogs(String service, LocalDateTime from, LocalDateTime to, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        var page = logRepository.findAuditLogs(service, from, to, pageable);
+        return page.getContent().stream().map(LogDomain::new).collect(Collectors.toList());
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+
+    private String asString(Object v) {
+        return v instanceof String ? (String) v : null;
+    }
+
+    private Long asLong(Object v) {
+        if (v == null) return null;
+        if (v instanceof Long)    return (Long) v;
+        if (v instanceof Integer) return ((Integer) v).longValue();
+        if (v instanceof Number)  return ((Number) v).longValue();
+        try { return Long.parseLong(v.toString()); } catch (Exception e) { return null; }
+    }
+}

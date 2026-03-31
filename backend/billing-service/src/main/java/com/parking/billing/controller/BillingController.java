@@ -131,6 +131,14 @@ public class BillingController implements BillingApi {
         log.info("Received payment status request for parking event: {}", parkingEventId);
 
         try {
+            // Verify that a billing record (ParkingEvent) actually exists for this ID.
+            // Gate-control-service uses its own gate_events table with independent IDs,
+            // so subscriber events will never have a matching parking_events row → 404.
+            if (!parkingEventRepository.existsById(parkingEventId)) {
+                log.warn("No billing record found for parkingEventId={}", parkingEventId);
+                throw new ParkingEventNotFoundException("No billing record for parking event: " + parkingEventId);
+            }
+
             boolean isPaid = billingService.isEventPaid(parkingEventId);
             BigDecimal remainingFee = billingService.getRemainingFee(parkingEventId);
 
@@ -186,12 +194,21 @@ public class BillingController implements BillingApi {
             return ResponseEntity.ok(response);
 
         } catch (ParkingEventNotFoundException e) {
-            log.warn("Parking event not found for ticket {}, returning unpaid status", ticketCode);
-            // Return unpaid status for unknown tickets
-            PaymentStatusResponse response = new PaymentStatusResponse();
-            response.setParkingEventId(0L); // Dummy ID
-            response.setIsPaid(false);
-            response.setRemainingFee(org.openapitools.jackson.nullable.JsonNullable.of(0.0));
+            log.warn("Parking event not found for ticket {}, creating a new ParkingEvent", ticketCode);
+            // Create a ParkingEvent so the client can proceed to payment
+            ParkingEvent newEvent = new ParkingEvent();
+            newEvent.setTicketCode(ticketCode);
+            newEvent.setLicensePlate("UNKNOWN");
+            newEvent.setEntryTime(LocalDateTime.now().minusHours(1)); // fallback: 1 hour ago
+            newEvent.setExitTime(LocalDateTime.now());               // lock fee calculation time
+            newEvent.setIsSubscriber(false);
+            newEvent.setEntryMethod(ParkingEvent.EntryMethod.SCAN);
+            ParkingEvent saved = parkingEventRepository.save(newEvent);
+            log.info("Created ParkingEvent id={} for unknown ticket {}", saved.getId(), ticketCode);
+
+            BigDecimal remainingFee = billingService.getRemainingFee(saved.getId());
+            PaymentStatusResponse response = billingMapper.toPaymentStatusResponse(
+                    saved.getId(), false, remainingFee);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error getting payment status by ticket: {}", e.getMessage(), e);

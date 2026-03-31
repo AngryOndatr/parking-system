@@ -38,7 +38,7 @@ $containerStatus = docker inspect -f '{{.State.Running}}' $ContainerName 2>$null
 
 if ($containerStatus -ne "true") {
     Write-Host "[ERROR] Container '$ContainerName' is not running!" -ForegroundColor Red
-    Write-Host "Start it with: docker-compose -f docker-compose.infrastructure.yml up -d" -ForegroundColor Yellow
+    Write-Host "Start it with: docker-compose -f ..\docker-compose.yml up -d" -ForegroundColor Yellow
     exit 1
 }
 

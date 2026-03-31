@@ -1,5 +1,6 @@
 package com.parking.billing.service;
 
+import com.parking.billing.audit.AuditLogger;
 import com.parking.billing.domain.ParkingEventDomain;
 import com.parking.billing.domain.PaymentDomain;
 import com.parking.billing.entity.Payment;
@@ -34,6 +35,7 @@ public class BillingService {
     private final TariffRepository tariffRepository;
     private final ParkingEventRepository parkingEventRepository;
     private final PaymentRepository paymentRepository;
+    private final AuditLogger auditLogger;
 
     /**
      * Calculate parking fee for a ticket.
@@ -242,6 +244,11 @@ public class BillingService {
         log.info("Payment recorded successfully. Transaction ID: {} for ticket: {}",
                 savedPayment.getTransactionId(), ticketCode);
 
+        auditLogger.audit("PAYMENT_PROCESSED", "BILLING", savedPayment.getId(), null,
+                parkingEvent.getLicensePlate(),
+                "Payment processed: ticket=" + ticketCode + ", amount=" + amountPaid +
+                ", method=" + method + ", txId=" + savedPayment.getTransactionId());
+
         return savedPayment;
     }
 
@@ -286,8 +293,10 @@ public class BillingService {
             throw new TicketAlreadyPaidException(parkingEvent.getTicketCode());
         }
 
-        // Calculate expected fee
-        LocalDateTime exitTime = LocalDateTime.now();
+        // Calculate expected fee using stored exitTime if available, otherwise now
+        LocalDateTime exitTime = parkingEvent.getExitTime() != null
+                ? parkingEvent.getExitTime()
+                : LocalDateTime.now();
         BigDecimal expectedFee = BigDecimal.ZERO;
         try {
             expectedFee = calculateFeeByEventId(parkingEventId, exitTime);
@@ -333,6 +342,11 @@ public class BillingService {
             Payment savedPayment = paymentRepository.save(paymentEntity);
             log.info("✅ Payment saved successfully with ID: {}, Transaction ID: {}",
                 savedPayment.getId(), savedPayment.getTransactionId());
+
+            auditLogger.audit("PAYMENT_PROCESSED", "BILLING", savedPayment.getId(), null,
+                    parkingEvent.getLicensePlate(),
+                    "Payment processed: eventId=" + parkingEventId + ", amount=" + amountPaid +
+                    ", method=" + method + ", txId=" + savedPayment.getTransactionId());
 
             return savedPayment;
 
@@ -418,6 +432,12 @@ public class BillingService {
             return fee;
         } catch (TicketAlreadyPaidException e) {
             // In case of race condition
+            return BigDecimal.ZERO;
+        } catch (TariffNotFoundException e) {
+            log.warn("Tariff not found while calculating remaining fee for event {}: {}", parkingEventId, e.getMessage());
+            return BigDecimal.ZERO;
+        } catch (Exception e) {
+            log.warn("Could not calculate remaining fee for event {}: {}", parkingEventId, e.getMessage());
             return BigDecimal.ZERO;
         }
     }

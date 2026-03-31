@@ -114,17 +114,21 @@ public class GateController implements GateApi {
                 decision.getAction(), decision.getMessage());
 
             ExitResponse response = new ExitResponse();
-            // set parkingEventId if present in decision
+            // set parkingEventId from billing service (passed through ExitDecision)
             response.setParkingEventId(decision.getParkingEventId());
             response.setLicensePlate(licensePlate == null ? "" : licensePlate);
             response.setEntryTime(OffsetDateTime.now().minusHours(2));
             response.setExitTime(OffsetDateTime.now());
             response.setDurationMinutes(120);
-            response.setFee(0.0);
+            // Use actual fee from billing, fall back to 0 only if unknown
+            response.setFee(decision.getFee() != null ? decision.getFee().doubleValue() : 0.0);
             response.setIsPaid("OPEN".equals(decision.getAction()));
             response.setPaymentRequired("DENY".equals(decision.getAction()));
             response.setMessage(decision.getMessage() == null ? "" : decision.getMessage());
-            response.setGateStatus(ExitResponse.GateStatusEnum.OPENED);
+            // Fix: gateStatus must reflect the actual decision, not always OPENED
+            response.setGateStatus("OPEN".equals(decision.getAction())
+                    ? ExitResponse.GateStatusEnum.OPENED
+                    : ExitResponse.GateStatusEnum.CLOSED);
 
             log.info("✅ [GATE CONTROLLER] Returning exit response with status OK");
             return new ResponseEntity<>(response, HttpStatus.OK);

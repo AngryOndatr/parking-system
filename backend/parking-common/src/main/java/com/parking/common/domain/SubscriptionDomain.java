@@ -1,5 +1,6 @@
 package com.parking.common.domain;
 
+import com.parking.common.entity.ParkingSpace;
 import com.parking.common.entity.Subscription;
 
 import java.time.LocalDateTime;
@@ -60,6 +61,16 @@ public class SubscriptionDomain {
 
     public Boolean getIsActive() {
         return entity.getIsActive();
+    }
+
+    // ── Parking Space ─────────────────────────────────────────────
+
+    public ParkingSpace getParkingSpace() {
+        return entity.getParkingSpace();
+    }
+
+    public void setParkingSpace(ParkingSpace space) {
+        entity.setParkingSpace(space);
     }
 
     // ── Business logic ────────────────────────────────────────────

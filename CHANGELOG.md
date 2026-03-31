@@ -841,8 +841,6 @@ Full project unit tests: **161 tests, 0 failures, BUILD SUCCESS**
   - OpenTelemetry integration
 - **Docker:**
   - docker-compose.yml for all services
-  - docker-compose.infrastructure.yml for infrastructure
-  - docker-compose.services.yml for microservices
   - docker-compose.observability.yml for monitoring
 - **Security:**
   - BCrypt password hashing

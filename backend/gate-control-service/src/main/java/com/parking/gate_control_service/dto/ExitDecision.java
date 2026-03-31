@@ -13,4 +13,5 @@ public class ExitDecision {
     private String action; // "OPEN" or "DENY"
     private String message;
     private Long parkingEventId;
+    private java.math.BigDecimal fee;
 }

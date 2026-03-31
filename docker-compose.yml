@@ -233,6 +233,7 @@ services:
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
       SPRING_APPLICATION_NAME: gate-control-service
       CLIENT_SERVICE_URL: http://client-service:8081
+      BILLING_SERVICE_URL: http://billing-service:8080
       # JWT Configuration - MUST match api-gateway
       JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
       # Disable default Spring Security (protected by api-gateway)

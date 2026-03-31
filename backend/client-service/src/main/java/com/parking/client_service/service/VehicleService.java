@@ -1,5 +1,6 @@
 package com.parking.client_service.service;
 
+import com.parking.client_service.audit.AuditLogger;
 import com.parking.client_service.dto.VehicleRequestDto;
 import com.parking.client_service.exception.ConflictException;
 import com.parking.client_service.exception.ResourceNotFoundException;
@@ -29,13 +30,16 @@ public class VehicleService {
     private final VehicleRepository vehicleRepository;
     private final ClientRepository clientRepository;
     private final VehicleMapper vehicleMapper;
+    private final AuditLogger auditLogger;
 
     public VehicleService(VehicleRepository vehicleRepository,
                          ClientRepository clientRepository,
-                         VehicleMapper vehicleMapper) {
+                         VehicleMapper vehicleMapper,
+                         AuditLogger auditLogger) {
         this.vehicleRepository = vehicleRepository;
-        this.clientRepository = clientRepository;
-        this.vehicleMapper = vehicleMapper;
+        this.clientRepository  = clientRepository;
+        this.vehicleMapper     = vehicleMapper;
+        this.auditLogger       = auditLogger;
     }
 
     @Transactional
@@ -62,6 +66,10 @@ public class VehicleService {
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
         log.info("Successfully created vehicle with id: {}, license plate: {}, for client: {}",
                 savedVehicle.getId(), savedVehicle.getLicensePlate(), client.getId());
+
+        auditLogger.audit("VEHICLE_CREATED", "VEHICLE", savedVehicle.getId(),
+                client.getId(), savedVehicle.getLicensePlate(),
+                "Vehicle registered: " + savedVehicle.getLicensePlate() + " for clientId=" + client.getId());
 
         return vehicleMapper.toResponse(savedVehicle);
     }
@@ -90,6 +98,10 @@ public class VehicleService {
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
         log.info("Successfully created vehicle with id: {}, license plate: {}, for client: {}",
                 savedVehicle.getId(), savedVehicle.getLicensePlate(), client.getId());
+
+        auditLogger.audit("VEHICLE_CREATED", "VEHICLE", savedVehicle.getId(),
+                client.getId(), savedVehicle.getLicensePlate(),
+                "Vehicle registered: " + savedVehicle.getLicensePlate() + " for clientId=" + client.getId());
 
         return vehicleMapper.toResponse(savedVehicle);
     }
@@ -169,6 +181,10 @@ public class VehicleService {
         Vehicle saved = vehicleRepository.save(domain.getEntity());
         log.info("Successfully updated vehicle with id: {}, license plate: {}", saved.getId(), saved.getLicensePlate());
 
+        auditLogger.audit("VEHICLE_UPDATED", "VEHICLE", saved.getId(),
+                saved.getClient() != null ? saved.getClient().getId() : null, saved.getLicensePlate(),
+                "Vehicle updated: " + saved.getLicensePlate() + " (id=" + saved.getId() + ")");
+
         return vehicleMapper.toResponse(saved);
     }
 
@@ -215,6 +231,10 @@ public class VehicleService {
         Vehicle saved = vehicleRepository.save(domain.getEntity());
         log.info("Successfully updated vehicle with id: {}, license plate: {}", saved.getId(), saved.getLicensePlate());
 
+        auditLogger.audit("VEHICLE_UPDATED", "VEHICLE", saved.getId(),
+                saved.getClient() != null ? saved.getClient().getId() : null, saved.getLicensePlate(),
+                "Vehicle updated: " + saved.getLicensePlate() + " (id=" + saved.getId() + ")");
+
         return vehicleMapper.toResponse(saved);
     }
 
@@ -228,8 +248,13 @@ public class VehicleService {
                     return new ResourceNotFoundException("Vehicle not found with id: " + id);
                 });
 
+        String plate = existing.getLicensePlate();
+        Long clientId = existing.getClient() != null ? existing.getClient().getId() : null;
         vehicleRepository.delete(existing);
-        log.info("Successfully deleted vehicle with id: {}", id);
+
+        auditLogger.audit("VEHICLE_DELETED", "VEHICLE", id,
+                clientId, plate,
+                "Vehicle deleted: " + plate + " (id=" + id + ")");
     }
 
     // Helper method for null-safe equality

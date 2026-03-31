@@ -13,23 +13,14 @@ import java.time.ZoneId;
 
 /**
  * Manual mapper for Subscription entity / domain / generated DTOs.
- * Follows the same manual-mapping pattern used by VehicleMapper.
  */
 @Component
 public class SubscriptionMapper {
-
-    // ── Entity → Domain ───────────────────────────────────────────
 
     public SubscriptionDomain toDomain(Subscription entity) {
         return new SubscriptionDomain(entity);
     }
 
-    // ── SubscriptionRequest → Entity ──────────────────────────────
-
-    /**
-     * Creates a new Subscription entity from the OpenAPI-generated request DTO.
-     * Client association and isActive default are set here.
-     */
     public Subscription toEntity(SubscriptionRequest request, Client client) {
         Subscription entity = new Subscription();
         entity.setClient(client);
@@ -39,8 +30,6 @@ public class SubscriptionMapper {
         entity.setIsActive(true);
         return entity;
     }
-
-    // ── Entity → SubscriptionResponse ─────────────────────────────
 
     public SubscriptionResponse toResponse(Subscription entity) {
         SubscriptionResponse response = new SubscriptionResponse();
@@ -52,16 +41,16 @@ public class SubscriptionMapper {
         response.setStartDate(toOffsetDateTime(entity.getStartDate()));
         response.setEndDate(toOffsetDateTime(entity.getEndDate()));
         response.setIsActive(entity.getIsActive());
+        if (entity.getParkingSpace() != null) {
+            response.setParkingSpaceId(entity.getParkingSpace().getId());
+            response.setSpaceNumber(entity.getParkingSpace().getSpaceNumber());
+        }
         return response;
     }
-
-    // ── Domain → SubscriptionResponse ─────────────────────────────
 
     public SubscriptionResponse toResponse(SubscriptionDomain domain) {
         return toResponse(domain.getEntity());
     }
-
-    // ── DateTime converters ───────────────────────────────────────
 
     private LocalDateTime toLocalDateTime(OffsetDateTime odt) {
         if (odt == null) return null;
@@ -73,4 +62,3 @@ public class SubscriptionMapper {
         return ldt.atZone(ZoneId.systemDefault()).toOffsetDateTime();
     }
 }
-

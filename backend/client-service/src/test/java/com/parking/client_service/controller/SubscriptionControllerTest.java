@@ -2,6 +2,7 @@ package com.parking.client_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 import com.parking.client_service.exception.ConflictException;
 import com.parking.client_service.exception.GlobalExceptionHandler;
 import com.parking.client_service.exception.ResourceNotFoundException;
@@ -45,7 +46,9 @@ class SubscriptionControllerTest {
 
     @BeforeEach
     void setup() {
-        objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .registerModule(new JsonNullableModule());
 
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();

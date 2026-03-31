@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
+        <module name="e2e-tests" />
         <module name="reporting-service" />
         <module name="gate-control-service" />
         <module name="eureka-server" />
@@ -41,7 +42,6 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="api-gateaway" target="21" />
-      <module name="e2e-tests" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

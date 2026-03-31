@@ -86,4 +86,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.info("✅ [CLIENT-SERVICE FILTER END] Request completed with status: {}", response.getStatus());
     }
 }
-

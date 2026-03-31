@@ -204,41 +204,43 @@ public class ClientProxyController {
     }
 
     /**
-     * Proxy GET request to search client by phone number
+     * Proxy GET /api/clients/search — supports ?phone=, ?plate=, ?name=
      */
     @GetMapping("/search")
-    public ResponseEntity<?> searchClientByPhone(@RequestParam(required = false) String phone, HttpServletRequest request) {
-        log.info("рџљЂ [PROXY CONTROLLER] Proxying GET request to Client Service: /api/clients/search?phone={}", phone);
-        log.info("рџ“ћ [PROXY CONTROLLER] Phone parameter received: '{}', length: {}", phone, phone != null ? phone.length() : "null");
+    public ResponseEntity<?> searchClients(
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String plate,
+            @RequestParam(required = false) String name,
+            HttpServletRequest request) {
+
+        HttpHeaders headers = extractHeaders(request);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            HttpHeaders headers = extractHeaders(request);
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            // Manual URL encoding to ensure + is encoded as %2B
-            String encodedPhone = phone != null ? java.net.URLEncoder.encode(phone, java.nio.charset.StandardCharsets.UTF_8) : "";
-            String targetUrl = CLIENT_SERVICE_URL + "/api/clients/search?phone=" + encodedPhone;
-
-            log.info("рџЋЇ [PROXY CONTROLLER] Encoded phone: {}", encodedPhone);
-            log.info("рџЋЇ [PROXY CONTROLLER] Target URL (encoded): {}", targetUrl);
+            String query;
+            if (phone != null) {
+                query = "phone=" + java.net.URLEncoder.encode(phone, java.nio.charset.StandardCharsets.UTF_8);
+                log.info("🔁 [PROXY] GET /api/clients/search?phone=***");
+            } else if (plate != null) {
+                query = "plate=" + java.net.URLEncoder.encode(plate.toUpperCase(), java.nio.charset.StandardCharsets.UTF_8);
+                log.info("🔁 [PROXY] GET /api/clients/search?plate={}", plate);
+            } else if (name != null) {
+                query = "name=" + java.net.URLEncoder.encode(name, java.nio.charset.StandardCharsets.UTF_8);
+                log.info("🔁 [PROXY] GET /api/clients/search?name={}", name);
+            } else {
+                return ResponseEntity.badRequest().body("One of: phone, plate, name is required");
+            }
 
             ResponseEntity<String> response = restTemplate.exchange(
-                targetUrl,
-                HttpMethod.GET,
-                entity,
-                String.class
-            );
-
-            log.info("вњ… [PROXY CONTROLLER] Client Service responded with status: {}", response.getStatusCode());
+                    CLIENT_SERVICE_URL + "/api/clients/search?" + query,
+                    HttpMethod.GET, entity, String.class);
             return ResponseEntity.status(response.getStatusCode())
                     .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
-
         } catch (HttpClientErrorException e) {
-            log.error("вќЊ [PROXY CONTROLLER] Client Service returned error: {} - {}", e.getStatusCode(), e.getMessage());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("рџ’Ґ [PROXY CONTROLLER] Error proxying request to Client Service", e);
+            log.error("Error proxying client search", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error communicating with Client Service: " + e.getMessage());
         }
@@ -424,5 +426,4 @@ public class ClientProxyController {
         return headers;
     }
 }
-
 

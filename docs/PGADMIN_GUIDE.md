@@ -72,11 +72,11 @@ docker logs parking_pgadmin
 
 Если pgAdmin не запустился:
 ```powershell
-cd C:\Users\user\Projects\parking-system\devops
-docker-compose -f docker-compose.infrastructure.yml logs pgadmin
+cd C:\Users\user\Projects\parking-system
+docker-compose -f docker-compose.yml logs pgadmin
 ```
 
-Если забыли пароль базы данных, он указан в `docker-compose.infrastructure.yml`:
+Пароль базы данных:
 - Username: `postgres`
 - Password: `postgres`
 

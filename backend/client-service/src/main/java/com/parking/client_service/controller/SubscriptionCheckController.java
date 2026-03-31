@@ -51,4 +51,3 @@ public class SubscriptionCheckController implements SubscriptionApi {
         return ResponseEntity.ok(response);
     }
 }
-

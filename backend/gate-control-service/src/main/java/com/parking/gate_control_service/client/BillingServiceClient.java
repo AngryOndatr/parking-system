@@ -116,11 +116,20 @@ public class BillingServiceClient {
                 }
             }
 
-            log.info("Parsed payment status for ticket {}: isPaid={}, remainingFee={}", ticketCode, isPaid, remainingFee);
+            Object parkingEventIdObj = responseMap.get("parkingEventId");
+            Long parkingEventId = null;
+            if (parkingEventIdObj instanceof Number) {
+                long id = ((Number) parkingEventIdObj).longValue();
+                parkingEventId = id > 0 ? id : null; // treat 0 as absent
+            }
+
+            log.info("Parsed payment status for ticket {}: isPaid={}, remainingFee={}, parkingEventId={}",
+                    ticketCode, isPaid, remainingFee, parkingEventId);
 
             return PaymentStatusResponse.builder()
                     .isPaid(isPaid)
                     .remainingFee(remainingFee)
+                    .parkingEventId(parkingEventId)
                     .build();
 
         } catch (WebClientResponseException.NotFound e) {

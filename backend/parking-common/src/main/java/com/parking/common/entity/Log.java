@@ -38,6 +38,23 @@ public class Log {
     @Column(name = "meta", columnDefinition = "json")
     private Map<String, Object> meta;
 
+    // ── Audit trail fields ──────────────────────────────────────────
+    @Column(name = "action", length = 100)
+    private String action;
+
+    @Column(name = "entity_type", length = 50)
+    private String entityType;
+
+    @Column(name = "entity_id")
+    private Long entityId;
+
+    @Column(name = "client_id")
+    private Long clientId;
+
+    @Column(name = "license_plate", length = 20)
+    private String licensePlate;
+    // ────────────────────────────────────────────────────────────────
+
     // Constructors
     public Log() {
     }
@@ -114,6 +131,21 @@ public class Log {
     public void setMeta(Map<String, Object> meta) {
         this.meta = meta;
     }
+
+    public String getAction() { return action; }
+    public void setAction(String action) { this.action = action; }
+
+    public String getEntityType() { return entityType; }
+    public void setEntityType(String entityType) { this.entityType = entityType; }
+
+    public Long getEntityId() { return entityId; }
+    public void setEntityId(Long entityId) { this.entityId = entityId; }
+
+    public Long getClientId() { return clientId; }
+    public void setClientId(Long clientId) { this.clientId = clientId; }
+
+    public String getLicensePlate() { return licensePlate; }
+    public void setLicensePlate(String licensePlate) { this.licensePlate = licensePlate; }
 
     @Override
     public String toString() {

@@ -48,7 +48,8 @@ export default function GatePage() {
     onSuccess: (data) => {
       setExitResult(data)
       setPaySuccess(false)
-      if (data.fee != null) setPayAmount(String(data.fee))
+      if (data.fee != null && data.fee > 0) setPayAmount(String(data.fee))
+      else setPayAmount('')
       if (data.gateStatus === 'OPENED') { setExitPlate(''); setExitTicket('') }
     },
   })
