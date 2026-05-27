@@ -161,7 +161,38 @@ npm run dev
 # Открывается на http://localhost:5173
 # Проксирует /api/* → http://localhost:8086
 ```
+ 
+---
 
+## ⚙️ CI/CD (GitHub Actions)
+
+В репозитории добавлены workflow GitHub Actions в `.github/workflows/` для автоматизации CI и CD:
+
+- `ci.yml` — CI: запускается на push и PR; выполняет unit-тесты бэкенда (Java 21 / Maven) и проверки фронтенда (ESLint + TypeScript/Vite build). В workflow задаётся тестовый `JWT_SECRET` для сценариев, где требуется JWT.
+- `cd.yml` — сборка и пуш Docker-образов в GitHub Container Registry (GHCR). Триггер — push в `main` и теги вида `v*.*.*`. Сначала собираются JAR, затем образы для каждого сервиса и фронтенда. Job с `deploy` включён, но закомментирован — включайте его после настройки секретов.
+- `e2e.yml` — E2E тесты (ручной запуск `workflow_dispatch`). Собирает образы для E2E и запускает Testcontainers-based тесты. Требует раннер с доступом к Docker.
+
+Важные замечания перед включением deploy:
+
+- `cd.yml` использует `docker/login-action` и `GITHUB_TOKEN` для пуша в GHCR. `GITHUB_TOKEN` предоставляется Actions автоматически; убедитесь, что разрешения репозитория позволяют запись в пакеты.
+- Для включения закомментированного `deploy`-job добавьте секреты в GitHub → Settings → Secrets: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`.
+- Никогда не коммитьте приватные ключи и другие секреты. Удалите локальные файлы вроде `ssh key.txt` и добавьте их в `.gitignore`.
+
+Локальные аналоги часто выполняемых CI шагов:
+
+```powershell
+# Запустить unit-тесты бэкенда
+mvn clean test
+
+# Собрать JAR (вход для сборки Docker)
+mvn clean package -DskipTests
+
+# Собрать образ фронтенда локально
+docker build -t parking-frontend:local frontend
+
+# Собрать образ для бэкенд-сервиса (пример)
+docker build -t parking-api-gateway:local backend/api-gateway
+```
 ### Доступ к сервисам
 | Сервис | Адрес | Примечание |
 |--------|-------|-----------|

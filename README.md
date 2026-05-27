@@ -162,6 +162,38 @@ npm run dev
 # Proxies /api/* → http://localhost:8086
 ```
 
+---
+
+## ⚙️ CI/CD (GitHub Actions)
+
+This repository includes GitHub Actions workflows in `.github/workflows/` to automate CI and CD:
+
+- `ci.yml` — continuous integration: runs on push & PR; executes backend unit tests (Java 21 / Maven) and frontend checks (ESLint + TypeScript/Vite build). The workflow sets a test `JWT_SECRET` value for CI runs that need JWT.
+- `cd.yml` — build & push Docker images to GitHub Container Registry (GHCR). Triggered on pushes to `main` and on semantic version tags. It first builds backend JARs, then builds and pushes Docker images for each service and the frontend. A `deploy` job is included but commented out — enable it after configuring deployment secrets.
+- `e2e.yml` — end-to-end tests (manual `workflow_dispatch`). Builds images for E2E and runs Testcontainers-based E2E tests. Requires a runner with Docker available.
+
+Important notes before enabling the deploy job in `cd.yml`:
+
+- `cd.yml` uses `docker/login-action` with `GITHUB_TOKEN` to push to GHCR. GitHub provides `GITHUB_TOKEN` automatically; ensure repository permissions allow package write.
+- To enable the commented `deploy` job you must add repository secrets in GitHub Settings → Secrets: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`.
+- Never commit private keys or secrets. Remove any local `ssh key.txt` files and add them to `.gitignore`.
+
+Local equivalents for common CI steps:
+
+```powershell
+# Run backend unit tests
+mvn clean test
+
+# Build backend jars (for Docker build inputs)
+mvn clean package -DskipTests
+
+# Build frontend image locally
+docker build -t parking-frontend:local frontend
+
+# Build a backend service image (example)
+docker build -t parking-api-gateway:local backend/api-gateway
+```
+
 ### Service Access
 | Service | Address | Notes |
 |---------|---------|-------|

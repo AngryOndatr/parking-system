@@ -1,0 +1,41 @@
+akar@Xiaomi:/mnt/c/Users/user$ ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/parking_deploy
+Generating public/private ed25519 key pair.
+Created directory '/home/akar/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/akar/.ssh/parking_deploy
+Your public key has been saved in /home/akar/.ssh/parking_deploy.pub
+The key fingerprint is:
+SHA256:nk6Qn+3NQC6AMry/alQm9/plY8ViIWIxWQ33mQHHu1I github-actions-deploy
+The key's randomart image is:
++--[ED25519 256]--+
+|    ooooooo      |
+|    .o ..o.+     |
+|    o . . +.     |
+| ...+o o oE      |
+|  +=..+ S.+.     |
+|  .+  .*.O.      |
+| ..  .  %.+      |
+|  ...  * + +     |
+| ...oo. . . o    |
++----[SHA256]-----+
+akar@Xiaomi:/mnt/c/Users/user$ cat ~/.ssh/parking_deploy.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICjBXkLT9d26e18+x5O48IIs8Ix2WUIKl2gR9bF1FLSS github-actions-deploy
+akar@Xiaomi:/mnt/c/Users/user$ cat ~/.ssh/parking_deploy
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACAowV5C0/XduntfPseTuPCCLPCMdllCCpdoEfWxdRS0kgAAAJi2NK+etjSv
+ngAAAAtzc2gtZWQyNTUxOQAAACAowV5C0/XduntfPseTuPCCLPCMdllCCpdoEfWxdRS0kg
+AAAEBbJNls/6cq+DjTu2Oej24MVfF/Uhng0m55AT8Q4BwktSjBXkLT9d26e18+x5O48IIs
+8Ix2WUIKl2gR9bF1FLSSAAAAFWdpdGh1Yi1hY3Rpb25zLWRlcGxveQ==
+-----END OPENSSH PRIVATE KEY-----
+akar@Xiaomi:/mnt/c/Users/user$
+
+# Сгенерировать пару ключей (выполнить локально)
+ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/parking_deploy
+
+# Публичный ключ → добавить на сервер в ~/.ssh/authorized_keys
+cat ~/.ssh/parking_deploy.pub
+
+# Приватный ключ → скопировать в GitHub Secret DEPLOY_SSH_KEY
+cat ~/.ssh/parking_deploy

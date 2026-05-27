@@ -324,6 +324,42 @@ docker-compose up -d --build api-gateway
 
 ---
 
+## CI/CD и GitHub Actions
+
+В репозитории присутствует папка `.github/workflows/` с готовыми workflow для CI, CD и E2E:
+
+- `ci.yml` — CI: выполняется на push и pull_request. Запускает `mvn test` (все модульные тесты) и для фронтенда — `npm ci`, `npm run lint`, `npm run build`.
+- `cd.yml` — сборка образов и пуш в GHCR: сначала один `mvn clean package -DskipTests`, затем параллельная сборка/пуш Docker-образов для каждого сервиса и фронтенда. Триггер: push в `main` и семантические теги (`v*.*.*`). В job-е предусмотрен закомментированный `deploy` шаг по SSH — включайте его только после настройки секретов.
+- `e2e.yml` — ручной запуск E2E (`workflow_dispatch`) с построением образов и запуском Testcontainers-based тестов. Используется для тяжёлых интеграционных проверок и требует runner с доступом к Docker.
+
+Что нужно знать и настроить:
+
+- Для пуша в GitHub Container Registry workflow использует `GITHUB_TOKEN`. GitHub Actions предоставляет этот токен автоматически — проверьте, что в настройках репозитория разрешена запись пакетов (`Settings → Actions → General` и `Settings → Packages`).
+- Для автоматического deploy-а (раскомментированного job-а в `cd.yml`) добавьте в репозиторий секреты (`Settings → Secrets`):
+  - `DEPLOY_HOST` — адрес сервера (IP или DNS);
+  - `DEPLOY_USER` — SSH-пользователь;
+  - `DEPLOY_SSH_KEY` — приватный SSH-ключ (в виде value, не файл);
+  - `DEPLOY_PATH` — путь на сервере, где находится docker-compose и .env;
+  Адреса и ключи не храните в репозитории в открытом виде.
+
+- `ci.yml` задаёт тестовый `JWT_SECRET` для CI: это значение используется в тестах, где ожидается минимум 64 символов для HS512. Не используйте этот тестовый секрет в продакшене.
+
+Рекомендации безопасности и workflow hygiene:
+
+- Никогда не коммитьте приватные ключи и секреты. Удалите локальные файлы вроде `ssh key.txt` и добавьте соответствующие паттерны в `.gitignore`.
+- Если вы хотите запускать `e2e.yml` в GitHub Actions, убедитесь, что runner имеет достаточные ресурсы и доступ к Docker (Testcontainers требует Docker socket или подходящий сервис).
+- Предпочтительнее использовать GHCR для хранения артефактов образов и управлять релизами через теги (semver). `cd.yml` уже формирует теги: branch, sha, semver и `latest` для `main`.
+
+Как включить deploy (шаги):
+
+1. Добавьте секреты в GitHub (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`).
+2. Проверьте, что `docker compose` и `docker` настроены на сервере назначения и что `DEPLOY_USER` имеет права запускать docker-compose.
+3. Раскомментируйте `deploy` job в `.github/workflows/cd.yml` и адаптируйте скрипт развертывания при необходимости (например, обновление `.env` с новыми тегами образов).
+4. Push в `main` или создайте релиз тегом `vX.Y.Z` — workflow соберёт образы и запустит deploy.
+
+
+---
+
 ## Health Checks
 
 ### Infrastructure Health

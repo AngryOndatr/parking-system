@@ -1,0 +1,78 @@
+name: E2E Tests
+
+on:
+  # Только ручной запуск (Testcontainers требуют Docker + тяжёлые ресурсы)
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref для тестирования (branch/tag/SHA)'
+        required: false
+        default: 'main'
+
+jobs:
+  e2e-tests:
+    name: End-to-End Tests (Testcontainers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Set up Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build all backend JARs (skip tests)
+        run: mvn clean package -DskipTests --no-transfer-progress
+
+      # Собираем образы с именами parking-system-* 
+      # (именно такие имена используются в docker-compose-e2e.yml)
+      - name: Build Docker images for E2E
+        run: |
+          declare -A SERVICES=(
+            ["eureka-server"]="backend/eureka-server"
+            ["api-gateway"]="backend/api-gateway"
+            ["client-service"]="backend/client-service"
+            ["gate-control-service"]="backend/gate-control-service"
+            ["billing-service"]="backend/billing-service"
+            ["reporting-service"]="backend/reporting-service"
+            ["management-service"]="backend/management-service"
+          )
+          for SERVICE in "${!SERVICES[@]}"; do
+            CONTEXT="${SERVICES[$SERVICE]}"
+            echo "🔨 Building parking-system-${SERVICE}:latest from ${CONTEXT}"
+            docker build -t "parking-system-${SERVICE}:latest" "${CONTEXT}"
+            echo "✅ parking-system-${SERVICE}:latest ready"
+          done
+
+      - name: Run E2E tests via Testcontainers
+        working-directory: backend/e2e-tests
+        run: mvn test --no-transfer-progress
+        env:
+          # Testcontainers использует системный Docker socket
+          DOCKER_HOST: unix:///var/run/docker.sock
+          # Testcontainers reuse отключён в CI (всегда чистая среда)
+          TESTCONTAINERS_REUSE_ENABLE: "false"
+
+      - name: Upload E2E reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports-${{ github.run_number }}
+          path: backend/e2e-tests/target/surefire-reports/*.xml
+          retention-days: 14
+
+      - name: Dump Docker logs on failure
+        if: failure()
+        working-directory: backend/e2e-tests
+        run: |
+          echo "=== Running containers ==="
+          docker ps -a
+          echo "=== docker-compose-e2e logs ==="
+          docker compose -f docker-compose-e2e.yml logs --tail=300 || true
