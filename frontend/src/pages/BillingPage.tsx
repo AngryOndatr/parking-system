@@ -1,208 +1,222 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { CreditCard, Calculator, DollarSign, Search, Loader2 } from 'lucide-react'
+import { CreditCard, Search, Loader2, DollarSign, CheckCircle2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PageHeader } from '@/components/PageHeader'
-import { calculateFee, processPayment, getBillingStatus } from '@/api/billing'
-import type { BillingCalculateResponse, BillingStatusResponse } from '@/api/billing'
+import { getBillingStatusByTicket, processPaymentTest } from '@/api/billing'
+import type { BillingStatusResponse } from '@/api/billing'
 
 export default function BillingPage() {
-  // Calculate fee state
-  const [calcForm, setCalcForm] = useState({
-    parkingEventId: '',
-    entryTime: '',
-    exitTime: '',
-    tariffType: 'ONE_TIME' as 'ONE_TIME' | 'DAILY' | 'NIGHT' | 'VIP',
-    isSubscriber: false,
-  })
-  const [calcResult, setCalcResult] = useState<BillingCalculateResponse | null>(null)
+  // Ticket search state
+  const [ticketCode, setTicketCode] = useState('')
+  const [searchResult, setSearchResult] = useState<BillingStatusResponse | null>(null)
+  const [searchError, setSearchError] = useState<string | null>(null)
 
-  // Payment state
+  // Payment form state (shown when ticket is found and unpaid)
   const [payForm, setPayForm] = useState({
-    parkingEventId: '',
     amount: '',
     paymentMethod: 'CARD' as 'CARD' | 'CASH' | 'MOBILE_PAY',
   })
-  const [payResult, setPayResult] = useState<{ paymentId: number; status: string } | null>(null)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
 
-  // Status state
-  const [statusEventId, setStatusEventId] = useState('')
-  const [statusResult, setStatusResult] = useState<BillingStatusResponse | null>(null)
-  const [statusError, setStatusError] = useState<string | null>(null)
-
-  const calcMutation = useMutation({
-    mutationFn: calculateFee,
-    onSuccess: (data) => setCalcResult(data),
+  const searchMutation = useMutation({
+    mutationFn: (code: string) => getBillingStatusByTicket(code),
+    onSuccess: (data) => {
+      setSearchResult(data)
+      setSearchError(null)
+      setPaymentSuccess(false)
+      // Pre-fill amount from the first unpaid payment if available
+      if (!data.isPaid && data.payments.length > 0) {
+        const totalAmount = data.payments.reduce((sum, p) => sum + p.amount, 0)
+        setPayForm(prev => ({ ...prev, amount: String(totalAmount) }))
+      }
+    },
+    onError: () => {
+      setSearchError('Ticket not found or no billing data available')
+      setSearchResult(null)
+    },
   })
 
   const payMutation = useMutation({
-    mutationFn: processPayment,
-    onSuccess: (data) => setPayResult({ paymentId: data.paymentId, status: data.status }),
+    mutationFn: (amount: number) =>
+      processPaymentTest({
+        parkingEventId: searchResult!.parkingEventId,
+        amount,
+        paymentMethod: payForm.paymentMethod,
+      }),
+    onSuccess: () => setPaymentSuccess(true),
   })
 
-  const handleStatus = async () => {
-    if (!statusEventId) return
-    setStatusError(null)
-    setStatusResult(null)
-    try {
-      const res = await getBillingStatus(Number(statusEventId))
-      setStatusResult(res)
-    } catch {
-      setStatusError('Event not found or no billing data')
-    }
+  const handleSearch = () => {
+    if (!ticketCode.trim()) return
+    setPaymentSuccess(false)
+    searchMutation.mutate(ticketCode)
+  }
+
+  const handlePayment = () => {
+    if (!payForm.amount || !searchResult) return
+    payMutation.mutate(Number(payForm.amount))
   }
 
   return (
     <div className="space-y-6">
       <PageHeader icon={<CreditCard size={24} />} title="Billing & Payments" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Calculate fee */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Calculator size={18} /> Calculate Fee</CardTitle>
-            <CardDescription>Calculate parking fee for an event</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Event ID</Label>
-                <Input type="number" placeholder="12345" value={calcForm.parkingEventId}
-                  onChange={(e) => setCalcForm({ ...calcForm, parkingEventId: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label>Tariff</Label>
-                <select className="w-full border rounded px-2 py-2 text-sm"
-                  value={calcForm.tariffType}
-                  onChange={(e) => setCalcForm({ ...calcForm, tariffType: e.target.value as typeof calcForm.tariffType })}>
-                  <option value="ONE_TIME">One Time</option>
-                  <option value="DAILY">Daily</option>
-                  <option value="NIGHT">Night</option>
-                  <option value="VIP">VIP</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Entry Time</Label>
-                <Input type="datetime-local" value={calcForm.entryTime}
-                  onChange={(e) => setCalcForm({ ...calcForm, entryTime: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label>Exit Time</Label>
-                <Input type="datetime-local" value={calcForm.exitTime}
-                  onChange={(e) => setCalcForm({ ...calcForm, exitTime: e.target.value })} />
-              </div>
-            </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={calcForm.isSubscriber}
-                onChange={(e) => setCalcForm({ ...calcForm, isSubscriber: e.target.checked })} />
-              Subscriber discount
-            </label>
-            <Button className="w-full" disabled={calcMutation.isPending || !calcForm.parkingEventId}
-              onClick={() => calcMutation.mutate({
-                parkingEventId: Number(calcForm.parkingEventId),
-                entryTime: new Date(calcForm.entryTime).toISOString(),
-                exitTime: new Date(calcForm.exitTime).toISOString(),
-                tariffType: calcForm.tariffType,
-                isSubscriber: calcForm.isSubscriber,
-              })}>
-              {calcMutation.isPending ? <Loader2 size={16} className="animate-spin mr-1" /> : null} Calculate
+      {/* ────── Ticket Search ────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search size={18} /> Find Ticket
+          </CardTitle>
+          <CardDescription>Search for a ticket by code to check payment status</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="e.g. TKT-20260101-001"
+              value={ticketCode}
+              onChange={(e) => setTicketCode(e.target.value)}
+              disabled={searchMutation.isPending}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Button
+              variant="outline"
+              onClick={handleSearch}
+              disabled={!ticketCode.trim() || searchMutation.isPending}
+            >
+              {searchMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
             </Button>
-            {calcMutation.isError && (
-              <p className="text-sm text-destructive">{(calcMutation.error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed'}</p>
-            )}
-            {calcResult && (
-              <div className="rounded-md bg-blue-50 border border-blue-200 px-4 py-3 text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-slate-600">Duration:</span><span className="font-medium">{calcResult.durationMinutes} min</span></div>
-                <div className="flex justify-between"><span className="text-slate-600">Base fee:</span><span>{calcResult.baseFee} UAH</span></div>
-                <div className="flex justify-between"><span className="text-slate-600">Discount:</span><span className="text-green-600">-{calcResult.discount} UAH</span></div>
-                <div className="flex justify-between font-bold border-t pt-1 mt-1"><span>Total:</span><span className="text-primary">{calcResult.totalFee} UAH</span></div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Process payment */}
+          {searchError && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+              {searchError}
+            </div>
+          )}
+
+          {searchResult && (
+            <div className={`rounded-md border px-4 py-3 space-y-2 ${
+              searchResult.isPaid ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Event ID:</span>
+                <span className="font-mono font-bold">{searchResult.parkingEventId}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Status:</span>
+                <span className={`inline-flex items-center gap-1 font-semibold ${
+                  searchResult.isPaid ? 'text-green-600' : 'text-amber-600'
+                }`}>
+                  {searchResult.isPaid ? <CheckCircle2 size={16} /> : <DollarSign size={16} />}
+                  {searchResult.isPaid ? 'PAID' : 'UNPAID'}
+                </span>
+              </div>
+              {searchResult.payments.length > 0 && (
+                <div className="border-t pt-2 mt-2 space-y-1">
+                  <p className="text-xs text-slate-600 font-semibold">Payments:</p>
+                  {searchResult.payments.map((p) => (
+                    <div key={p.paymentId} className="flex justify-between text-xs text-slate-600">
+                      <span>#{p.paymentId} · {p.paymentMethod}</span>
+                      <span>
+                        {p.amount} UAH ·{' '}
+                        <span className={p.status === 'COMPLETED' ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'}>
+                          {p.status}
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ────── Payment Form (shown only when unpaid) ────── */}
+      {searchResult && !searchResult.isPaid && !paymentSuccess && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><DollarSign size={18} /> Process Payment</CardTitle>
-            <CardDescription>Register payment for a parking event</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign size={18} /> Process Payment
+            </CardTitle>
+            <CardDescription>Record payment for this parking session</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Event ID</Label>
-                <Input type="number" placeholder="12345" value={payForm.parkingEventId}
-                  onChange={(e) => setPayForm({ ...payForm, parkingEventId: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <Label>Amount (UAH)</Label>
-                <Input type="number" placeholder="100.00" value={payForm.amount}
-                  onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} />
-              </div>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount (UAH)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="100.00"
+                value={payForm.amount}
+                onChange={(e) => setPayForm(prev => ({ ...prev, amount: e.target.value }))}
+                disabled={payMutation.isPending}
+              />
             </div>
-            <div className="space-y-1">
-              <Label>Payment Method</Label>
-              <select className="w-full border rounded px-2 py-2 text-sm"
+
+            <div className="space-y-2">
+              <Label htmlFor="payment-method">Payment Method</Label>
+              <select
+                id="payment-method"
+                className="w-full border rounded-md px-3 py-2 text-sm"
                 value={payForm.paymentMethod}
-                onChange={(e) => setPayForm({ ...payForm, paymentMethod: e.target.value as typeof payForm.paymentMethod })}>
+                onChange={(e) => setPayForm(prev => ({ ...prev, paymentMethod: e.target.value as typeof payForm.paymentMethod }))}
+                disabled={payMutation.isPending}
+              >
                 <option value="CARD">Card</option>
                 <option value="CASH">Cash</option>
                 <option value="MOBILE_PAY">Mobile Pay</option>
               </select>
             </div>
-            <Button className="w-full" disabled={payMutation.isPending || !payForm.parkingEventId || !payForm.amount}
-              onClick={() => payMutation.mutate({
-                parkingEventId: Number(payForm.parkingEventId),
-                amount: Number(payForm.amount),
-                paymentMethod: payForm.paymentMethod,
-              })}>
-              {payMutation.isPending ? <Loader2 size={16} className="animate-spin mr-1" /> : null} Pay
+
+            <Button
+              className="w-full"
+              disabled={!payForm.amount || payMutation.isPending}
+              onClick={handlePayment}
+            >
+              {payMutation.isPending && <Loader2 size={16} className="animate-spin mr-2" />}
+              Process Payment
             </Button>
+
             {payMutation.isError && (
-              <p className="text-sm text-destructive">{(payMutation.error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed'}</p>
-            )}
-            {payResult && (
-              <div className="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm">
-                <p className="font-semibold text-green-700">✅ Payment #{payResult.paymentId} — {payResult.status}</p>
+              <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+                {(payMutation.error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Payment failed'}
               </div>
             )}
           </CardContent>
         </Card>
-      </div>
+      )}
 
-      {/* Status check */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Search size={18} /> Payment Status</CardTitle>
-          <CardDescription>Check payment status by parking event ID</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-[1fr_auto] xs:flex gap-2">
-            <Input type="number" placeholder="Event ID" value={statusEventId}
-              onChange={(e) => { setStatusEventId(e.target.value); setStatusResult(null); setStatusError(null) }} />
-            <Button variant="outline" onClick={handleStatus} disabled={!statusEventId}>
-              <Search size={16} className="mr-1" /> Check
-            </Button>
-          </div>
-          {statusError && <p className="text-sm text-destructive">{statusError}</p>}
-          {statusResult && (
-            <div className={`rounded-md border px-4 py-3 text-sm ${statusResult.isPaid ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
-              <p className="font-semibold mb-2">Event #{statusResult.parkingEventId} — {statusResult.isPaid ? '✅ Paid' : '⏳ Unpaid'}</p>
-              {statusResult.payments.map((p) => (
-                <div key={p.paymentId} className="flex justify-between text-xs text-slate-600 py-0.5">
-                  <span>#{p.paymentId} · {p.paymentMethod}</span>
-                  <span>{p.amount} UAH · <span className={p.status === 'COMPLETED' ? 'text-green-600' : 'text-red-500'}>{p.status}</span></span>
-                </div>
-              ))}
+      {/* ────── Payment Success ────── */}
+      {paymentSuccess && searchResult && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6 text-center space-y-4">
+            <div className="flex justify-center">
+              <CheckCircle2 size={48} className="text-green-600" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div>
+              <p className="font-bold text-lg text-green-700">Payment Completed!</p>
+              <p className="text-sm text-slate-600">
+               Ticket: {ticketCode} · Event #{searchResult.parkingEventId}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTicketCode('')
+                setSearchResult(null)
+                setPaymentSuccess(false)
+                setPayForm({ amount: '', paymentMethod: 'CARD' })
+              }}
+            >
+              Search Another Ticket
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

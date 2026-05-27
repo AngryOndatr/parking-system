@@ -67,3 +67,13 @@ export async function getBillingStatus(parkingEventId: number): Promise<BillingS
   return res.data
 }
 
+export async function getBillingStatusByTicket(ticketCode: string): Promise<BillingStatusResponse> {
+  const res = await apiClient.get<BillingStatusResponse>('/v1/billing/status-by-ticket', { params: { ticketCode } })
+  return res.data
+}
+
+export async function processPaymentTest(data: BillingPayRequest): Promise<BillingPayResponse> {
+  const res = await apiClient.post<BillingPayResponse>('/v1/billing/pay-test', data)
+  return res.data
+}
+
