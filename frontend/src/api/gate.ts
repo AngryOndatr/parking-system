@@ -36,11 +36,11 @@ export interface GateExitResponse {
 }
 
 export async function gateEntry(data: GateEntryRequest): Promise<GateEntryResponse> {
-  const res = await apiClient.post<GateEntryResponse>('/v1/gate/entry', data)
+  const res = await apiClient.post<GateEntryResponse>('/gate/entry', data)
   return res.data
 }
 
 export async function gateExit(data: GateExitRequest): Promise<GateExitResponse> {
-  const res = await apiClient.post<GateExitResponse>('/v1/gate/exit', data)
+  const res = await apiClient.post<GateExitResponse>('/gate/exit', data)
   return res.data
 }

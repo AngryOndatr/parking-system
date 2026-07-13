@@ -679,12 +679,12 @@ try {
             $testsFailed++
         }
 
-        # Test 18: POST /api/v1/gate/entry (subscriber entry — no ticket)
-        Write-Host "   [18/25] POST /api/v1/gate/entry (subscriber AA1234BB): " -NoNewline -ForegroundColor White
+        # Test 18: POST /api/gate/entry (subscriber entry — no ticket)
+        Write-Host "   [18/25] POST /api/gate/entry (subscriber AA1234BB): " -NoNewline -ForegroundColor White
         $subscriberEventId = $null
         try {
             $entryBody = '{"licensePlate":"AA1234BB","entryMethod":"SCAN","gateId":"ENTRY-1"}'
-            $entryResp = Invoke-RestMethod -Uri "http://localhost:8086/api/v1/gate/entry" `
+            $entryResp = Invoke-RestMethod -Uri "http://localhost:8086/api/gate/entry" `
                 -Method POST -Headers $headers -Body $entryBody -TimeoutSec 10
             $subscriberEventId = $entryResp.parkingEventId
             if ($entryResp.isSubscriber -eq $true -and $entryResp.gateStatus -eq "OPENED") {
@@ -699,11 +699,11 @@ try {
             $testsFailed++
         }
 
-        # Test 19: POST /api/v1/gate/exit (subscriber exit — no payment)
-        Write-Host "   [19/25] POST /api/v1/gate/exit (subscriber AA1234BB): " -NoNewline -ForegroundColor White
+        # Test 19: POST /api/gate/exit (subscriber exit — no payment)
+        Write-Host "   [19/25] POST /api/gate/exit (subscriber AA1234BB): " -NoNewline -ForegroundColor White
         try {
             $exitBody = '{"licensePlate":"AA1234BB","exitMethod":"SCAN","gateId":"EXIT-1"}'
-            $exitResp = Invoke-RestMethod -Uri "http://localhost:8086/api/v1/gate/exit" `
+            $exitResp = Invoke-RestMethod -Uri "http://localhost:8086/api/gate/exit" `
                 -Method POST -Headers $headers -Body $exitBody -TimeoutSec 10
             if ($exitResp.paymentRequired -eq $false -and $exitResp.gateStatus -eq "OPENED") {
                 Write-Host "OK (paymentRequired=false, gateStatus=OPENED)" -ForegroundColor Green
@@ -936,4 +936,3 @@ Write-Host "   operator / operator123  (role: OPERATOR)" -ForegroundColor White
 Write-Host "   manager  / manager123   (role: MANAGER)" -ForegroundColor White
 Write-Host "   user     / user1234     (role: USER)" -ForegroundColor White
 Write-Host ""
-

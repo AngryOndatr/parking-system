@@ -86,13 +86,13 @@ public class SecurityFilter extends OncePerRequestFilter {
     static {
         Map<String, Set<Role>> m = new HashMap<>();
         // Gate Control Service — write operations
-        m.put("POST:/api/v1/gate/",    EnumSet.of(Role.OPERATOR, Role.ADMIN));
-        m.put("PUT:/api/v1/gate/",     EnumSet.of(Role.OPERATOR, Role.ADMIN));
-        m.put("DELETE:/api/v1/gate/",  EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("POST:/api/gate/",    EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("PUT:/api/gate/",     EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("DELETE:/api/gate/",  EnumSet.of(Role.OPERATOR, Role.ADMIN));
         // Billing Service — write operations
-        m.put("POST:/api/v1/billing/",    EnumSet.of(Role.OPERATOR, Role.ADMIN));
-        m.put("PUT:/api/v1/billing/",     EnumSet.of(Role.OPERATOR, Role.ADMIN));
-        m.put("DELETE:/api/v1/billing/",  EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("POST:/api/billing/",    EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("PUT:/api/billing/",     EnumSet.of(Role.OPERATOR, Role.ADMIN));
+        m.put("DELETE:/api/billing/",  EnumSet.of(Role.OPERATOR, Role.ADMIN));
         // Client Service — all methods
         m.put("GET:/api/clients/",    EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));
         m.put("POST:/api/clients/",   EnumSet.of(Role.ADMIN, Role.MANAGER, Role.OPERATOR));

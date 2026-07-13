@@ -70,7 +70,7 @@ public class OneTimeVisitorE2ETest {
         System.out.println("Waiting for Gate Control Service to be ready...");
         await().atMost(Duration.ofMinutes(3)).pollInterval(Duration.ofSeconds(10)).until(() -> {
             try {
-                int status = given().when().get("/api/v1/gate/events").getStatusCode();
+                int status = given().when().get("/api/gate/events").getStatusCode();
                 // 200 or 404 both mean gate-control-service is UP
                 if (status == 200 || status == 404) {
                     System.out.println("Gate Control Service is ready (status=" + status + ")");
@@ -88,7 +88,7 @@ public class OneTimeVisitorE2ETest {
         System.out.println("Waiting for Billing Service to be ready...");
         await().atMost(Duration.ofMinutes(3)).pollInterval(Duration.ofSeconds(10)).until(() -> {
             try {
-                int status = given().queryParam("parkingEventId", 0).when().get("/api/v1/billing/status").getStatusCode();
+                int status = given().queryParam("parkingEventId", 0).when().get("/api/billing/status").getStatusCode();
                 if (status == 200 || status == 404) {
                     System.out.println("Billing Service is ready (status=" + status + ")");
                     return true;
@@ -114,7 +114,7 @@ public class OneTimeVisitorE2ETest {
         // Step 1: Vehicle Entry - Generate Ticket
         System.out.println("\n=== Step 1: Vehicle Entry ===");
         System.out.println("License Plate: " + licensePlate);
-        System.out.println("Request URL: " + RestAssured.baseURI + "/api/v1/gate/entry");
+        System.out.println("Request URL: " + RestAssured.baseURI + "/api/gate/entry");
 
         // Extract both ticketCode and parkingEventId from entry response
         var entryResponse = given()
@@ -122,7 +122,7 @@ public class OneTimeVisitorE2ETest {
                 .body("{\"licensePlate\":\"" + licensePlate + "\", \"entryMethod\":\"SCAN\", \"gateId\":\"ENTRY-1\"}")
                 .log().all() // Log request
                 .when()
-                .post("/api/v1/gate/entry")
+                .post("/api/gate/entry")
                 .then()
                 .log().all() // Log response for debugging
                 .statusCode(201)
@@ -143,7 +143,7 @@ public class OneTimeVisitorE2ETest {
                 .contentType(ContentType.JSON)
                 .body("{\"ticketCode\":\"" + ticketCode + "\", \"licensePlate\":\"" + licensePlate + "\", \"exitMethod\":\"SCAN\", \"gateId\":\"EXIT-1\"}")
                 .when()
-                .post("/api/v1/gate/exit")
+                .post("/api/gate/exit")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -160,7 +160,7 @@ public class OneTimeVisitorE2ETest {
                 .body(String.format("{\"ticketCode\":\"%s\", \"licensePlate\":\"%s\", \"amount\":100.0, \"paymentMethod\":\"CARD\", \"transactionId\":\"TXN-E2E-%d\"}",
                         ticketCode, licensePlate, System.currentTimeMillis()))
                 .when()
-                .post("/api/v1/billing/pay-test")
+                .post("/api/billing/pay-test")
                 .then()
                 .log().all()
                 .statusCode(201)
@@ -180,7 +180,7 @@ public class OneTimeVisitorE2ETest {
         given()
                 .queryParam("parkingEventId", actualParkingEventId)
                 .when()
-                .get("/api/v1/billing/status")
+                .get("/api/billing/status")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -193,7 +193,7 @@ public class OneTimeVisitorE2ETest {
                 .contentType(ContentType.JSON)
                 .body("{\"ticketCode\":\"" + ticketCode + "\", \"licensePlate\":\"" + licensePlate + "\", \"exitMethod\":\"SCAN\", \"gateId\":\"EXIT-1\"}")
                 .when()
-                .post("/api/v1/gate/exit")
+                .post("/api/gate/exit")
                 .then()
                 .log().all();
 

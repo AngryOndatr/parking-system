@@ -1379,7 +1379,7 @@
             };
 
             // Call modified version that captures response
-            testEndpointWithCallback('POST', '/api/v1/gate/entry', entryData, (response) => {
+            testEndpointWithCallback('POST', '/api/gate/entry', entryData, (response) => {
                 // Auto-fill ticket code if present
                 if (response && response.ticketCode) {
                     document.getElementById('exitTicketCode').value = response.ticketCode;
@@ -1412,7 +1412,7 @@
                 exitData.ticketCode = ticketCode;
             }
 
-            testEndpointWithData('POST', '/api/v1/gate/exit', exitData);
+            testEndpointWithData('POST', '/api/gate/exit', exitData);
         }
 
         function testManualGateControl() {
@@ -1428,7 +1428,7 @@
                 reason: reason
             };
 
-            testEndpointWithData('POST', '/api/v1/gate/control', controlData);
+            testEndpointWithData('POST', '/api/gate/control', controlData);
         }
 
         // ============================================
@@ -1449,7 +1449,7 @@
                 feeData.exitTime = exitTime;
             }
 
-            testEndpointWithData('POST', '/api/v1/billing/calculate', feeData);
+            testEndpointWithData('POST', '/api/billing/calculate', feeData);
         }
 
         function processPayment() {
@@ -1468,17 +1468,17 @@
                 paymentData.transactionId = transactionId;
             }
 
-            testEndpointWithData('POST', '/api/v1/billing/pay', paymentData);
+            testEndpointWithData('POST', '/api/billing/pay', paymentData);
         }
 
         function checkPaymentStatus() {
             const parkingEventId = document.getElementById('statusParkingEventId').value;
-            testEndpoint('GET', `/api/v1/billing/status?parkingEventId=${parkingEventId}`);
+            testEndpoint('GET', `/api/billing/status?parkingEventId=${parkingEventId}`);
         }
 
         function checkPaymentStatusByTicket() {
             const ticketCode = document.getElementById('statusTicketCode').value;
-            testEndpoint('GET', `/api/v1/billing/status-by-ticket?ticketCode=${encodeURIComponent(ticketCode)}`);
+            testEndpoint('GET', `/api/billing/status-by-ticket?ticketCode=${encodeURIComponent(ticketCode)}`);
         }
 
         // ============================================
@@ -1681,21 +1681,21 @@
 
             // Gate Control Service tests
             progress('Gate Entry (subscriber)');
-            const entryRes = await runRequest('POST', '/api/v1/gate/entry', {
+            const entryRes = await runRequest('POST', '/api/gate/entry', {
                 licensePlate: 'AA1234BB',
                 entryMethod: 'SCAN',
                 gateId: 'ENTRY-1'
             }, 'Gate Entry (subscriber AA1234BB)');
 
             progress('Gate Exit (subscriber)');
-            await runRequest('POST', '/api/v1/gate/exit', {
+            await runRequest('POST', '/api/gate/exit', {
                 licensePlate: 'AA1234BB',
                 exitMethod: 'SCAN',
                 gateId: 'EXIT-1'
             }, 'Gate Exit (subscriber AA1234BB)');
 
             progress('Manual Gate Control');
-            await runRequest('POST', '/api/v1/gate/control', {
+            await runRequest('POST', '/api/gate/control', {
                 gateId: 'ENTRY-1',
                 action: 'OPEN',
                 operatorId: 1,
@@ -1706,7 +1706,7 @@
             progress('Create billing test event');
             const billingTicket = `QT-TICKET-${ts}`;
             const billingPlate = `QT-${String(ts).slice(-4)}`;
-            const billingPrepRes = await runRequest('POST', '/api/v1/billing/test-event', {
+            const billingPrepRes = await runRequest('POST', '/api/billing/test-event', {
                 ticketCode: billingTicket,
                 licensePlate: billingPlate,
                 entryMinutesAgo: 120
@@ -1719,7 +1719,7 @@
              progress('Calculate Parking Fee');
             const calcEntry = new Date(Date.now() - 2 * 60 * 60 * 1000);
             const calcExit = new Date();
-            await runRequest('POST', '/api/v1/billing/calculate', {
+            await runRequest('POST', '/api/billing/calculate', {
                 parkingEventId: billingPreparedEventId || 1,
                 entryTime: calcEntry.toISOString(),
                 exitTime: calcExit.toISOString(),
@@ -1729,7 +1729,7 @@
 
              progress('Process Payment');
             const paymentTestEventId = Math.floor(Date.now() / 1000);
-            await runRequest('POST', '/api/v1/billing/pay', {
+            await runRequest('POST', '/api/billing/pay', {
                 parkingEventId: paymentTestEventId,
                 amount: 150.00,
                 paymentMethod: 'CASH',
@@ -1738,7 +1738,7 @@
 
              progress('Check Payment Status');
             const statusEventId = billingPreparedEventId || paymentTestEventId;
-            await runRequest('GET', `/api/v1/billing/status?parkingEventId=${statusEventId}`, null, 'Check payment status by event ID');
+            await runRequest('GET', `/api/billing/status?parkingEventId=${statusEventId}`, null, 'Check payment status by event ID');
 
             // Reporting Service tests
             progress('Create log entry');
@@ -1768,4 +1768,3 @@
     </script>
 </body>
 </html>
-

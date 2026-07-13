@@ -19,8 +19,8 @@ import static org.hamcrest.Matchers.nullValue;
  * an active ANNUAL subscription (client_id=1, is_active=true, end_date = NOW + 1 year).
  *
  * Scenario (3 steps):
- *   1. POST /api/v1/gate/entry  → 201, isSubscriber=true, gateStatus=OPENED, no ticketCode
- *   2. POST /api/v1/gate/exit   → 200, paymentRequired=false, gateStatus=OPENED
+ *   1. POST /api/gate/entry  → 201, isSubscriber=true, gateStatus=OPENED, no ticketCode
+ *   2. POST /api/gate/exit   → 200, paymentRequired=false, gateStatus=OPENED
  *   3. Confirm no payment record exists for this plate (billing returns 404 by ticket)
  */
 public class SubscriberE2ETest {
@@ -61,7 +61,7 @@ public class SubscriberE2ETest {
         System.out.println("Waiting for Gate Control Service...");
         await().atMost(Duration.ofMinutes(3)).pollInterval(Duration.ofSeconds(10)).until(() -> {
             try {
-                int status = given().when().get("/api/v1/gate/events").getStatusCode();
+                int status = given().when().get("/api/gate/events").getStatusCode();
                 if (status == 200 || status == 404) {
                     System.out.println("Gate Control Service is ready (status=" + status + ")");
                     return true;
@@ -89,7 +89,7 @@ public class SubscriberE2ETest {
                         SUBSCRIBER_PLATE))
                 .log().all()
                 .when()
-                .post("/api/v1/gate/entry")
+                .post("/api/gate/entry")
                 .then()
                 .log().all()
                 .statusCode(201)
@@ -113,7 +113,7 @@ public class SubscriberE2ETest {
                         SUBSCRIBER_PLATE))
                 .log().all()
                 .when()
-                .post("/api/v1/gate/exit")
+                .post("/api/gate/exit")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -130,7 +130,7 @@ public class SubscriberE2ETest {
         given()
                 .queryParam("parkingEventId", parkingEventId)
                 .when()
-                .get("/api/v1/billing/status")
+                .get("/api/billing/status")
                 .then()
                 .log().all()
                 .statusCode(404);

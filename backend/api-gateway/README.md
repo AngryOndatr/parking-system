@@ -40,8 +40,8 @@ Request
 
 | Route pattern | Required roles |
 |---------------|---------------|
-| `POST/PUT/DELETE /api/v1/gate/*` | OPERATOR, ADMIN |
-| `POST/PUT/DELETE /api/v1/billing/*` | OPERATOR, ADMIN |
+| `POST/PUT/DELETE /api/gate/*` | OPERATOR, ADMIN |
+| `POST/PUT/DELETE /api/billing/*` | OPERATOR, ADMIN |
 | `GET/POST/PUT/DELETE /api/clients/*` | ADMIN, MANAGER, OPERATOR |
 | write ops `/api/management/*` | ADMIN, MANAGER |
 | `GET /api/reporting/*` | ADMIN, MANAGER, OPERATOR |

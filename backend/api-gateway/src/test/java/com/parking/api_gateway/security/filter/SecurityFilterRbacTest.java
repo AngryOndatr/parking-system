@@ -68,8 +68,8 @@ class SecurityFilterRbacTest {
     @Test
     @DisplayName("ADMIN is allowed on every protected route")
     void adminAllowedOnAllProtectedRoutes() {
-        assertThat(securityFilter.isRoleAllowed("POST",   "/api/v1/gate/entry",        "ADMIN")).isTrue();
-        assertThat(securityFilter.isRoleAllowed("POST",   "/api/v1/billing/pay",        "ADMIN")).isTrue();
+        assertThat(securityFilter.isRoleAllowed("POST",   "/api/gate/entry",        "ADMIN")).isTrue();
+        assertThat(securityFilter.isRoleAllowed("POST",   "/api/billing/pay",        "ADMIN")).isTrue();
         assertThat(securityFilter.isRoleAllowed("GET",    "/api/clients/1",             "ADMIN")).isTrue();
         assertThat(securityFilter.isRoleAllowed("DELETE", "/api/clients/1",             "ADMIN")).isTrue();
         assertThat(securityFilter.isRoleAllowed("POST",   "/api/management/spots",      "ADMIN")).isTrue();
@@ -137,4 +137,3 @@ class SecurityFilterRbacTest {
         return request;
     }
 }
-

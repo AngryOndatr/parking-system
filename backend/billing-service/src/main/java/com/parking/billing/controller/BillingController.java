@@ -169,7 +169,7 @@ public class BillingController implements BillingApi {
      * @param ticketCode the ticket code
      * @return payment status response
      */
-    @org.springframework.web.bind.annotation.GetMapping("/api/v1/billing/status-by-ticket")
+    @org.springframework.web.bind.annotation.GetMapping("/api/billing/status-by-ticket")
     public ResponseEntity<PaymentStatusResponse> getPaymentStatusByTicket(
             @org.springframework.web.bind.annotation.RequestParam String ticketCode) {
         log.info("Received payment status request for ticket: {}", ticketCode);
@@ -224,7 +224,7 @@ public class BillingController implements BillingApi {
      * @param request payment request with ticketCode, licensePlate and amount
      * @return payment response
      */
-    @PostMapping("/api/v1/billing/pay-test")
+    @PostMapping("/api/billing/pay-test")
     public ResponseEntity<PaymentResponse> processTestPayment(@RequestBody Map<String, Object> request) {
         log.info("🧪 TEST ENDPOINT: Received simplified payment request: {}", request);
 
@@ -286,7 +286,7 @@ public class BillingController implements BillingApi {
      * @param request contains ticketCode, licensePlate, and optional entryMinutesAgo
      * @return created parking event details
      */
-    @PostMapping("/api/v1/billing/test-event")
+    @PostMapping("/api/billing/test-event")
     public ResponseEntity<Map<String, Object>> createTestParkingEvent(@RequestBody Map<String, Object> request) {
         log.info("🧪 TEST ENDPOINT: Preparing parking event: {}", request);
         try {
@@ -320,4 +320,3 @@ public class BillingController implements BillingApi {
         }
     }
 }
-

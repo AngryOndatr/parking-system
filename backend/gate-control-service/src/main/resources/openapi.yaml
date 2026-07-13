@@ -24,7 +24,7 @@ paths:
   # =================================================================
   # VEHICLE ENTRY
   # =================================================================
-  /api/v1/gate/entry:
+  /api/gate/entry:
     post:
       tags:
         - Gate
@@ -100,7 +100,7 @@ paths:
                 status: 400
                 error: "Bad Request"
                 message: "License plate format is invalid"
-                path: "/api/v1/gate/entry"
+                path: "/api/gate/entry"
         '403':
           description: Access denied
           content:
@@ -112,7 +112,7 @@ paths:
                 status: 403
                 error: "Forbidden"
                 message: "Vehicle is blacklisted or subscription expired"
-                path: "/api/v1/gate/entry"
+                path: "/api/gate/entry"
         '409':
           description: Vehicle already inside
           content:
@@ -124,14 +124,14 @@ paths:
                 status: 409
                 error: "Conflict"
                 message: "Vehicle ABC-1234 is already inside (entry at 08:00)"
-                path: "/api/v1/gate/entry"
+                path: "/api/gate/entry"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
   # =================================================================
   # VEHICLE EXIT
   # =================================================================
-  /api/v1/gate/exit:
+  /api/gate/exit:
     post:
       tags:
         - Gate
@@ -224,7 +224,7 @@ paths:
                 status: 404
                 error: "Not Found"
                 message: "No active parking event found for license plate ABC-1234"
-                path: "/api/v1/gate/exit"
+                path: "/api/gate/exit"
         '409':
           description: Exit already processed
           content:
@@ -236,14 +236,14 @@ paths:
                 status: 409
                 error: "Conflict"
                 message: "Parking event already closed (exit at 11:00)"
-                path: "/api/v1/gate/exit"
+                path: "/api/gate/exit"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
   # =================================================================
   # MANUAL GATE CONTROL
   # =================================================================
-  /api/v1/gate/control:
+  /api/gate/control:
     post:
       tags:
         - Gate
@@ -310,7 +310,7 @@ paths:
                 status: 403
                 error: "Forbidden"
                 message: "Operator does not have permission for manual gate control"
-                path: "/api/v1/gate/control"
+                path: "/api/gate/control"
         '404':
           description: Gate not found
           content:
@@ -608,7 +608,7 @@ components:
         path:
           type: string
           description: Request path where error occurred
-          example: "/api/v1/gate/entry"
+          example: "/api/gate/entry"
 
   # =================================================================
   # REUSABLE RESPONSES
@@ -625,7 +625,7 @@ components:
             status: 400
             error: "Bad Request"
             message: "Invalid request parameters"
-            path: "/api/v1/gate/entry"
+            path: "/api/gate/entry"
 
     InternalServerError:
       description: Internal server error
@@ -638,5 +638,4 @@ components:
             status: 500
             error: "Internal Server Error"
             message: "An unexpected error occurred"
-            path: "/api/v1/gate/entry"
-
+            path: "/api/gate/entry"

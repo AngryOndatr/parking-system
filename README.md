@@ -259,15 +259,15 @@ Client, vehicle, and subscription management. OpenAPI-first (`src/main/resources
 ### 3. Gate Control Service (Port 8082)
 Handles physical gate events. OpenAPI-first. Calls client-service to check subscriptions.
 
-- `POST /api/v1/gate/entry` — vehicle entry (returns ticket or subscriber pass)
-- `POST /api/v1/gate/exit` — vehicle exit (calculates fee)
-- `POST /api/v1/gate/control` — manual gate control (OPEN/CLOSE)
+- `POST /api/gate/entry` — vehicle entry (returns ticket or subscriber pass)
+- `POST /api/gate/exit` — vehicle exit (calculates fee)
+- `POST /api/gate/control` — manual gate control (OPEN/CLOSE)
 
 ### 4. Billing Service (Port 8083)
 Parking fee calculation and payment recording.
 
-- `GET  /api/v1/billing/status-by-ticket?ticketCode={code}` — payment status
-- `POST /api/v1/billing/pay-test` — test payment endpoint
+- `GET  /api/billing/status-by-ticket?ticketCode={code}` — payment status
+- `POST /api/billing/pay-test` — test payment endpoint
 
 ### 5. Management Service (Port 8084)
 Parking space inventory and availability. OpenAPI-first.
@@ -432,8 +432,8 @@ curl -s -X POST http://localhost:8086/api/auth/login \
 
 | Route | Required Roles |
 |-------|---------------|
-| `POST/PUT/DELETE /api/v1/gate/*` | OPERATOR, ADMIN |
-| `POST/PUT/DELETE /api/v1/billing/*` | OPERATOR, ADMIN |
+| `POST/PUT/DELETE /api/gate/*` | OPERATOR, ADMIN |
+| `POST/PUT/DELETE /api/billing/*` | OPERATOR, ADMIN |
 | `GET/POST/PUT/DELETE /api/clients/*` | ADMIN, MANAGER, OPERATOR |
 | `write ops /api/management/*` | ADMIN, MANAGER |
 | `GET /api/reporting/*` | ADMIN, MANAGER, OPERATOR |

@@ -4,7 +4,7 @@
 
 ### What was done:
 
-1. ✅ Created test endpoint `/api/v1/billing/pay-test` in billing-service
+1. ✅ Created test endpoint `/api/billing/pay-test` in billing-service
 2. ✅ Added proxy in api-gateway
 3. ✅ Updated E2E test
 4. ✅ Rebuilt Docker images
@@ -121,7 +121,7 @@ public ResponseEntity<PaymentResponse> processTestPayment(...)
 
 Or via Spring Security:
 ```java
-.requestMatchers("/api/v1/billing/pay-test").hasRole("TEST")
+.requestMatchers("/api/billing/pay-test").hasRole("TEST")
 ```
 
 ---

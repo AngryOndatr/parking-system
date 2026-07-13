@@ -57,7 +57,7 @@ class CorsFilterTest {
     @Test
     @DisplayName("OPTIONS preflight from localhost:3000 returns 200")
     void preflight_port3000_returns200() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/v1/gate/entry");
+        MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/gate/entry");
         request.addHeader("Origin", "http://localhost:3000");
         request.addHeader("Access-Control-Request-Method", "POST");
         MockHttpServletResponse response = new MockHttpServletResponse();

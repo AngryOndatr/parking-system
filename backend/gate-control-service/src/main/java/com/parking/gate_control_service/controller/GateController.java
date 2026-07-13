@@ -29,7 +29,7 @@ public class GateController implements GateApi {
 
     /**
      * Process vehicle entry through gate.
-     * POST /api/v1/gate/entry
+     * POST /api/gate/entry
      *
      * @param entryRequest entry request with license plate and gate info
      * @return EntryResponse with parking event details and gate status
@@ -40,7 +40,7 @@ public class GateController implements GateApi {
         String licensePlate = entryRequest.getLicensePlate() != null ? entryRequest.getLicensePlate() : "";
         String gateId = entryRequest.getGateId() != null ? entryRequest.getGateId() : null;
 
-        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/entry - License plate: {}, Gate: {}", licensePlate, gateId);
+        log.info("🚀 [GATE CONTROLLER] POST /api/gate/entry - License plate: {}, Gate: {}", licensePlate, gateId);
 
         EntryDecision decision = gateService.processEntry(licensePlate);
 
@@ -67,7 +67,7 @@ public class GateController implements GateApi {
 
     /**
      * Process vehicle exit through gate.
-     * POST /api/v1/gate/exit
+     * POST /api/gate/exit
      *
      * @param exitRequest exit request with license plate or ticket code
      * @return ExitResponse with parking event details, fee, and gate status
@@ -75,7 +75,7 @@ public class GateController implements GateApi {
     @Override
     public ResponseEntity<ExitResponse> processExit(@Valid @RequestBody ExitRequest exitRequest) {
         try {
-            log.info("🚪 [GATE CONTROLLER] POST /api/v1/gate/exit - RECEIVED REQUEST");
+            log.info("🚪 [GATE CONTROLLER] POST /api/gate/exit - RECEIVED REQUEST");
             log.info("🔍 [RAW] exitRequest class: {}", exitRequest != null ? exitRequest.getClass().getName() : "null");
             log.info("🔍 [RAW] exitRequest toString: {}", exitRequest);
 
@@ -142,7 +142,7 @@ public class GateController implements GateApi {
 
     /**
      * Manual gate control by operator.
-     * POST /api/v1/gate/control
+     * POST /api/gate/control
      *
      * @param gateControlRequest gate control request with gate ID and action
      * @return GateControlResponse with gate status
@@ -154,7 +154,7 @@ public class GateController implements GateApi {
         Long operatorId = gateControlRequest.getOperatorId() != null ? gateControlRequest.getOperatorId() : null;
         String gateId = gateControlRequest.getGateId() != null ? gateControlRequest.getGateId() : null;
 
-        log.info("🚀 [GATE CONTROLLER] POST /api/v1/gate/control - Gate: {}, Action: {}", gateId, action);
+        log.info("🚀 [GATE CONTROLLER] POST /api/gate/control - Gate: {}, Action: {}", gateId, action);
 
         gateService.processManualControl(gateId, action, operatorId, gateControlRequest.getReason() != null ? gateControlRequest.getReason() : null);
 

@@ -88,7 +88,7 @@ export default function ParkingSimulation() {
         if (!ticketCode) return;
         addLog(t('sim.paying', { ticket: ticketCode }));
         try {
-            await apiClient.post('/v1/billing/pay-test', { ticketCode, amount: 50.0 });
+            await apiClient.post('/billing/pay-test', { ticketCode, amount: 50.0 });
             setIsPaid(true);
             addLog(t('sim.payment_success'));
         } catch {

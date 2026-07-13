@@ -76,7 +76,7 @@ public class SimpleHealthCheckTest {
                 .body(requestBody)
                 .log().all()
                 .when()
-                .post("/api/v1/gate/entry");
+                .post("/api/gate/entry");
 
         System.out.println("\nResponse status: " + response.getStatusCode());
         System.out.println("Response body: " + response.asString());
@@ -97,7 +97,7 @@ public class SimpleHealthCheckTest {
                 .body(exitRequestBody)
                 .log().all()
                 .when()
-                .post("/api/v1/gate/exit");
+                .post("/api/gate/exit");
 
         System.out.println("\nExit response status: " + exitResponse.getStatusCode());
         System.out.println("Exit response body: " + exitResponse.asString());
@@ -112,4 +112,3 @@ public class SimpleHealthCheckTest {
         }
     }
 }
-

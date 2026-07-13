@@ -28,11 +28,11 @@ mvn test -Pe2e
 **Scenario:** Complete parking cycle for a one-time visitor (no subscription)
 
 **Steps:**
-1. **Entry** → `POST /api/v1/gate/entry` → returns `ticketCode`, `isSubscriber=false`
-2. **Exit Attempt** → `POST /api/v1/gate/exit` → `paymentRequired: true`
-3. **Payment Status** → `GET /api/v1/billing/status-by-ticket?ticketCode={code}` → `isPaid: false`
-4. **Payment** → `POST /api/v1/billing/pay-test`
-5. **Exit** → `POST /api/v1/gate/exit` → `gateStatus: OPENED`
+1. **Entry** → `POST /api/gate/entry` → returns `ticketCode`, `isSubscriber=false`
+2. **Exit Attempt** → `POST /api/gate/exit` → `paymentRequired: true`
+3. **Payment Status** → `GET /api/billing/status-by-ticket?ticketCode={code}` → `isPaid: false`
+4. **Payment** → `POST /api/billing/pay-test`
+5. **Exit** → `POST /api/gate/exit` → `gateStatus: OPENED`
 
 **Duration:** ~2 minutes
 
@@ -42,10 +42,10 @@ mvn test -Pe2e
 **Scenario:** Complete parking cycle for a subscriber (plate AA1234BB, seeded in init.sql)
 
 **Steps:**
-1. **Entry** → `POST /api/v1/gate/entry` with `licensePlate=AA1234BB`
+1. **Entry** → `POST /api/gate/entry` with `licensePlate=AA1234BB`
    - Returns: `isSubscriber=true`, `gateStatus=OPENED`, no ticketCode
-2. **Exit** → `POST /api/v1/gate/exit` → `paymentRequired=false`, `gateStatus=OPENED`
-3. **Verify no payment** → `GET /api/v1/billing/status-by-ticket` → 404
+2. **Exit** → `POST /api/gate/exit` → `paymentRequired=false`, `gateStatus=OPENED`
+3. **Verify no payment** → `GET /api/billing/status-by-ticket` → 404
 
 **Duration:** ~1 minute
 

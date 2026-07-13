@@ -24,8 +24,8 @@ src/
 ├── api/              # Axios service clients
 │   ├── auth.ts       # POST /api/auth/login, /refresh, /logout
 │   ├── clients.ts    # /api/clients, /api/vehicles
-│   ├── gate.ts       # /api/v1/gate/entry, /exit, /control
-│   ├── billing.ts    # /api/v1/billing/*
+│   ├── gate.ts       # /api/gate/entry, /exit, /control
+│   ├── billing.ts    # /api/billing/*
 │   ├── management.ts # /api/management/spots/*
 │   └── reporting.ts  # /api/reporting/*
 ├── pages/            # Route pages

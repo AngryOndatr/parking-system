@@ -26,7 +26,7 @@ public class BillingServiceClient {
             // Deserialize to Map first to handle JsonNullable fields
             Map<String, Object> responseMap = billingServiceWebClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/api/v1/billing/status")
+                            .path("/api/billing/status")
                             .queryParam("parkingEventId", parkingEventId)
                             .build())
                     .retrieve()
@@ -87,7 +87,7 @@ public class BillingServiceClient {
             // Deserialize to Map first to handle JsonNullable fields
             Map<String, Object> responseMap = billingServiceWebClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/api/v1/billing/status-by-ticket")
+                            .path("/api/billing/status-by-ticket")
                             .queryParam("ticketCode", ticketCode)
                             .build())
                     .retrieve()

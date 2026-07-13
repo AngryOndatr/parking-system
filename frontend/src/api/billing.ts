@@ -53,27 +53,26 @@ export interface BillingStatusResponse {
 }
 
 export async function calculateFee(data: BillingCalculateRequest): Promise<BillingCalculateResponse> {
-  const res = await apiClient.post<BillingCalculateResponse>('/v1/billing/calculate', data)
+  const res = await apiClient.post<BillingCalculateResponse>('/billing/calculate', data)
   return res.data
 }
 
 export async function processPayment(data: BillingPayRequest): Promise<BillingPayResponse> {
-  const res = await apiClient.post<BillingPayResponse>('/v1/billing/pay', data)
+  const res = await apiClient.post<BillingPayResponse>('/billing/pay', data)
   return res.data
 }
 
 export async function getBillingStatus(parkingEventId: number): Promise<BillingStatusResponse> {
-  const res = await apiClient.get<BillingStatusResponse>('/v1/billing/status', { params: { parkingEventId } })
+  const res = await apiClient.get<BillingStatusResponse>('/billing/status', { params: { parkingEventId } })
   return res.data
 }
 
 export async function getBillingStatusByTicket(ticketCode: string): Promise<BillingStatusResponse> {
-  const res = await apiClient.get<BillingStatusResponse>('/v1/billing/status-by-ticket', { params: { ticketCode } })
+  const res = await apiClient.get<BillingStatusResponse>('/billing/status-by-ticket', { params: { ticketCode } })
   return res.data
 }
 
 export async function processPaymentTest(data: BillingPayRequest): Promise<BillingPayResponse> {
-  const res = await apiClient.post<BillingPayResponse>('/v1/billing/pay-test', data)
+  const res = await apiClient.post<BillingPayResponse>('/billing/pay-test', data)
   return res.data
 }
-

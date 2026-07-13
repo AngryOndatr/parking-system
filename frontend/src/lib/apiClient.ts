@@ -2,15 +2,17 @@ import axios from 'axios'
 import { useAuthStore, isTokenExpired } from '@/store/authStore'
 
 // Utility to unwrap JsonNullable and recurse
-function unwrapJsonNullables(obj: any): any {
+function unwrapJsonNullables(obj: unknown): unknown {
   if (obj === null || typeof obj !== 'object') return obj
   if (Array.isArray(obj)) return obj.map(unwrapJsonNullables)
-  if (obj && typeof obj === 'object' && 'present' in obj) {
-    return obj.present ? unwrapJsonNullables(obj.value) : null
+  if ('present' in obj && typeof obj.present === 'boolean') {
+    return obj.present
+      ? unwrapJsonNullables((obj as { value?: unknown }).value)
+      : null
   }
-  const result: any = {}
-  for (const key in obj) {
-    result[key] = unwrapJsonNullables(obj[key])
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    result[key] = unwrapJsonNullables(value)
   }
   return result
 }

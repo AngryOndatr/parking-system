@@ -18,7 +18,7 @@ export const gateSimApi = {
         // Подставьте сюда ТЕ КЛЮЧИ, которые увидели в Java / YAML файле:
         const entryMethod = isSubscriber ? 'SCAN' : 'SCAN';
 
-        const response = await apiClient.post('/v1/gate/entry', {
+        const response = await apiClient.post('/gate/entry', {
             licensePlate,
             gateId: 'GATE_IN_1',
             entryMethod: entryMethod
@@ -30,7 +30,7 @@ export const gateSimApi = {
         // То же самое для выезда  SCAN, MANUAL, AUTO
         const exitMethod = isSubscriber ? 'SCAN' : 'AUTO';
 
-        const response = await apiClient.post('/v1/gate/exit', {
+        const response = await apiClient.post('/gate/exit', {
             licensePlate,
             ticketCode,
             gateId: 'GATE_OUT_1',

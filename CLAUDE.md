@@ -107,8 +107,8 @@ Implemented in `SecurityFilter` (`api-gateway`). First-match-wins prefix scan ag
 
 | Route pattern | Allowed roles |
 |---------------|---------------|
-| `POST\|PUT\|DELETE /api/v1/gate/**` | OPERATOR, ADMIN |
-| `POST\|PUT\|DELETE /api/v1/billing/**` | OPERATOR, ADMIN |
+| `POST\|PUT\|DELETE /api/gate/**` | OPERATOR, ADMIN |
+| `POST\|PUT\|DELETE /api/billing/**` | OPERATOR, ADMIN |
 | `GET\|POST\|PUT\|DELETE /api/clients/**` | ADMIN, MANAGER, OPERATOR |
 | `POST\|PUT\|DELETE /api/management/**` | ADMIN, MANAGER |
 | `GET\|POST\|PUT\|DELETE /api/reporting/**` | ADMIN, MANAGER, OPERATOR |
@@ -334,21 +334,21 @@ Start with: `docker compose -f devops/docker-compose-observability.yml up -d`
 | DELETE | `/api/vehicles/{id}` | Delete vehicle |
 | GET | `/api/v1/clients/subscriptions/check?licensePlate={plate}` | Check active subscription (used by gate-control) |
 
-### Gate Control Service (`/api/v1/gate/**`)
+### Gate Control Service (`/api/gate/**`)
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/v1/gate/entry` | Vehicle entry — returns ticket or subscriber pass |
-| POST | `/api/v1/gate/exit` | Vehicle exit — checks payment, opens gate |
-| POST | `/api/v1/gate/control` | Manual gate open/close (OPERATOR) |
+| POST | `/api/gate/entry` | Vehicle entry — returns ticket or subscriber pass |
+| POST | `/api/gate/exit` | Vehicle exit — checks payment, opens gate |
+| POST | `/api/gate/control` | Manual gate open/close (OPERATOR) |
 
-### Billing Service (`/api/v1/billing/**`)
+### Billing Service (`/api/billing/**`)
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/v1/billing/calculate` | Calculate fee (entryTime, exitTime, tariffType) |
-| POST | `/api/v1/billing/pay` | Record payment |
-| GET | `/api/v1/billing/status?parkingEventId={id}` | Payment status — **404 if no billing record** |
-| GET | `/api/v1/billing/status-by-ticket?ticketCode={code}` | Payment status by ticket |
-| POST | `/api/v1/billing/pay-test` | Simplified payment for E2E/testing |
+| POST | `/api/billing/calculate` | Calculate fee (entryTime, exitTime, tariffType) |
+| POST | `/api/billing/pay` | Record payment |
+| GET | `/api/billing/status?parkingEventId={id}` | Payment status — **404 if no billing record** |
+| GET | `/api/billing/status-by-ticket?ticketCode={code}` | Payment status by ticket |
+| POST | `/api/billing/pay-test` | Simplified payment for E2E/testing |
 
 ### Management Service (`/api/management/**`)
 | Method | Path | Description |

@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Integration tests for GateController.
- * Tests the /api/v1/gate/entry endpoint with mocked external dependencies.
+ * Tests the /api/gate/entry endpoint with mocked external dependencies.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -61,7 +61,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/entry - Subscriber entry returns 201 with no ticket")
+    @DisplayName("POST /api/gate/entry - Subscriber entry returns 201 with no ticket")
     void processEntry_Subscriber_Returns201WithoutTicket() throws Exception {
         // Given: Vehicle with active subscription
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
@@ -78,7 +78,7 @@ class GateControllerIntegrationTest {
         request.setGateId("ENTRY-1");
 
         // When & Then: Entry processed successfully
-        mockMvc.perform(post("/api/v1/gate/entry")
+        mockMvc.perform(post("/api/gate/entry")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -94,7 +94,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/entry - One-time visitor returns 201 with ticket")
+    @DisplayName("POST /api/gate/entry - One-time visitor returns 201 with ticket")
     void processEntry_OneTimeVisitor_Returns201WithTicket() throws Exception {
         // Given: Vehicle without subscription
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
@@ -109,7 +109,7 @@ class GateControllerIntegrationTest {
         request.setGateId("ENTRY-1");
 
         // When & Then: Entry processed successfully with ticket
-        mockMvc.perform(post("/api/v1/gate/entry")
+        mockMvc.perform(post("/api/gate/entry")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -126,7 +126,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/entry - Invalid license plate returns 400")
+    @DisplayName("POST /api/gate/entry - Invalid license plate returns 400")
     void processEntry_InvalidLicensePlate_Returns400() throws Exception {
         // Given: Invalid license plate (lowercase letters not allowed)
         EntryRequest request = new EntryRequest();
@@ -135,7 +135,7 @@ class GateControllerIntegrationTest {
         request.setGateId("ENTRY-1");
 
         // When & Then: Validation error
-        mockMvc.perform(post("/api/v1/gate/entry")
+        mockMvc.perform(post("/api/gate/entry")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -144,14 +144,14 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/entry - Missing required fields returns 400")
+    @DisplayName("POST /api/gate/entry - Missing required fields returns 400")
     void processEntry_MissingRequiredFields_Returns400() throws Exception {
         // Given: Request missing required fields
         EntryRequest request = new EntryRequest();
         // licensePlate, entryMethod, gateId are required but not set
 
         // When & Then: Validation error
-        mockMvc.perform(post("/api/v1/gate/entry")
+        mockMvc.perform(post("/api/gate/entry")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -160,7 +160,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/entry - Manual entry with operator ID succeeds")
+    @DisplayName("POST /api/gate/entry - Manual entry with operator ID succeeds")
     void processEntry_ManualEntryWithOperator_Returns201() throws Exception {
         // Given: Manual entry by operator
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
@@ -176,7 +176,7 @@ class GateControllerIntegrationTest {
         request.setOperatorId(JsonNullable.of(3L));
 
         // When & Then: Entry processed successfully
-        mockMvc.perform(post("/api/v1/gate/entry")
+        mockMvc.perform(post("/api/gate/entry")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -191,7 +191,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/exit - Subscriber exit returns 200 with gate opened")
+    @DisplayName("POST /api/gate/exit - Subscriber exit returns 200 with gate opened")
     void processExit_Subscriber_Returns200WithGateOpened() throws Exception {
         // Given: Vehicle with active subscription
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
@@ -209,7 +209,7 @@ class GateControllerIntegrationTest {
         request.setGateId("EXIT-1");
 
         // When & Then: Exit processed successfully
-        mockMvc.perform(post("/api/v1/gate/exit")
+        mockMvc.perform(post("/api/gate/exit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -224,7 +224,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/exit - Paid one-time visitor returns 200 with gate opened")
+    @DisplayName("POST /api/gate/exit - Paid one-time visitor returns 200 with gate opened")
     void processExit_PaidVisitor_Returns200WithGateOpened() throws Exception {
         // Given: Vehicle without subscription but with paid ticket
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
@@ -246,7 +246,7 @@ class GateControllerIntegrationTest {
         request.setGateId("EXIT-1");
 
         // When & Then: Exit processed successfully
-        mockMvc.perform(post("/api/v1/gate/exit")
+        mockMvc.perform(post("/api/gate/exit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -259,7 +259,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/exit - Unpaid one-time visitor returns 200 with payment required")
+    @DisplayName("POST /api/gate/exit - Unpaid one-time visitor returns 200 with payment required")
     void processExit_UnpaidVisitor_Returns200WithPaymentRequired() throws Exception {
         // Given: Vehicle without subscription and unpaid ticket
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
@@ -281,7 +281,7 @@ class GateControllerIntegrationTest {
         request.setGateId("EXIT-1");
 
         // When & Then: Exit denied, payment required
-        mockMvc.perform(post("/api/v1/gate/exit")
+        mockMvc.perform(post("/api/gate/exit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -294,7 +294,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/exit - No ticket and no subscription returns 200 with deny")
+    @DisplayName("POST /api/gate/exit - No ticket and no subscription returns 200 with deny")
     void processExit_NoTicketNoSubscription_Returns200WithDeny() throws Exception {
         // Given: Vehicle without subscription and without ticket
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
@@ -310,7 +310,7 @@ class GateControllerIntegrationTest {
         request.setGateId("EXIT-1");
 
         // When & Then: Exit denied - no valid ticket or subscription
-        mockMvc.perform(post("/api/v1/gate/exit")
+        mockMvc.perform(post("/api/gate/exit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -320,7 +320,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/exit - Manual exit by operator succeeds")
+    @DisplayName("POST /api/gate/exit - Manual exit by operator succeeds")
     void processExit_ManualByOperator_Returns200() throws Exception {
         // Given: Manual exit by operator for subscriber
         SubscriptionCheckResponse subscriptionResponse = SubscriptionCheckResponse.builder()
@@ -339,7 +339,7 @@ class GateControllerIntegrationTest {
         request.setOperatorId(JsonNullable.of(5L));
 
         // When & Then: Exit processed successfully
-        mockMvc.perform(post("/api/v1/gate/exit")
+        mockMvc.perform(post("/api/gate/exit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -354,7 +354,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/control - Open gate returns 200")
+    @DisplayName("POST /api/gate/control - Open gate returns 200")
     void manualControl_OpenGate_Returns200() throws Exception {
         // Given: Operator opens gate manually
         GateControlRequest request = new GateControlRequest();
@@ -364,7 +364,7 @@ class GateControllerIntegrationTest {
         request.setReason("Emergency exit - fire alarm");
 
         // When & Then: Gate opened successfully
-        mockMvc.perform(post("/api/v1/gate/control")
+        mockMvc.perform(post("/api/gate/control")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -379,7 +379,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/control - Close gate returns 200")
+    @DisplayName("POST /api/gate/control - Close gate returns 200")
     void manualControl_CloseGate_Returns200() throws Exception {
         // Given: Operator closes gate for maintenance
         GateControlRequest request = new GateControlRequest();
@@ -389,7 +389,7 @@ class GateControllerIntegrationTest {
         request.setReason("Maintenance mode");
 
         // When & Then: Gate control executed successfully
-        mockMvc.perform(post("/api/v1/gate/control")
+        mockMvc.perform(post("/api/gate/control")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -403,14 +403,14 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/control - Missing required fields returns 400")
+    @DisplayName("POST /api/gate/control - Missing required fields returns 400")
     void manualControl_MissingRequiredFields_Returns400() throws Exception {
         // Given: Request missing required fields
         GateControlRequest request = new GateControlRequest();
         // gateId, action, operatorId, reason are required but not set
 
         // When & Then: Validation error
-        mockMvc.perform(post("/api/v1/gate/control")
+        mockMvc.perform(post("/api/gate/control")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -419,7 +419,7 @@ class GateControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /api/v1/gate/control - Saves gate event in database")
+    @DisplayName("POST /api/gate/control - Saves gate event in database")
     void manualControl_OpenGate_SavesGateEvent() throws Exception {
         // Given: Operator opens gate
         GateControlRequest request = new GateControlRequest();
@@ -431,7 +431,7 @@ class GateControllerIntegrationTest {
         long eventCountBefore = gateEventRepository.count();
 
         // When: Manual control executed
-        mockMvc.perform(post("/api/v1/gate/control")
+        mockMvc.perform(post("/api/gate/control")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())

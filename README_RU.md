@@ -239,15 +239,15 @@ OpenAPI-first. Управление клиентами, ТС и подписка
 ### 3. Gate Control Service (порт 8082)
 OpenAPI-first. Управление физическими шлагбаумами.
 
-- `POST /api/v1/gate/entry` — въезд (возвращает тикет или пропуск абонента)
-- `POST /api/v1/gate/exit` — выезд (расчёт стоимости)
-- `POST /api/v1/gate/control` — ручное управление (OPEN/CLOSE)
+- `POST /api/gate/entry` — въезд (возвращает тикет или пропуск абонента)
+- `POST /api/gate/exit` — выезд (расчёт стоимости)
+- `POST /api/gate/control` — ручное управление (OPEN/CLOSE)
 
 ### 4. Billing Service (порт 8083)
 Расчёт стоимости парковки и фиксация платежей.
 
-- `GET /api/v1/billing/status-by-ticket?ticketCode=` — статус оплаты
-- `POST /api/v1/billing/pay-test` — тестовый эндпоинт оплаты
+- `GET /api/billing/status-by-ticket?ticketCode=` — статус оплаты
+- `POST /api/billing/pay-test` — тестовый эндпоинт оплаты
 
 ### 5. Management Service (порт 8084)
 OpenAPI-first. Управление парковочными местами.
@@ -350,8 +350,8 @@ OpenAPI-first. Централизованное логирование и ауд
 
 | Маршрут | Требуемые роли |
 |---------|---------------|
-| `POST/PUT/DELETE /api/v1/gate/*` | OPERATOR, ADMIN |
-| `POST/PUT/DELETE /api/v1/billing/*` | OPERATOR, ADMIN |
+| `POST/PUT/DELETE /api/gate/*` | OPERATOR, ADMIN |
+| `POST/PUT/DELETE /api/billing/*` | OPERATOR, ADMIN |
 | `GET/POST/PUT/DELETE /api/clients/*` | ADMIN, MANAGER, OPERATOR |
 | write ops `/api/management/*` | ADMIN, MANAGER |
 | `GET /api/reporting/*` | ADMIN, MANAGER, OPERATOR |

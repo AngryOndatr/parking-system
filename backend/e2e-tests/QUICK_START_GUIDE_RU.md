@@ -4,7 +4,7 @@
 
 ### Что было сделано:
 
-1. ✅ Создан тестовый эндпоинт `/api/v1/billing/pay-test` в billing-service
+1. ✅ Создан тестовый эндпоинт `/api/billing/pay-test` в billing-service
 2. ✅ Добавлен прокси в api-gateway
 3. ✅ Обновлён E2E тест
 4. ✅ Пересобраны Docker образы
@@ -95,4 +95,3 @@ mvn test -Dtest=OneTimeVisitorE2ETest
 **Статус**: 🟢 Готово к запуску  
 **Версия**: 1.0  
 **Дата**: 2026-02-11
-
