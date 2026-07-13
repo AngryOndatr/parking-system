@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/PageHeader'
+import { useLanguage } from '@/store/languageContext'
 import { getLogs, getAuditLogs, getClientHistory, getVehicleHistory } from '@/api/reporting'
 import type { LogEntry, AuditEntry } from '@/api/reporting'
 
-// ─── colour maps ──────────────────────────────────────────────────────────────
 const LEVEL_COLORS: Record<string, string> = {
   INFO:  'bg-blue-100 text-blue-700',
   WARN:  'bg-yellow-100 text-yellow-700',
@@ -41,10 +41,10 @@ function actionColor(action: string | null) {
   return ACTION_COLORS[action] ?? 'bg-slate-100 text-slate-600'
 }
 
-// ─── AuditTable ───────────────────────────────────────────────────────────────
 function AuditTable({ entries }: { entries: AuditEntry[] }) {
+  const { t } = useLanguage()
   if (entries.length === 0)
-    return <p className="text-sm text-muted-foreground py-4">No audit events found.</p>
+    return <p className="text-sm text-muted-foreground py-4">{t('reporting.no_audit_events')}</p>
   return (
     <>
       <div className="space-y-2 lg:hidden">
@@ -69,12 +69,12 @@ function AuditTable({ entries }: { entries: AuditEntry[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-slate-500">
-              <th className="pb-2 pr-3 font-medium">Time</th>
-              <th className="pb-2 pr-3 font-medium">Action</th>
-              <th className="pb-2 pr-3 font-medium">Entity</th>
-              <th className="pb-2 pr-3 font-medium">Plate</th>
-              <th className="pb-2 pr-3 font-medium">Service</th>
-              <th className="pb-2 font-medium">Message</th>
+              <th className="pb-2 pr-3 font-medium">{t('reporting.col_time')}</th>
+              <th className="pb-2 pr-3 font-medium">{t('reporting.col_action')}</th>
+              <th className="pb-2 pr-3 font-medium">{t('reporting.col_entity')}</th>
+              <th className="pb-2 pr-3 font-medium">{t('reporting.col_plate')}</th>
+              <th className="pb-2 pr-3 font-medium">{t('reporting.filter_service')}</th>
+              <th className="pb-2 font-medium">{t('reporting.message')}</th>
             </tr>
           </thead>
           <tbody>
@@ -99,10 +99,10 @@ function AuditTable({ entries }: { entries: AuditEntry[] }) {
   )
 }
 
-// ─── LogTable ─────────────────────────────────────────────────────────────────
 function LogTable({ logs }: { logs: LogEntry[] }) {
+  const { t } = useLanguage()
   if (logs.length === 0)
-    return <p className="text-sm text-muted-foreground py-4">No logs found.</p>
+    return <p className="text-sm text-muted-foreground py-4">{t('reporting.no_logs')}</p>
   return (
     <>
       <div className="space-y-2 lg:hidden">
@@ -122,10 +122,10 @@ function LogTable({ logs }: { logs: LogEntry[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-slate-500">
-              <th className="pb-2 pr-3 font-medium">Time</th>
-              <th className="pb-2 pr-3 font-medium">Level</th>
-              <th className="pb-2 pr-3 font-medium">Service</th>
-              <th className="pb-2 font-medium">Message</th>
+              <th className="pb-2 pr-3 font-medium">{t('reporting.col_time')}</th>
+              <th className="pb-2 pr-3 font-medium">{t('reporting.filter_level')}</th>
+              <th className="pb-2 pr-3 font-medium">{t('reporting.filter_service')}</th>
+              <th className="pb-2 font-medium">{t('reporting.message')}</th>
             </tr>
           </thead>
           <tbody>
@@ -146,16 +146,16 @@ function LogTable({ logs }: { logs: LogEntry[] }) {
   )
 }
 
-// ─── DateRange ────────────────────────────────────────────────────────────────
 function DateRange({ from, to, onFrom, onTo }: { from: string; to: string; onFrom: (v: string) => void; onTo: (v: string) => void }) {
+  const { t } = useLanguage()
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <Clock size={14} className="text-slate-400 shrink-0" />
-      <span className="text-sm text-slate-500 shrink-0">From:</span>
+      <span className="text-sm text-slate-500 shrink-0">{t('reporting.filter_from')}:</span>
       <input type="datetime-local" className="border rounded px-2 py-1 text-sm" value={from} onChange={e => onFrom(e.target.value)} />
-      <span className="text-sm text-slate-500 shrink-0">To:</span>
+      <span className="text-sm text-slate-500 shrink-0">{t('reporting.filter_to')}:</span>
       <input type="datetime-local" className="border rounded px-2 py-1 text-sm" value={to} onChange={e => onTo(e.target.value)} />
-      {(from || to) && <Button variant="ghost" size="sm" onClick={() => { onFrom(''); onTo('') }}>Clear</Button>}
+      {(from || to) && <Button variant="ghost" size="sm" onClick={() => { onFrom(''); onTo('') }}>{t('reporting.filter_clear')}</Button>}
     </div>
   )
 }
@@ -163,6 +163,7 @@ function DateRange({ from, to, onFrom, onTo }: { from: string; to: string; onFro
 type Tab = 'general' | 'audit' | 'client' | 'vehicle'
 
 export default function ReportingPage() {
+  const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState<Tab>('audit')
 
   const [filterLevel, setFilterLevel]     = useState('')
@@ -240,37 +241,37 @@ export default function ReportingPage() {
   const isFetching = logsQuery.isFetching || auditQuery.isFetching || clientQuery.isFetching || vehicleQuery.isFetching
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'audit',   label: 'Audit Trail',     icon: <Shield size={15} /> },
-    { id: 'client',  label: 'Client History',  icon: <User size={15} /> },
-    { id: 'vehicle', label: 'Vehicle History', icon: <Car size={15} /> },
-    { id: 'general', label: 'System Logs',     icon: <BarChart3 size={15} /> },
+    { id: 'audit',   label: t('reporting.tab_audit'),   icon: <Shield size={15} /> },
+    { id: 'client',  label: t('reporting.tab_client'),  icon: <User size={15} /> },
+    { id: 'vehicle', label: t('reporting.tab_vehicle'), icon: <Car size={15} /> },
+    { id: 'general', label: t('reporting.tab_general'), icon: <BarChart3 size={15} /> },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeader
         icon={<Shield size={24} />}
-        title="Audit Trail & Reports"
+        title={t('reporting.page_title')}
         actions={
           <Button variant="ghost" size="sm" onClick={refetchCurrent} disabled={isFetching}>
-            <RefreshCw size={16} className={`mr-1 ${isFetching ? 'animate-spin' : ''}`} /> Refresh
+            <RefreshCw size={16} className={`mr-1 ${isFetching ? 'animate-spin' : ''}`} /> {t('common.refresh')}
           </Button>
         }
       />
 
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)}
+        {tabs.map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'
+              activeTab === tab.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}>
-            {t.icon} {t.label}
+            {tab.icon} {tab.label}
           </button>
         ))}
       </div>
 
-      {/* ── Audit Trail ── */}
+      {/* Audit Trail */}
       {activeTab === 'audit' && (
         <div className="space-y-4">
           {Object.keys(actionCounts).length > 0 && (
@@ -284,18 +285,18 @@ export default function ReportingPage() {
           )}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2"><Filter size={15}/> Filters</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2"><Filter size={15}/> {t('reporting.filters')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3 items-center">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 shrink-0">Service:</span>
+                  <span className="text-sm text-slate-500 shrink-0">{t('reporting.filter_service')}:</span>
                   <Input placeholder="e.g. gate-control-service" className="w-48 h-8 text-sm"
                     value={auditService} onChange={e => setAuditService(e.target.value)} />
                 </div>
                 <DateRange from={auditFrom} to={auditTo} onFrom={setAuditFrom} onTo={setAuditTo} />
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 shrink-0">Limit:</span>
+                  <span className="text-sm text-slate-500 shrink-0">{t('reporting.filter_limit')}:</span>
                   <select className="border rounded px-2 py-1 text-sm" value={auditLimit}
                     onChange={e => setAuditLimit(e.target.value)}>
                     {['100','200','500','1000'].map(v => <option key={v} value={v}>{v}</option>)}
@@ -306,30 +307,30 @@ export default function ReportingPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">All Business Events</CardTitle>
-              <CardDescription>All recorded business actions across services, newest first</CardDescription>
+              <CardTitle className="text-base">{t('reporting.all_events_title')}</CardTitle>
+              <CardDescription>{t('reporting.all_events_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {auditQuery.isLoading
-                ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> Loading…</div>
+                ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> {t('common.loading')}</div>
                 : <AuditTable entries={auditQuery.data ?? []} />}
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* ── Client History ── */}
+      {/* Client History */}
       {activeTab === 'client' && (
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2"><User size={15}/> Client History</CardTitle>
-              <CardDescription>Enter client ID to view all events related to this client</CardDescription>
+              <CardTitle className="text-base flex items-center gap-2"><User size={15}/> {t('reporting.tab_client')}</CardTitle>
+              <CardDescription>{t('reporting.client_history_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3 items-end">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 shrink-0">Client ID:</span>
+                  <span className="text-sm text-slate-500 shrink-0">{t('reporting.client_id_filter')}:</span>
                   <Input type="number" placeholder="e.g. 1" className="w-28 h-8 text-sm"
                     value={clientIdInput}
                     onChange={e => { setClientIdInput(e.target.value); setClientSearch(false) }}
@@ -337,7 +338,7 @@ export default function ReportingPage() {
                 </div>
                 <DateRange from={clientFrom} to={clientTo} onFrom={setClientFrom} onTo={setClientTo} />
                 <Button size="sm" onClick={() => setClientSearch(true)} disabled={!clientIdInput}>
-                  <Search size={14} className="mr-1"/> Search
+                  <Search size={14} className="mr-1"/> {t('common.search')}
                 </Button>
               </div>
             </CardContent>
@@ -345,12 +346,15 @@ export default function ReportingPage() {
           {clientSearch && clientId > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">History: Client #{clientId}</CardTitle>
-                <CardDescription>{clientQuery.data?.length ?? 0} events{(clientFrom || clientTo) && ' in selected period'}</CardDescription>
+                <CardTitle className="text-base">{t('reporting.history_client', { id: clientId })}</CardTitle>
+                <CardDescription>
+                  {clientQuery.data?.length ?? 0} {t('reporting.logs')}
+                  {(clientFrom || clientTo) && ` ${t('reporting.events_in_period')}`}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {clientQuery.isLoading
-                  ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> Loading…</div>
+                  ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> {t('common.loading')}</div>
                   : <AuditTable entries={clientQuery.data ?? []} />}
               </CardContent>
             </Card>
@@ -358,18 +362,18 @@ export default function ReportingPage() {
         </div>
       )}
 
-      {/* ── Vehicle History ── */}
+      {/* Vehicle History */}
       {activeTab === 'vehicle' && (
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2"><Car size={15}/> Vehicle History</CardTitle>
-              <CardDescription>Enter license plate to view registrations, gate events and payments</CardDescription>
+              <CardTitle className="text-base flex items-center gap-2"><Car size={15}/> {t('reporting.tab_vehicle')}</CardTitle>
+              <CardDescription>{t('reporting.vehicle_history_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3 items-end">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 shrink-0">License Plate:</span>
+                  <span className="text-sm text-slate-500 shrink-0">{t('reporting.col_plate')}:</span>
                   <Input placeholder="e.g. ABC123" className="w-36 h-8 text-sm uppercase"
                     value={plateInput}
                     onChange={e => { setPlateInput(e.target.value.toUpperCase()); setVehicleSearch(false) }}
@@ -377,7 +381,7 @@ export default function ReportingPage() {
                 </div>
                 <DateRange from={vehicleFrom} to={vehicleTo} onFrom={setVehicleFrom} onTo={setVehicleTo} />
                 <Button size="sm" onClick={() => setVehicleSearch(true)} disabled={plateInput.trim().length < 2}>
-                  <Search size={14} className="mr-1"/> Search
+                  <Search size={14} className="mr-1"/> {t('common.search')}
                 </Button>
               </div>
             </CardContent>
@@ -385,12 +389,15 @@ export default function ReportingPage() {
           {vehicleSearch && plateInput.trim().length >= 2 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">History: {plateInput}</CardTitle>
-                <CardDescription>{vehicleQuery.data?.length ?? 0} events{(vehicleFrom || vehicleTo) && ' in selected period'}</CardDescription>
+                <CardTitle className="text-base">{t('reporting.history_vehicle', { plate: plateInput })}</CardTitle>
+                <CardDescription>
+                  {vehicleQuery.data?.length ?? 0} {t('reporting.logs')}
+                  {(vehicleFrom || vehicleTo) && ` ${t('reporting.events_in_period')}`}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {vehicleQuery.isLoading
-                  ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> Loading…</div>
+                  ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> {t('common.loading')}</div>
                   : <AuditTable entries={vehicleQuery.data ?? []} />}
               </CardContent>
             </Card>
@@ -398,67 +405,67 @@ export default function ReportingPage() {
         </div>
       )}
 
-      {/* ── System Logs ── */}
+      {/* System Logs */}
       {activeTab === 'general' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Total Logs</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">{t('reporting.total_logs')}</p>
                 <p className="text-3xl font-bold text-slate-700">{logsQuery.data?.length ?? 0}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Errors</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">{t('reporting.stat_errors')}</p>
                 <p className="text-3xl font-bold text-red-600">{(logsQuery.data ?? []).filter(l => l.level === 'ERROR').length}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Warnings</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">{t('reporting.stat_warnings')}</p>
                 <p className="text-3xl font-bold text-yellow-500">{(logsQuery.data ?? []).filter(l => l.level === 'WARN').length}</p>
               </CardContent>
             </Card>
           </div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2"><Filter size={16}/> Filters</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2"><Filter size={16}/> {t('reporting.filters')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3 items-center">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 shrink-0">Level:</span>
+                  <span className="text-sm text-slate-500 shrink-0">{t('reporting.filter_level')}:</span>
                   <select className="border rounded px-2 py-1 text-sm" value={filterLevel} onChange={e => setFilterLevel(e.target.value)}>
-                    <option value="">All</option>
+                    <option value="">{t('reporting.all_levels')}</option>
                     {levels.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 shrink-0">Service:</span>
+                  <span className="text-sm text-slate-500 shrink-0">{t('reporting.filter_service')}:</span>
                   <Input placeholder="e.g. client-service" className="w-40 h-8 text-sm"
                     value={filterService} onChange={e => setFilterService(e.target.value)} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 shrink-0">Limit:</span>
+                  <span className="text-sm text-slate-500 shrink-0">{t('reporting.filter_limit')}:</span>
                   <select className="border rounded px-2 py-1 text-sm" value={filterLimit} onChange={e => setFilterLimit(e.target.value)}>
                     {['25','50','100','200'].map(v => <option key={v} value={v}>{v}</option>)}
                   </select>
                 </div>
                 {(filterLevel || filterService) && (
-                  <Button variant="ghost" size="sm" onClick={() => { setFilterLevel(''); setFilterService('') }}>Clear</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setFilterLevel(''); setFilterService('') }}>{t('reporting.filter_clear')}</Button>
                 )}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Log Entries</CardTitle>
-              <CardDescription>Recent system events from all services</CardDescription>
+              <CardTitle className="text-base">{t('reporting.log_entries_title')}</CardTitle>
+              <CardDescription>{t('reporting.log_entries_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {logsQuery.isLoading
-                ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> Loading…</div>
+                ? <div className="flex items-center gap-2 text-muted-foreground text-sm py-4"><Loader2 size={16} className="animate-spin"/> {t('common.loading')}</div>
                 : <LogTable logs={logsQuery.data ?? []} />}
             </CardContent>
           </Card>

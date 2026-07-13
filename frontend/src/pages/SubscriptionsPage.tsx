@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -12,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PageHeader } from '@/components/PageHeader'
+import { useLanguage } from '@/store/languageContext'
 import { getClients, searchClientByPlate, searchClientsByName } from '@/api/clients'
 import type { Client } from '@/api/clients'
 import {
@@ -24,30 +24,14 @@ import { getAvailableSpaces } from '@/api/spaces'
 import type { ParkingSpace } from '@/api/spaces'
 import { useAuthStore } from '@/store/authStore'
 
-// ── Pricing table (UAH) ───────────────────────────────────────────────
 const SUBSCRIPTION_PRICES: Record<SubscriptionType, number> = {
   MONTHLY:   500,
   QUARTERLY: 1_200,
   ANNUAL:    4_000,
-  CUSTOM:    0, // calculated from days
+  CUSTOM:    0,
 }
-const CUSTOM_PRICE_PER_DAY = 20 // UAH / day
+const CUSTOM_PRICE_PER_DAY = 20
 
-// ── Config ────────────────────────────────────────────────────────────
-const TYPE_OPTIONS: { value: SubscriptionType; label: string; days: number }[] = [
-  { value: 'MONTHLY',   label: 'Monthly',   days: 30  },
-  { value: 'QUARTERLY', label: 'Quarterly', days: 90  },
-  { value: 'ANNUAL',    label: 'Annual',    days: 365 },
-  { value: 'CUSTOM',    label: 'Custom',    days: 0   },
-]
-
-const PAYMENT_METHODS = [
-  { value: 'CASH'  as const, label: 'Cash',       icon: <Banknote size={14} />  },
-  { value: 'CARD'  as const, label: 'Card',        icon: <CreditCard size={14} /> },
-  { value: 'MOBILE_PAY' as const, label: 'Mobile Pay', icon: <CreditCard size={14} /> },
-]
-
-// ── Helpers ───────────────────────────────────────────────────────────
 function typeColor(type: string) {
   switch (type) {
     case 'MONTHLY':   return 'bg-blue-100 text-blue-700'
@@ -82,7 +66,6 @@ function calcPrice(type: SubscriptionType, startDate: string, endDate: string): 
   return days * CUSTOM_PRICE_PER_DAY
 }
 
-// ── Sub-component ─────────────────────────────────────────────────────
 interface SubListProps {
   client: Client
   canWrite: boolean
@@ -91,18 +74,29 @@ interface SubListProps {
 
 function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
   const qc = useQueryClient()
+  const { t } = useLanguage()
 
-  // ── form state ──────────────────────────────────────────────────
+  const TYPE_OPTIONS: { value: SubscriptionType; label: string; days: number }[] = [
+    { value: 'MONTHLY',   label: t('subscriptions.type_monthly'),   days: 30  },
+    { value: 'QUARTERLY', label: t('subscriptions.type_quarterly'), days: 90  },
+    { value: 'ANNUAL',    label: t('subscriptions.type_annual'),    days: 365 },
+    { value: 'CUSTOM',    label: t('subscriptions.type_custom'),    days: 0   },
+  ]
+
+  const PAYMENT_METHODS = [
+    { value: 'CASH'  as const, label: t('subscriptions.payment_cash'),   icon: <Banknote size={14} />  },
+    { value: 'CARD'  as const, label: t('subscriptions.payment_card'),   icon: <CreditCard size={14} /> },
+    { value: 'MOBILE_PAY' as const, label: t('subscriptions.payment_mobile'), icon: <CreditCard size={14} /> },
+  ]
+
   const [showForm, setShowForm]   = useState(false)
   const [step, setStep]           = useState<'details' | 'payment'>('details')
 
-  // Step 1 — details
   const [subType, setSubType]     = useState<SubscriptionType>('MONTHLY')
   const [startDate, setStartDate] = useState(today())
   const [endDate, setEndDate]     = useState(addDays(30))
   const [selectedSpaceId, setSelectedSpaceId] = useState<number | null>(null)
 
-  // Step 2 — payment
   const [payMethod, setPayMethod] = useState<'CASH' | 'CARD' | 'MOBILE_PAY'>('CASH')
   const [payAmount, setPayAmount] = useState(String(SUBSCRIPTION_PRICES.MONTHLY))
 
@@ -128,7 +122,7 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
       setFormError(null)
     },
     onError: (e: { response?: { data?: { message?: string } } }) => {
-      setFormError(e.response?.data?.message ?? 'Failed to create subscription')
+      setFormError(e.response?.data?.message ?? t('subscriptions.date_error'))
     },
   })
 
@@ -137,15 +131,14 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['subscriptions', client.id] }),
   })
 
-  // ── handlers ────────────────────────────────────────────────────
-  const handleTypeChange = (t: SubscriptionType) => {
-    setSubType(t)
-    const opt = TYPE_OPTIONS.find(o => o.value === t)!
+  const handleTypeChange = (type: SubscriptionType) => {
+    setSubType(type)
+    const opt = TYPE_OPTIONS.find(o => o.value === type)!
     const start = today()
     const end   = opt.days > 0 ? addDays(opt.days) : addDays(30)
     setStartDate(start)
     setEndDate(end)
-    setPayAmount(String(calcPrice(t, start, end)))
+    setPayAmount(String(calcPrice(type, start, end)))
   }
 
   const handleDateChange = (field: 'start' | 'end', val: string) => {
@@ -182,7 +175,7 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
   const goToPayment = () => {
     if (!startDate || !endDate) return
     if (new Date(endDate) <= new Date(startDate)) {
-      setFormError('End date must be after start date')
+      setFormError(t('subscriptions.date_error'))
       return
     }
     setFormError(null)
@@ -194,11 +187,12 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
 
   return (
     <div className="space-y-3">
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-slate-700">
-            {subs.length === 0 ? 'No subscriptions' : `${activeCount} active / ${subs.length} total`}
+            {subs.length === 0
+              ? t('subscriptions.no_subs')
+              : t('subscriptions.active_of_total', { active: activeCount, total: subs.length })}
           </span>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => refetch()}>
             <RefreshCw size={13} />
@@ -206,34 +200,29 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
         </div>
         {canWrite && !showForm && (
           <Button size="sm" variant="outline" onClick={openForm}>
-            <Plus size={14} className="mr-1" /> Add Subscription
+            <Plus size={14} className="mr-1" /> {t('subscriptions.add_subscription')}
           </Button>
         )}
       </div>
 
-      {/* ── Creation form ─────────────────────────────────── */}
       {showForm && (
         <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-4 space-y-4">
-
-          {/* Step indicator */}
           <div className="flex items-center gap-2 text-xs font-medium">
             <span className={`rounded-full px-2.5 py-0.5 ${step === 'details' ? 'bg-primary text-white' : 'bg-slate-200 text-slate-500'}`}>
-              1 · Subscription
+              {t('subscriptions.step1')}
             </span>
             <div className="h-px flex-1 bg-slate-200" />
             <span className={`rounded-full px-2.5 py-0.5 ${step === 'payment' ? 'bg-primary text-white' : 'bg-slate-200 text-slate-500'}`}>
-              2 · Payment
+              {t('subscriptions.step2')}
             </span>
           </div>
 
-          {/* ── STEP 1: details ─────────────────────────── */}
           {step === 'details' && (
             <>
               <p className="text-sm font-semibold text-blue-800 flex items-center gap-1">
-                <CalendarRange size={15} /> Choose plan
+                <CalendarRange size={15} /> {t('subscriptions.choose_plan')}
               </p>
 
-              {/* Type buttons */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {TYPE_OPTIONS.map(opt => (
                   <button
@@ -255,31 +244,28 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
                 ))}
               </div>
 
-              {/* Date range */}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label className="text-xs">Start Date</Label>
+                  <Label className="text-xs">{t('subscriptions.start_date')}</Label>
                   <Input type="date" value={startDate} className="h-9 text-sm bg-white"
                     onChange={e => handleDateChange('start', e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">End Date</Label>
+                  <Label className="text-xs">{t('subscriptions.end_date')}</Label>
                   <Input type="date" value={endDate} className="h-9 text-sm bg-white"
                     onChange={e => handleDateChange('end', e.target.value)} />
                 </div>
               </div>
 
-              {/* Parking space picker */}
               <div className="space-y-1.5">
                 <Label className="text-xs flex items-center gap-1">
-                  <MapPin size={12} /> Reserve Parking Space
-                  <span className="text-slate-400 font-normal">(optional)</span>
+                  <MapPin size={12} /> {t('subscriptions.reserve_space_label')}
+                  <span className="text-slate-400 font-normal">{t('subscriptions.optional_label')}</span>
                 </Label>
                 {spaces.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">No available spaces at the moment</p>
+                  <p className="text-xs text-slate-400 italic">{t('subscriptions.no_spaces_available')}</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
-                    {/* "None" option */}
                     <button
                       type="button"
                       onClick={() => setSelectedSpaceId(null)}
@@ -288,7 +274,7 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
                           ? 'bg-slate-600 text-white border-slate-600'
                           : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}
                     >
-                      No specific space
+                      {t('subscriptions.no_specific_space')}
                     </button>
                     {spaces.map(sp => (
                       <button
@@ -312,16 +298,18 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
                 {selectedSpaceId !== null && (
                   <p className="text-xs text-primary font-medium flex items-center gap-1">
                     <MapPin size={11} />
-                    Space {spaces.find(s => s.spaceId === selectedSpaceId)?.spaceNumber} will be reserved for this subscription
+                    {t('subscriptions.space_reserved_msg', { space: spaces.find(s => s.spaceId === selectedSpaceId)?.spaceNumber ?? selectedSpaceId })}
                   </p>
                 )}
               </div>
 
               {subType === 'CUSTOM' && startDate && endDate && new Date(endDate) > new Date(startDate) && (
                 <p className="text-xs text-slate-600 bg-white/70 rounded px-3 py-1.5 border border-slate-200">
-                  {Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86_400_000)} days
-                  · estimated price: <strong>{calcPrice('CUSTOM', startDate, endDate).toLocaleString()} ₴</strong>
-                  &ensp;({CUSTOM_PRICE_PER_DAY} ₴/day)
+                  {t('subscriptions.custom_days_price', {
+                    days: Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86_400_000),
+                    price: calcPrice('CUSTOM', startDate, endDate).toLocaleString(),
+                    rate: CUSTOM_PRICE_PER_DAY,
+                  })}
                 </p>
               )}
 
@@ -329,47 +317,44 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
 
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" onClick={goToPayment} disabled={!startDate || !endDate}>
-                  Next: Payment <ArrowRight size={14} className="ml-1" />
+                  {t('subscriptions.next_payment')} <ArrowRight size={14} className="ml-1" />
                 </Button>
-                <Button size="sm" variant="ghost" onClick={closeForm}>Cancel</Button>
+                <Button size="sm" variant="ghost" onClick={closeForm}>{t('common.cancel')}</Button>
               </div>
             </>
           )}
 
-          {/* ── STEP 2: payment ─────────────────────────── */}
           {step === 'payment' && !lastCreated && (
             <>
               <p className="text-sm font-semibold text-blue-800 flex items-center gap-1">
-                <Banknote size={15} /> Collect payment
+                <Banknote size={15} /> {t('subscriptions.collect_payment')}
               </p>
 
-              {/* Order summary */}
               <div className="rounded-md bg-white border border-slate-200 px-4 py-3 text-sm space-y-1.5">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Plan</span>
+                  <span className="text-slate-500">{t('subscriptions.plan_label')}</span>
                   <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeColor(subType)}`}>{subType}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Period</span>
+                  <span className="text-slate-500">{t('subscriptions.period_label')}</span>
                   <span className="text-slate-700">{formatDate(toIsoLocal(startDate))} – {formatDate(toIsoLocal(endDate))}</span>
                 </div>
                 {selectedSpaceId !== null && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500 flex items-center gap-1"><MapPin size={11} /> Space</span>
+                    <span className="text-slate-500 flex items-center gap-1"><MapPin size={11} /> {t('subscriptions.space_label')}</span>
                     <span className="text-slate-700 font-medium">
                       {spaces.find(s => s.spaceId === selectedSpaceId)?.spaceNumber ?? `#${selectedSpaceId}`}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between font-semibold text-base border-t border-slate-100 pt-2 mt-1">
-                  <span>Total</span>
+                  <span>{t('subscriptions.total_label')}</span>
                   <span className="text-primary">{Number(payAmount).toLocaleString()} ₴</span>
                 </div>
               </div>
 
-              {/* Payment method */}
               <div className="space-y-1.5">
-                <Label className="text-xs">Payment Method</Label>
+                <Label className="text-xs">{t('subscriptions.payment_method_label')}</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {PAYMENT_METHODS.map(m => (
                     <button
@@ -387,9 +372,8 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
                 </div>
               </div>
 
-              {/* Amount (editable) */}
               <div className="space-y-1">
-                <Label className="text-xs">Amount received (₴)</Label>
+                <Label className="text-xs">{t('subscriptions.amount_received')}</Label>
                 <Input
                   type="number"
                   value={payAmount}
@@ -409,54 +393,52 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
                   {createMut.isPending
                     ? <Loader2 size={14} className="animate-spin mr-1" />
                     : <CheckCircle2 size={14} className="mr-1" />}
-                  Confirm Payment & Activate
+                  {t('subscriptions.confirm_and_activate')}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => { setStep('details'); setFormError(null) }}>
-                  <ArrowLeft size={14} className="mr-1" /> Back
+                  <ArrowLeft size={14} className="mr-1" /> {t('common.back')}
                 </Button>
               </div>
             </>
           )}
 
-          {/* ── SUCCESS ─────────────────────────────────── */}
           {lastCreated && (
             <div className="rounded-md border border-green-200 bg-green-50 px-4 py-4 text-sm space-y-3">
               <p className="font-semibold text-green-700 flex items-center gap-1.5">
-                <CheckCircle2 size={16} /> Subscription activated!
+                <CheckCircle2 size={16} /> {t('subscriptions.activated_msg')}
               </p>
               <div className="space-y-1 text-slate-600">
                 <div className="flex justify-between">
-                  <span>Plan</span>
+                  <span>{t('subscriptions.plan_label')}</span>
                   <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${typeColor(lastCreated.type)}`}>{lastCreated.type}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Period</span>
+                  <span>{t('subscriptions.period_label')}</span>
                   <span>{formatDate(lastCreated.startDate)} – {formatDate(lastCreated.endDate)}</span>
                 </div>
                 {lastCreated.spaceNumber && typeof lastCreated.spaceNumber === 'string' && (
                   <div className="flex justify-between">
-                    <span className="flex items-center gap-1"><MapPin size={11} /> Reserved space</span>
+                    <span className="flex items-center gap-1"><MapPin size={11} /> {t('subscriptions.reserved_space_label')}</span>
                     <span className="font-semibold text-primary">{lastCreated.spaceNumber}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-semibold">
-                  <span>Paid ({payMethod})</span>
+                  <span>{t('subscriptions.paid_via', { method: payMethod })}</span>
                   <span className="text-green-700">{Number(payAmount).toLocaleString()} ₴</span>
                 </div>
               </div>
-              <Button size="sm" variant="outline" onClick={closeForm}>Done</Button>
+              <Button size="sm" variant="outline" onClick={closeForm}>{t('subscriptions.done')}</Button>
             </div>
           )}
         </div>
       )}
 
-      {/* ── Subscription list ─────────────────────────── */}
       {isLoading ? (
         <div className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
-          <Loader2 size={14} className="animate-spin" /> Loading…
+          <Loader2 size={14} className="animate-spin" /> {t('common.loading')}
         </div>
       ) : subs.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-2">No subscriptions for this client.</p>
+        <p className="text-sm text-muted-foreground py-2">{t('subscriptions.no_subs_client')}</p>
       ) : (
         <div className="space-y-2">
           {subs.map((sub: Subscription) => (
@@ -480,7 +462,7 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className={`text-xs font-medium ${sub.isActive ? 'text-green-600' : 'text-slate-400'}`}>
-                  {sub.isActive ? '● Active' : '○ Inactive'}
+                  {sub.isActive ? t('subscriptions.status_active') : t('subscriptions.status_inactive')}
                 </span>
                 {canWrite && sub.isActive && (
                   <Button
@@ -489,7 +471,7 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
                     className="h-7 w-7 text-red-400 hover:text-red-600"
                     onClick={() => deactivateMut.mutate(sub.id)}
                     disabled={deactivateMut.isPending}
-                    title="Deactivate"
+                    title={t('subscriptions.deactivate')}
                   >
                     <Trash2 size={13} />
                   </Button>
@@ -503,20 +485,13 @@ function SubscriptionList({ client, canWrite, spaces }: SubListProps) {
   )
 }
 
-// ── Universal client lookup ───────────────────────────────────────────
 type QueryMode = 'phone' | 'plate' | 'name'
 
 function detectMode(q: string): QueryMode {
-  const t = q.trim()
-  if (/^[+\d\s\-()]+$/.test(t)) return 'phone'
-  if (/^[A-ZА-ЯІЇЄ0-9]{3,10}$/i.test(t) && /[A-ZА-ЯІЇЄ]/i.test(t) && /\d/.test(t)) return 'plate'
+  const trimmed = q.trim()
+  if (/^[+\d\s\-()]+$/.test(trimmed)) return 'phone'
+  if (/^[A-ZА-ЯІЇЄ0-9]{3,10}$/i.test(trimmed) && /[A-ZА-ЯІЇЄ]/i.test(trimmed) && /\d/.test(trimmed)) return 'plate'
   return 'name'
-}
-
-const MODE_META: Record<QueryMode, { icon: React.ReactNode; hint: string; color: string }> = {
-  phone: { icon: <Phone size={12} />,  hint: 'phone',        color: 'text-blue-600 bg-blue-50 border-blue-200'   },
-  plate: { icon: <Car  size={12} />,   hint: 'license plate', color: 'text-amber-700 bg-amber-50 border-amber-200' },
-  name:  { icon: <User size={12} />,   hint: 'name',         color: 'text-violet-700 bg-violet-50 border-violet-200' },
 }
 
 interface UniversalSearchProps {
@@ -526,6 +501,14 @@ interface UniversalSearchProps {
 }
 
 function UniversalClientSearch({ clients, onSelect, selectedId }: UniversalSearchProps) {
+  const { t } = useLanguage()
+
+  const MODE_META: Record<QueryMode, { icon: React.ReactNode; hint: string; color: string }> = {
+    phone: { icon: <Phone size={12} />,  hint: t('subscriptions.search_mode_phone'), color: 'text-blue-600 bg-blue-50 border-blue-200'   },
+    plate: { icon: <Car  size={12} />,   hint: t('subscriptions.search_mode_plate'), color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    name:  { icon: <User size={12} />,   hint: t('subscriptions.search_mode_name'),  color: 'text-violet-700 bg-violet-50 border-violet-200' },
+  }
+
   const [query, setQuery]           = useState('')
   const [results, setResults]       = useState<Client[]>([])
   const [loading, setLoading]       = useState(false)
@@ -547,7 +530,6 @@ function UniversalClientSearch({ clients, onSelect, selectedId }: UniversalSearc
       setNoResult(false)
       try {
         if (mode === 'phone') {
-          // client-side filter — no network call
           const hits = clients.filter(c => c.phoneNumber.replace(/\D/g, '').includes(q.replace(/\D/g, '')))
           setResults(hits)
           setNoResult(hits.length === 0)
@@ -556,7 +538,6 @@ function UniversalClientSearch({ clients, onSelect, selectedId }: UniversalSearc
           setResults([hit])
           setNoResult(false)
         } else {
-          // name — client-side first (instant), also try server for partial matches
           const local = clients.filter(c =>
             c.fullName.toLowerCase().includes(q.toLowerCase())
           )
@@ -588,7 +569,6 @@ function UniversalClientSearch({ clients, onSelect, selectedId }: UniversalSearc
 
   return (
     <div className="relative">
-      {/* Input + mode badge */}
       <div className="relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         <Input
@@ -596,7 +576,7 @@ function UniversalClientSearch({ clients, onSelect, selectedId }: UniversalSearc
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(false) }}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Phone, name or license plate…"
+          placeholder={t('subscriptions.search_placeholder')}
           className="pl-8 pr-24 h-10"
           autoComplete="off"
         />
@@ -610,18 +590,16 @@ function UniversalClientSearch({ clients, onSelect, selectedId }: UniversalSearc
         )}
       </div>
 
-      {/* Hint line */}
       {query.trim().length === 0 && (
         <p className="mt-1 text-[11px] text-slate-400">
-          Digits → phone &nbsp;·&nbsp; Letters → name &nbsp;·&nbsp; Mix (AA1234BB) → plate
+          {t('subscriptions.search_hint')}
         </p>
       )}
 
-      {/* Dropdown */}
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden">
           {noResult ? (
-            <p className="px-4 py-3 text-sm text-slate-400">No clients found</p>
+            <p className="px-4 py-3 text-sm text-slate-400">{t('subscriptions.no_clients_found')}</p>
           ) : (
             <ul className="max-h-56 overflow-y-auto divide-y divide-slate-100">
               {results.map(c => (
@@ -645,10 +623,9 @@ function UniversalClientSearch({ clients, onSelect, selectedId }: UniversalSearc
   )
 }
 
-// ── Main Page ────────────────────────────────────────────────────────
-
 export default function SubscriptionsPage() {
   const { role } = useAuthStore()
+  const { t } = useLanguage()
   const canWrite = role === 'ADMIN' || role === 'MANAGER' || role === 'OPERATOR'
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
@@ -662,7 +639,7 @@ export default function SubscriptionsPage() {
   const { data: availableSpaces = [] } = useQuery({
     queryKey: ['parking-spaces-available'],
     queryFn: getAvailableSpaces,
-    staleTime: 30_000, // refresh every 30 s
+    staleTime: 30_000,
   })
 
   const handleSelectClient = (c: Client) => {
@@ -674,18 +651,17 @@ export default function SubscriptionsPage() {
     <div className="space-y-6">
       <PageHeader
         icon={<BadgeCheck size={24} />}
-        title="Subscriptions"
-        description="Create and manage client subscription plans"
+        title={t('subscriptions.title')}
+        description={t('subscriptions.page_desc')}
       />
 
       <div className="grid gap-4 xl:grid-cols-[1fr_2fr]">
 
-        {/* ── Left: client picker ──────────────────── */}
         <div className="space-y-4">
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Find Client</CardTitle>
-              <CardDescription>Start typing — auto-detects phone, name or plate</CardDescription>
+              <CardTitle className="text-base">{t('subscriptions.find_client_title')}</CardTitle>
+              <CardDescription>{t('subscriptions.find_client_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <UniversalClientSearch
@@ -698,15 +674,15 @@ export default function SubscriptionsPage() {
 
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">All Clients</CardTitle>
+              <CardTitle className="text-base">{t('subscriptions.all_clients_title')}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {clientsLoading ? (
                 <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
-                  <Loader2 size={14} className="animate-spin" /> Loading…
+                  <Loader2 size={14} className="animate-spin" /> {t('common.loading')}
                 </div>
               ) : clients.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-muted-foreground">No clients.</p>
+                <p className="px-4 py-3 text-sm text-muted-foreground">{t('subscriptions.no_clients')}</p>
               ) : (
                 <ul className="divide-y divide-slate-100 max-h-[360px] overflow-y-auto">
                   {clients.map(c => (
@@ -730,12 +706,11 @@ export default function SubscriptionsPage() {
           </Card>
         </div>
 
-        {/* ── Right: subscription panel ─────────────── */}
         <div>
           {!selectedClient ? (
             <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-white py-16 text-center">
               <BadgeCheck size={40} className="text-slate-300 mb-3" />
-              <p className="text-slate-500 text-sm">Select a client to view and manage subscriptions</p>
+              <p className="text-slate-500 text-sm">{t('subscriptions.select_client_prompt')}</p>
             </div>
           ) : (
             <Card className="shadow-sm">
@@ -754,7 +729,7 @@ export default function SubscriptionsPage() {
                     type="button"
                     className="text-slate-400 hover:text-slate-600 text-lg leading-none"
                     onClick={() => setSelectedClient(null)}
-                    title="Close"
+                    title={t('common.close')}
                   >
                     ✕
                   </button>
@@ -766,10 +741,9 @@ export default function SubscriptionsPage() {
             </Card>
           )}
 
-          {/* Quick overview accordion (when no client selected) */}
           {!selectedClient && clients.length > 0 && (
             <div className="mt-4 space-y-2">
-              <p className="text-xs text-slate-500 font-medium uppercase tracking-wide px-1">Quick Overview</p>
+              <p className="text-xs text-slate-500 font-medium uppercase tracking-wide px-1">{t('subscriptions.quick_overview')}</p>
               {clients.map(c => (
                 <div key={c.id} className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
                   <button
@@ -797,4 +771,3 @@ export default function SubscriptionsPage() {
     </div>
   )
 }
-

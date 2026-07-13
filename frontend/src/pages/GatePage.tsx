@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PageHeader } from '@/components/PageHeader'
+import { useLanguage } from '@/store/languageContext'
 import { gateEntry, gateExit } from '@/api/gate'
 import { processPayment } from '@/api/billing'
 import type { GateEntryResponse, GateExitResponse } from '@/api/gate'
@@ -24,6 +25,7 @@ const PAYMENT_METHODS = [
 ] as const
 
 export default function GatePage() {
+  const { t } = useLanguage()
   const [entryPlate, setEntryPlate] = useState('')
   const [exitPlate, setExitPlate]   = useState('')
   const [exitTicket, setExitTicket] = useState('')
@@ -72,7 +74,7 @@ export default function GatePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={<Car size={24} />} title="Gate Control" />
+      <PageHeader icon={<Car size={24} />} title={t('gate.title')} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -80,13 +82,13 @@ export default function GatePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <LogIn size={18} className="text-green-600" /> Entry
+              <LogIn size={18} className="text-green-600" /> {t('gate.entry')}
             </CardTitle>
-            <CardDescription>Register vehicle entry</CardDescription>
+            <CardDescription>{t('gate.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="entry-plate">License Plate</Label>
+              <Label htmlFor="entry-plate">{t('gate.license_plate')}</Label>
               <Input
                 id="entry-plate"
                 placeholder="e.g. AA1234BB"
@@ -104,7 +106,7 @@ export default function GatePage() {
               disabled={!entryPlate.trim() || entryMutation.isPending}
             >
               {entryMutation.isPending && <Loader2 size={16} className="animate-spin mr-2" />}
-              Open Entry Gate
+              {t('gate.open')}
             </Button>
 
             {entryMutation.isError && (
@@ -116,16 +118,16 @@ export default function GatePage() {
             {entryResult && (
               <div className={`rounded-md border px-4 py-3 text-sm space-y-1 ${entryResult.gateStatus === 'OPENED' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Gate:</span>
+                  <span className="text-slate-600">{t('gate.status')}:</span>
                   <StatusBadge status={entryResult.gateStatus} />
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Subscriber:</span>
+                  <span className="text-slate-600">{t('gate.subscriber')}:</span>
                   <span className="font-medium">{entryResult.isSubscriber ? '✅ Yes' : '❌ No'}</span>
                 </div>
                 {entryResult.ticketCode && (
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Ticket:</span>
+                    <span className="text-slate-600">{t('gate.ticket')}:</span>
                     <span className="font-mono font-bold">{entryResult.ticketCode}</span>
                   </div>
                 )}
@@ -139,13 +141,13 @@ export default function GatePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <LogOut size={18} className="text-blue-600" /> Exit
+              <LogOut size={18} className="text-blue-600" /> {t('gate.exit')}
             </CardTitle>
-            <CardDescription>Register vehicle exit</CardDescription>
+            <CardDescription>{t('gate.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="exit-plate">License Plate</Label>
+              <Label htmlFor="exit-plate">{t('gate.license_plate')}</Label>
               <Input
                 id="exit-plate"
                 placeholder="e.g. AA1234BB"
@@ -156,7 +158,7 @@ export default function GatePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="exit-ticket">
-                Ticket Code <span className="text-slate-400 font-normal">(optional)</span>
+                {t('gate.ticket')} <span className="text-slate-400 font-normal">({t('common.no_data')})</span>
               </Label>
               <Input
                 id="exit-ticket"
@@ -172,7 +174,7 @@ export default function GatePage() {
               disabled={(!exitPlate.trim() && !exitTicket.trim()) || exitMutation.isPending}
             >
               {exitMutation.isPending && <Loader2 size={16} className="animate-spin mr-2" />}
-              Open Exit Gate
+              {t('gate.open')}
             </Button>
 
             {exitMutation.isError && (
@@ -185,23 +187,23 @@ export default function GatePage() {
               <div className={`rounded-md border px-4 py-3 text-sm space-y-2 ${exitResult.gateStatus === 'OPENED' ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
                 {/* Status row */}
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Gate:</span>
+                  <span className="text-slate-600">{t('gate.status')}:</span>
                   <StatusBadge status={exitResult.gateStatus} />
                 </div>
                 {exitResult.durationMinutes > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Duration:</span>
+                    <span className="text-slate-600">{t('billing.entry_time')}:</span>
                     <span className="font-medium">{exitResult.durationMinutes} min</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Fee:</span>
+                  <span className="text-slate-600">{t('billing.fee')}:</span>
                   <span className="font-semibold">{exitResult.fee} UAH</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Status:</span>
+                  <span className="text-slate-600">{t('billing.status')}:</span>
                   <span className={exitResult.isPaid ? 'text-green-600 font-medium' : 'text-amber-600 font-medium'}>
-                    {exitResult.isPaid ? '✅ Paid' : '⏳ Unpaid'}
+                    {exitResult.isPaid ? '✅ ' + t('billing.paid') : '⏳ ' + t('billing.unpaid')}
                   </span>
                 </div>
                 <p className="text-slate-500 text-xs">{exitResult.message}</p>
@@ -210,7 +212,7 @@ export default function GatePage() {
                 {exitResult.paymentRequired && !paySuccess && (
                   <div className="mt-3 pt-3 border-t border-amber-200 space-y-3">
                     <p className="text-sm font-semibold text-amber-700 flex items-center gap-1">
-                      <Banknote size={15} /> Record Payment
+                      <Banknote size={15} /> {t('gate.status')}
                     </p>
 
                     {/* Payment method selector */}
@@ -233,7 +235,7 @@ export default function GatePage() {
                     {/* Amount */}
                     <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
                       <div className="space-y-1">
-                        <Label className="text-xs">Amount (UAH)</Label>
+                        <Label className="text-xs">{t('billing.amount')} (UAH)</Label>
                         <Input
                           type="number"
                           value={payAmount}
@@ -254,7 +256,7 @@ export default function GatePage() {
                       >
                         {payMutation.isPending
                           ? <Loader2 size={14} className="animate-spin" />
-                          : 'Pay'}
+                          : t('billing.paid')}
                       </Button>
                     </div>
 
@@ -269,7 +271,7 @@ export default function GatePage() {
                 {/* ── Payment confirmed → retry exit ── */}
                 {paySuccess && (
                   <div className="mt-3 pt-3 border-t border-green-200 space-y-2">
-                    <p className="text-sm text-green-700 font-semibold">✅ Payment recorded!</p>
+                    <p className="text-sm text-green-700 font-semibold">✅ {t('common.success')}</p>
                     <Button
                       variant="outline"
                       size="sm"
@@ -278,7 +280,7 @@ export default function GatePage() {
                       disabled={exitMutation.isPending}
                     >
                       <RotateCcw size={14} className="mr-1" />
-                      Retry Exit Gate
+                      {t('gate.exit')}
                     </Button>
                   </div>
                 )}

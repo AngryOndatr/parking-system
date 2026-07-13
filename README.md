@@ -8,6 +8,14 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Showing last commit only.** Full history: [CHANGELOG.md](./CHANGELOG.md)
 
+### 2026-07-13 — Frontend multilingual UI (EN/DE/UA/RU) ✅
+
+- 🌍 Added centralized i18n dictionaries in `frontend/src/i18n/translations.ts`
+- 🔧 Added `LanguageProvider` + `useLanguage()` context in `frontend/src/store/languageContext.tsx`
+- 💾 Language selection is persisted (`localStorage`: `parking-system-language`)
+- 🧭 Language switchers added to Login page and App sidebar
+- ✅ UI text translated across main pages (dashboard, clients, subscriptions, management, billing, gate, reporting, simulator)
+
 ### 2026-03-09 — CORS wildcard for dynamic LAN IP (Issue #79 fix) ✅
 
 - 🔧 **`SecurityConfiguration.java`**: `setAllowedOrigins()` → `setAllowedOriginPatterns()` — wildcard `http://192.168.*` support
@@ -68,6 +76,7 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ P
 | **API Endpoints** | 20+ (via API Gateway) |
 | **DB Migrations** | 10 (V0–V9) |
 | **OpenAPI specs** | 5 services (OpenAPI-first) |
+| **UI Languages** | 4 (EN, DE, UA, RU) |
 
 ---
 
@@ -555,7 +564,8 @@ parking-system/
 │       ├── pages/            # Route pages
 │       ├── components/       # Shared UI components
 │       ├── layouts/          # AppLayout with sidebar
-│       ├── store/            # Zustand auth store
+│       ├── store/            # Zustand auth store + language context
+│       ├── i18n/             # Translation dictionaries (en/de/uk/ru)
 │       └── types/            # TypeScript types
 ├── database/
 │   └── init.sql              # DB init (runs once on first Docker start)

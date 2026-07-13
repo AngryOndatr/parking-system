@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PageHeader } from '@/components/PageHeader'
+import { useLanguage } from '@/store/languageContext'
 import { getBillingStatusByTicket, processPaymentTest } from '@/api/billing'
 import type { BillingStatusResponse } from '@/api/billing'
 
 export default function BillingPage() {
+  const { t } = useLanguage()
   // Ticket search state
   const [ticketCode, setTicketCode] = useState('')
   const [searchResult, setSearchResult] = useState<BillingStatusResponse | null>(null)
@@ -63,15 +65,15 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={<CreditCard size={24} />} title="Billing & Payments" />
+      <PageHeader icon={<CreditCard size={24} />} title={t('billing.title')} />
 
       {/* ────── Ticket Search ────── */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Search size={18} /> Find Ticket
+            <Search size={18} /> {t('billing.ticket_code')}
           </CardTitle>
-          <CardDescription>Search for a ticket by code to check payment status</CardDescription>
+          <CardDescription>{t('billing.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -106,17 +108,17 @@ export default function BillingPage() {
                 <span className="font-mono font-bold">{searchResult.parkingEventId}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-600 font-medium">Status:</span>
+                <span className="text-slate-600 font-medium">{t('billing.status')}:</span>
                 <span className={`inline-flex items-center gap-1 font-semibold ${
                   searchResult.isPaid ? 'text-green-600' : 'text-amber-600'
                 }`}>
                   {searchResult.isPaid ? <CheckCircle2 size={16} /> : <DollarSign size={16} />}
-                  {searchResult.isPaid ? 'PAID' : 'UNPAID'}
+                  {searchResult.isPaid ? t('billing.paid') : t('billing.unpaid')}
                 </span>
               </div>
               {searchResult.payments.length > 0 && (
                 <div className="border-t pt-2 mt-2 space-y-1">
-                  <p className="text-xs text-slate-600 font-semibold">Payments:</p>
+                  <p className="text-xs text-slate-600 font-semibold">{t('billing.payment_info')}:</p>
                   {searchResult.payments.map((p) => (
                     <div key={p.paymentId} className="flex justify-between text-xs text-slate-600">
                       <span>#{p.paymentId} · {p.paymentMethod}</span>
@@ -140,13 +142,13 @@ export default function BillingPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign size={18} /> Process Payment
+              <DollarSign size={18} /> {t('billing.calculate_fee')}
             </CardTitle>
-            <CardDescription>Record payment for this parking session</CardDescription>
+            <CardDescription>{t('billing.payment_info')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount (UAH)</Label>
+              <Label htmlFor="amount">{t('billing.amount')} (UAH)</Label>
               <Input
                 id="amount"
                 type="number"
@@ -158,7 +160,7 @@ export default function BillingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="payment-method">Payment Method</Label>
+              <Label htmlFor="payment-method">{t('billing.payment_info')}</Label>
               <select
                 id="payment-method"
                 className="w-full border rounded-md px-3 py-2 text-sm"
@@ -178,7 +180,7 @@ export default function BillingPage() {
               onClick={handlePayment}
             >
               {payMutation.isPending && <Loader2 size={16} className="animate-spin mr-2" />}
-              Process Payment
+              {t('billing.amount')}
             </Button>
 
             {payMutation.isError && (
@@ -198,9 +200,9 @@ export default function BillingPage() {
               <CheckCircle2 size={48} className="text-green-600" />
             </div>
             <div>
-              <p className="font-bold text-lg text-green-700">Payment Completed!</p>
+              <p className="font-bold text-lg text-green-700">{t('common.success')}</p>
               <p className="text-sm text-slate-600">
-               Ticket: {ticketCode} · Event #{searchResult.parkingEventId}
+                {t('billing.ticket_code')}: {ticketCode} · Event #{searchResult.parkingEventId}
               </p>
             </div>
             <Button
@@ -212,7 +214,7 @@ export default function BillingPage() {
                 setPayForm({ amount: '', paymentMethod: 'CARD' })
               }}
             >
-              Search Another Ticket
+              {t('billing.calculate_fee')}
             </Button>
           </CardContent>
         </Card>

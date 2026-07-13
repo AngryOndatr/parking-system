@@ -8,10 +8,12 @@ import { Label } from '@/components/ui/label'
 import { getClients, createClient, deleteClient, searchClientByPhone } from '@/api/clients'
 import type { Client } from '@/api/clients'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguage } from '@/store/languageContext'
 
 export default function ClientsPage() {
   const qc = useQueryClient()
   const { role } = useAuthStore()
+  const { t } = useLanguage()
   const [showForm, setShowForm] = useState(false)
   const [searchPhone, setSearchPhone] = useState('')
   const [searchResult, setSearchResult] = useState<Client | null | 'not-found'>(null)
@@ -62,24 +64,24 @@ export default function ClientsPage() {
           <div className="flex items-center gap-2 text-slate-900">
             <Users size={26} className="text-primary" />
             <div>
-              <h1 className="text-2xl font-semibold">Clients</h1>
-              <p className="text-sm text-muted-foreground">Manage subscriber records and quick lookups</p>
+              <h1 className="text-2xl font-semibold">{t('clients.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('clients.description')}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 text-sm text-slate-600">
-            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-900">{totalClients} records</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-900">{totalClients} {t('common.records')}</span>
             <span className="rounded-full bg-slate-100 px-3 py-1">
-              Access: {canWrite ? 'read/write' : 'read-only'}
+              {t('clients.access')}: {canWrite ? t('clients.read_write') : t('clients.read_only')}
             </span>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="ghost" size="sm" onClick={() => refetch()}>
-            <RefreshCw size={16} className="mr-1" /> Refresh
+            <RefreshCw size={16} className="mr-1" /> {t('common.refresh')}
           </Button>
           {canWrite && (
             <Button size="sm" onClick={() => setShowForm(!showForm)}>
-              <Plus size={16} className="mr-1" /> {showForm ? 'Hide Form' : 'Add Client'}
+              <Plus size={16} className="mr-1" /> {showForm ? t('clients.hide_form') : t('clients.add_client')}
             </Button>
           )}
         </div>
@@ -88,13 +90,13 @@ export default function ClientsPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">Search by Phone</CardTitle>
-            <CardDescription>Use international format for precise results</CardDescription>
+            <CardTitle className="text-base">{t('clients.search_by_phone')}</CardTitle>
+            <CardDescription>{t('clients.use_international_format')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
               <Input
-                placeholder="+380501234567"
+                placeholder={t('clients.phone_placeholder')}
                 value={searchPhone}
                 onChange={(e) => { setSearchPhone(e.target.value); setSearchResult(null) }}
               />
@@ -104,11 +106,11 @@ export default function ClientsPage() {
                 disabled={!searchPhone.trim()}
                 className="w-full sm:w-auto"
               >
-                <Search size={16} className="mr-1" /> Search
+                <Search size={16} className="mr-1" /> {t('common.search')}
               </Button>
             </div>
             {searchResult === 'not-found' && (
-              <p className="text-sm text-destructive">Client not found</p>
+              <p className="text-sm text-destructive">{t('common.no_data')}</p>
             )}
             {searchResult && searchResult !== 'not-found' && (
               <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
@@ -122,30 +124,30 @@ export default function ClientsPage() {
         {showForm && (
           <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">New Client</CardTitle>
-              <CardDescription>Fill in client details</CardDescription>
+              <CardTitle className="text-base">{t('clients.add_client')}</CardTitle>
+              <CardDescription>{t('clients.add_client')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Full Name</Label>
+                  <Label>{t('clients.full_name')}</Label>
                   <Input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} placeholder="John Doe" />
                 </div>
                 <div className="space-y-1">
-                  <Label>Phone Number</Label>
-                  <Input value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} placeholder="+380501234567" />
+                  <Label>{t('clients.phone_number')}</Label>
+                  <Input value={form.phoneNumber} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} placeholder={t('clients.phone_placeholder')} />
                 </div>
                 <div className="space-y-1 sm:col-span-2">
-                  <Label>Email</Label>
+                  <Label>{t('clients.email')}</Label>
                   <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="john@example.com" />
                 </div>
               </div>
               {formError && <p className="mt-2 text-sm text-destructive">{formError}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button onClick={() => createMutation.mutate(form)} disabled={createMutation.isPending || !form.fullName || !form.phoneNumber}>
-                  {createMutation.isPending ? <Loader2 size={16} className="mr-1 animate-spin" /> : null} Save
+                  {createMutation.isPending ? <Loader2 size={16} className="mr-1 animate-spin" /> : null} {t('common.save')}
                 </Button>
-                <Button variant="ghost" onClick={() => { setShowForm(false); setFormError(null) }}>Cancel</Button>
+                <Button variant="ghost" onClick={() => { setShowForm(false); setFormError(null) }}>{t('common.cancel')}</Button>
               </div>
             </CardContent>
           </Card>
@@ -154,16 +156,16 @@ export default function ClientsPage() {
 
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Registered Clients ({totalClients})</CardTitle>
-          <CardDescription>Large screens render a full table, mobile switches to cards automatically</CardDescription>
+          <CardTitle className="text-base">{t('clients.registered')} ({totalClients})</CardTitle>
+          <CardDescription>{t('common.no_data')}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-              <Loader2 size={16} className="animate-spin" /> Loading…
+              <Loader2 size={16} className="animate-spin" /> {t('common.loading')}
             </div>
           ) : clients.length === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">No clients registered yet.</p>
+            <p className="py-4 text-sm text-muted-foreground">{t('common.no_data')}</p>
           ) : (
             <div className="space-y-4">
               <div className="grid gap-3 lg:hidden">
@@ -189,15 +191,15 @@ export default function ClientsPage() {
                     </div>
                     <dl className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
                       <div>
-                        <dt className="font-medium text-slate-500">Phone</dt>
+                        <dt className="font-medium text-slate-500">{t('clients.phone_number')}</dt>
                         <dd className="text-slate-900">{c.phoneNumber}</dd>
                       </div>
                       <div>
-                        <dt className="font-medium text-slate-500">Email</dt>
+                        <dt className="font-medium text-slate-500">{t('clients.email')}</dt>
                         <dd className="text-slate-900">{c.email}</dd>
                       </div>
                       <div>
-                        <dt className="font-medium text-slate-500">Registered</dt>
+                        <dt className="font-medium text-slate-500">{t('clients.registered')}</dt>
                         <dd>{formatRegistrationDate(c.registeredAt)}</dd>
                       </div>
                     </dl>
@@ -210,10 +212,10 @@ export default function ClientsPage() {
                   <thead>
                     <tr className="border-b text-left text-slate-500">
                       <th className="pb-2 pr-4 font-medium">ID</th>
-                      <th className="pb-2 pr-4 font-medium">Full Name</th>
-                      <th className="pb-2 pr-4 font-medium">Phone</th>
-                      <th className="pb-2 pr-4 font-medium">Email</th>
-                      <th className="pb-2 pr-4 font-medium">Registered</th>
+                      <th className="pb-2 pr-4 font-medium">{t('clients.full_name')}</th>
+                      <th className="pb-2 pr-4 font-medium">{t('clients.phone_number')}</th>
+                      <th className="pb-2 pr-4 font-medium">{t('clients.email')}</th>
+                      <th className="pb-2 pr-4 font-medium">{t('clients.registered')}</th>
                       {canWrite && <th className="pb-2 font-medium"></th>}
                     </tr>
                   </thead>

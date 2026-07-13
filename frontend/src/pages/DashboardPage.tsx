@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguage } from '@/store/languageContext'
 import { getAvailableCount, getAllSpots } from '@/api/management'
 import { getClients } from '@/api/clients'
 import { getLogs } from '@/api/reporting'
 
 export default function DashboardPage() {
   const { username, role } = useAuthStore()
+  const { t } = useLanguage()
 
   const { data: countData, refetch: refetchCount } = useQuery({
     queryKey: ['spots-count'],
@@ -43,11 +45,11 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         icon={<LayoutDashboard size={24} />}
-        title="Dashboard"
-        description={`Welcome back, ${username ?? '…'} · ${role ?? ''}`}
+        title={t('dashboard.title')}
+        description={`${t('dashboard.welcome')}, ${username ?? '…'} · ${role ?? ''}`}
         actions={
           <Button variant="ghost" size="sm" onClick={handleRefresh}>
-            <RefreshCw size={16} className="mr-1" /> Refresh
+            <RefreshCw size={16} className="mr-1" /> {t('common.refresh')}
           </Button>
         }
       />
@@ -58,7 +60,7 @@ export default function DashboardPage() {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Available</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">{t('dashboard.available')}</p>
                 <p className="text-3xl font-bold text-green-600">{countData?.count ?? '—'}</p>
               </div>
               <CheckCircle2 size={32} className="text-green-200" />
@@ -69,7 +71,7 @@ export default function DashboardPage() {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Occupied</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">{t('dashboard.occupied')}</p>
                 <p className="text-3xl font-bold text-red-500">{occupiedCount}</p>
               </div>
               <Car size={32} className="text-red-200" />
@@ -80,7 +82,7 @@ export default function DashboardPage() {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Occupancy</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">{t('dashboard.occupancy')}</p>
                 <p className="text-3xl font-bold text-slate-700">{occupancyPct}%</p>
               </div>
               <div className="w-10 h-10 rounded-full border-4 border-slate-200 flex items-center justify-center">
@@ -93,7 +95,7 @@ export default function DashboardPage() {
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Clients</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide">{t('dashboard.total_clients')}</p>
                 <p className="text-3xl font-bold text-blue-600">{clients.length}</p>
               </div>
               <Users size={32} className="text-blue-200" />
@@ -105,7 +107,7 @@ export default function DashboardPage() {
       {/* Occupancy bar */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Occupancy Overview</CardTitle>
+          <CardTitle className="text-base">{t('dashboard.occupancy_rate')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
@@ -118,9 +120,9 @@ export default function DashboardPage() {
             <span className="text-sm font-semibold text-slate-700 w-12 text-right">{occupancyPct}%</span>
           </div>
           <div className="flex justify-between text-xs text-slate-500 mt-2">
-            <span>Available: {countData?.count ?? 0}</span>
-            <span>Occupied: {occupiedCount}</span>
-            <span>Total: {totalCount}</span>
+            <span>{t('dashboard.available')}: {countData?.count ?? 0}</span>
+            <span>{t('dashboard.occupied')}: {occupiedCount}</span>
+            <span>{t('common.records')}: {totalCount}</span>
           </div>
         </CardContent>
       </Card>
@@ -129,13 +131,13 @@ export default function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <AlertCircle size={16} className="text-red-500" /> Recent Errors
+            <AlertCircle size={16} className="text-red-500" /> {t('dashboard.recent_logs')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {recentLogs.length === 0 ? (
             <p className="text-sm text-green-600 flex items-center gap-1">
-              <CheckCircle2 size={14} /> No recent errors
+              <CheckCircle2 size={14} /> {t('dashboard.recent_logs')}
             </p>
           ) : (
             <div className="space-y-2">

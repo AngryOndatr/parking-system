@@ -232,11 +232,14 @@ frontend/src/
 │   ├── management.ts, reporting.ts, spaces.ts, subscriptions.ts
 ├── components/   # Reusable UI components (shadcn/Radix primitives)
 ├── layouts/      # AppLayout (nav sidebar + outlet)
+├── i18n/
+│   └── translations.ts # EN/DE/UA/RU translation dictionaries + typed helper
 ├── lib/
 │   └── apiClient.ts   # Axios instance with JWT interceptor + JsonNullable unwrapper
 ├── pages/        # Route-level page components
 ├── store/
 │   └── authStore.ts   # Zustand store (JWT token, user info)
+│   └── languageContext.tsx # i18n language context + localStorage persistence
 └── types/        # Shared TypeScript types
 ```
 
@@ -256,6 +259,14 @@ All `apiClient` calls use relative paths: `apiClient.get('/v1/clients')`.
 Backend uses `org.openapitools.jackson.nullable.JsonNullable` for optional fields.  
 `apiClient.ts` includes a response interceptor that automatically unwraps `JsonNullable`  
 wrappers so the frontend never sees `{ present: true, value: "..." }` objects.
+
+### Internationalization (i18n)
+- Frontend UI supports **EN**, **DE**, **UA** (`uk` locale code), and **RU**
+- Translation source of truth: `frontend/src/i18n/translations.ts` (`Language = 'en' | 'de' | 'uk' | 'ru'`)
+- `LanguageProvider` from `frontend/src/store/languageContext.tsx` wraps the app in `frontend/src/App.tsx`
+- Selected language is persisted in `localStorage` under key: `parking-system-language`
+- Language switchers are available on **LoginPage** and in **AppLayout** sidebar
+- Pages use `useLanguage().t(key, params)` for runtime text translation
 
 ---
 

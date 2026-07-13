@@ -8,6 +8,14 @@
 
 > **Показан последний коммит.** Полная история: [CHANGELOG.md](./CHANGELOG.md)
 
+### 2026-07-13 — Мультиязычный UI фронтенда (EN/DE/UA/RU) ✅
+
+- 🌍 Добавлены централизованные словари i18n в `frontend/src/i18n/translations.ts`
+- 🔧 Добавлен `LanguageProvider` + `useLanguage()` в `frontend/src/store/languageContext.tsx`
+- 💾 Выбранный язык сохраняется в `localStorage` (`parking-system-language`)
+- 🧭 Переключатель языка добавлен на странице логина и в боковом меню приложения
+- ✅ Переведены основные страницы UI (dashboard, clients, subscriptions, management, billing, gate, reporting, simulator)
+
 ### 2026-03-09 — CORS wildcard для динамического LAN IP (Issue #79 fix) ✅
 
 - 🔧 **`SecurityConfiguration.java`**: `setAllowedOrigins()` → `setAllowedOriginPatterns()` — поддержка wildcard `http://192.168.*`
@@ -68,6 +76,7 @@
 | **API-эндпоинтов** | 20+ (через API Gateway) |
 | **Миграций БД** | 10 (V0–V9) |
 | **OpenAPI-спецификации** | 5 сервисов (OpenAPI-first) |
+| **Языков UI** | 4 (EN, DE, UA, RU) |
 
 ---
 

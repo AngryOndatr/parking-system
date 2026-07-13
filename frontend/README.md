@@ -40,6 +40,9 @@ src/
 ├── layouts/          # AppLayout with role-based sidebar
 ├── store/            # Zustand stores
 │   └── authStore.ts  # JWT in localStorage, role decoded from token
+│   └── languageContext.tsx # LanguageProvider + useLanguage hook
+├── i18n/
+│   └── translations.ts # EN/DE/UA/RU dictionaries
 └── types/            # TypeScript types
 ```
 
@@ -76,6 +79,16 @@ JWT stored in `localStorage`. Role decoded from token payload (`atob`).
 | ADMIN | All pages |
 | OPERATOR | Gate, Billing |
 | MANAGER | Clients, Management, Reporting |
+
+## Internationalization (i18n)
+
+- Supported UI languages: **English (EN)**, **Deutsch (DE)**, **Українська (UA, code `uk`)**, **Русский (RU)**.
+- App-level provider: `LanguageProvider` in `src/store/languageContext.tsx` (mounted in `App.tsx`).
+- Translation dictionaries: `src/i18n/translations.ts`.
+- Selected language is persisted in `localStorage` (`parking-system-language`).
+- Language switchers are available in:
+  - Login page (`src/pages/LoginPage.tsx`)
+  - Sidebar/app layout (`src/layouts/AppLayout.tsx`)
 
 ## Vite Proxy Config
 

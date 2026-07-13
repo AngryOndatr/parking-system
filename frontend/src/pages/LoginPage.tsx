@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguage, AVAILABLE_LANGUAGES } from '@/store/languageContext'
+import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types/auth'
 
 function getRoleDefaultRoute(role: UserRole): string {
@@ -26,22 +28,20 @@ function getRoleDefaultRoute(role: UserRole): string {
 export default function LoginPage() {
   const navigate = useNavigate()
   const { setToken, isAuthenticated, role, _hasHydrated } = useAuthStore()
+  const { language, setLanguage, t } = useLanguage()
 
-  // ВСЕ хуки — до любого условного return
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-
   const mutation = useMutation({
     mutationFn: login,
     onSuccess: (data) => {
       const token = data.accessToken
       if (!token) {
-        setErrorMsg('No token received from server')
+        setErrorMsg(t('auth.no_token'))
         return
       }
       setToken(token)
-      // небольшая задержка чтобы Zustand persist успел записать состояние
       setTimeout(() => {
         const currentRole = useAuthStore.getState().role
         navigate(getRoleDefaultRoute(currentRole ?? 'OPERATOR'), { replace: true })
@@ -50,16 +50,15 @@ export default function LoginPage() {
     onError: (error: unknown) => {
       const err = error as { response?: { data?: { message?: string }; status?: number } }
       if (err.response?.status === 401 || err.response?.status === 403) {
-        setErrorMsg('Invalid username or password')
+        setErrorMsg(t('auth.error'))
       } else if (err.response?.data?.message) {
         setErrorMsg(err.response.data.message)
       } else {
-        setErrorMsg('Login failed. Please try again.')
+        setErrorMsg(t('auth.login_failed'))
       }
     },
   })
 
-  // Условный return — только ПОСЛЕ всех хуков
   if (_hasHydrated && isAuthenticated && role) {
     return <Navigate to={getRoleDefaultRoute(role)} replace />
   }
@@ -73,24 +72,44 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="w-full max-w-md px-4">
+        {/* Language Selector - Top Right */}
+        <div className="absolute top-6 right-6 flex gap-2">
+          {AVAILABLE_LANGUAGES.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => setLanguage(lang.code)}
+              className={cn(
+                'flex items-center gap-1 px-3 py-1.5 rounded-md transition-all font-medium text-sm',
+                language === lang.code
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+              )}
+              title={lang.label}
+            >
+              <span>{lang.flag}</span>
+              <span className="hidden sm:inline">{lang.code.toUpperCase()}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2 text-primary mb-2">
             <ParkingSquare size={40} strokeWidth={1.5} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">Parking System</h1>
-          <p className="text-slate-500 text-sm mt-1">Management Portal</p>
+          <h1 className="text-2xl font-bold text-slate-800">{t('nav.parking_system')}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t('dashboard.management_portal')}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Sign in</CardTitle>
-            <CardDescription>Enter your credentials to access the system</CardDescription>
+            <CardTitle className="text-xl">{t('auth.sign_in')}</CardTitle>
+            <CardDescription>{t('auth.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t('auth.username')}</Label>
                 <Input
                   id="username"
                   type="text"
@@ -104,7 +123,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -131,10 +150,10 @@ export default function LoginPage() {
                 {mutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in…
+                    {t('auth.submitting')}
                   </>
                 ) : (
-                  'Sign in'
+                  t('auth.submit')
                 )}
               </Button>
             </form>
