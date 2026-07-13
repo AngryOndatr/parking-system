@@ -11,10 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### In Progress
 
-- Gate Control UI page (Issue #76)
-- Clients UI page (Issue #77)
+- Phase 4 planning and report features backlog
 
 ### Recently Completed
+- ✅ **[Phase 3] Tech Debt: unify API path versioning across microservices** (Issue #81) — 2026-07-13
+- ✅ **[Phase 3] Frontend multilingual support documentation and context sync** (Issue #84) — 2026-07-13
+- ✅ **[Phase 3] Frontend: Billing Operator UI (payment processing)** (Issue #76) — 2026-07-13
+- ✅ **[Phase 3] Frontend: Gate Emulation UI (vehicle entry and exit)** (Issue #75) — 2026-07-13
+- ✅ **[Phase 3] Phase status updated to completed** — 2026-07-13
+- ✅ **[Phase 3] Backend / client-service: Subscription CRUD endpoints (create, list, deactivate)** (Issue #83) — 2026-03-30
+- ✅ **[Phase 3] Frontend: Responsive Layout Overhaul — mobile sidebar, adaptive grids, card views** (Issue #82) — 2026-03-30
 - ✅ **[Phase 3] CORS wildcard for dynamic LAN IP** (Issue #79 fix) — 2026-03-09
 - ✅ **[Phase 3] React frontend: project init, auth, base layout** (Issue #74) — 2026-03-08
 - ✅ **[Phase 3] CORS configuration in api-gateway** (Issue #79) — 2026-03-08
@@ -22,6 +28,111 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **[Phase 3] Subscription check: real DB logic in client-service** (Issue #72) — 2026-03-08
 - ✅ **[Phase 3] Add default OPERATOR user on application startup** (Issue #80) — 2026-03-08
 - ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
+
+## [Issue #81] - 2026-07-13
+
+### Changed — Tech Debt: unify API path versioning across microservices (Issue #81)
+
+**Problem:** API path versioning was inconsistent (`/api/v1/gate/*`, `/api/v1/billing/*` vs
+unversioned routes in other services), which increased maintenance overhead in RBAC,
+OpenAPI contracts, frontend clients, tests, and docs.
+
+#### `GateControlProxyController.java` / `BillingProxyController.java` (api-gateway)
+- Proxy mappings migrated to unified non-versioned paths: `/api/gate/*` and `/api/billing/*`
+
+#### `SecurityFilter.java` (api-gateway)
+- RBAC route rules updated to match unified gate/billing paths without `/v1`
+
+#### `openapi.yaml` (gate-control-service, billing-service)
+- Endpoint paths normalized to non-versioned gateway contract
+
+#### Frontend + tests + docs
+- Frontend API clients, E2E/integration tests, scripts, and API docs aligned to unified paths
+
+## [Issue #84] - 2026-07-13
+
+### Added — Frontend multilingual support documentation and context sync (Issue #84)
+
+**Problem:** multilingual support (EN/DE/UA/RU) existed in frontend code, but AI context docs
+and project documentation were not fully synchronized with the implemented i18n architecture.
+
+#### `.github/copilot-instructions.md` / `CLAUDE.md`
+- Added i18n architecture notes and maintenance context for EN/DE/UA/RU support
+
+#### `README.md` / `README_RU.md` / `frontend/README.md`
+- Updated language-support documentation and translation workflow references
+
+#### `docs/sessions/SESSION_DEVELOPMENT_2026-07-13_EN.md` / `docs/sessions/SESSION_DEVELOPMENT_2026-07-13_RU.md`
+- Added session-level documentation snapshots for multilingual rollout updates
+
+## [Issue #76] - 2026-07-13
+
+### Added — Frontend: Billing Operator UI (payment processing) (Issue #76)
+
+**Problem:** operators had no dedicated UI flow to check ticket payment status and complete
+payments from the frontend.
+
+#### `BillingPage.tsx` (frontend)
+- Implemented ticket status lookup UI and payment submission flow for operator/admin roles
+- Added response-state rendering for paid/unpaid and completed payment status
+
+#### `billing.ts` (frontend API)
+- Added billing endpoints integration for status-by-ticket and payment processing flows
+
+## [Issue #75] - 2026-07-13
+
+### Added — Frontend: Gate Emulation UI (vehicle entry and exit) (Issue #75)
+
+**Problem:** there was no operator UI to emulate gate entry/exit and validate gate-control
+behavior end-to-end from the frontend.
+
+#### `GatePage.tsx` (frontend)
+- Added entry/exit forms for operator flow with API-backed submission
+- Added result rendering for ticket code and gate status outcomes
+
+#### `gate.ts` (frontend API)
+- Added gateway integrations for vehicle entry and exit operations
+
+## [Issue #83] - 2026-03-30
+
+### Added — Backend / client-service: Subscription CRUD endpoints (Issue #83)
+
+**Problem:** subscriptions existed at DB/entity level, but there were no REST endpoints to
+create, list, or deactivate subscriptions for operational use.
+
+#### `SubscriptionController.java` (client-service)
+- Added create/list/deactivate subscription endpoints
+
+#### `SubscriptionService.java` / `SubscriptionRepository.java` / `SubscriptionMapper.java` (client-service)
+- Implemented business logic, repository support, and DTO mapping for subscription lifecycle
+
+#### Tests (client-service)
+- Added/updated unit and controller tests for create, list, and deactivate behavior
+
+## [Issue #82] - 2026-03-30
+
+### Added — Frontend: Responsive Layout Overhaul (Issue #82)
+
+**Problem:** desktop-oriented layout patterns caused poor usability on mobile and small tablets
+(fixed sidebar, dense tables, non-adaptive action rows).
+
+#### `AppLayout.tsx` / `PageHeader.tsx` (frontend)
+- Implemented responsive layout shell and reusable adaptive page header patterns
+
+#### `ReportingPage.tsx`, `BillingPage.tsx`, `ManagementPage.tsx`, `DashboardPage.tsx`, `ClientsPage.tsx`
+- Migrated key screens to adaptive grid/card behavior with improved small-screen usability
+
+## [Issue #74] - 2026-03-08
+
+### Added — React frontend: project init, auth, and base layout (Issue #74)
+
+**Problem:** project lacked frontend foundation for authenticated role-based user flows and
+protected navigation.
+
+#### Frontend foundation (React + TypeScript + Vite)
+- Initialized app scaffold, routing, auth store, and API client integration
+- Implemented login flow, protected routes, and role-based base layout/navigation
+
 
 ---
 
