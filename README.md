@@ -6,193 +6,34 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 🆕 Latest Updates
 
-> **Showing the latest 3 updates.** Full history: [CHANGELOG.md](./CHANGELOG.md) | [Session Logs](./docs/sessions/)
+> **Showing last commit only.** Full history: [CHANGELOG.md](./CHANGELOG.md)
 
-### 2026-03-07 — Bug Fixes & All Tests Green (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor) ✅
+### 2026-07-13 — Frontend multilingual UI (EN/DE/UA/RU) ✅
 
-✅ **Full Build: 161 unit tests + 1 E2E test — BUILD SUCCESS**
-- 🐛 **billing-service**: `getPaymentStatus` — fixed 404 response for unknown events
-- 🐛 **billing-service**: `JacksonConfig` — fixed `@DataJpaTest` slice incompatibility
-- 🐛 **gate-control-service**: `PaymentStatusResponse.remainingFee` — restored `BigDecimal`
-- 🐛 **gate-control-service**: `BillingServiceClient` — parse fee as `BigDecimal` (not `Double`)
-- 🐛 **gate-control-service**: `GateServiceTest` — fix mock (`checkPaymentStatusByTicket`), remove unused stubs
-- 🛠️ **New script**: `devops/run-e2e-tests.ps1` — standalone E2E runner with Docker check
-- 📖 **Session Report**: [docs/sessions/SESSION_DEVELOPMENT_2026-03-07.md](./docs/sessions/SESSION_DEVELOPMENT_2026-03-07.md)
+- 🌍 Added centralized i18n dictionaries in `frontend/src/i18n/translations.ts`
+- 🔧 Added `LanguageProvider` + `useLanguage()` context in `frontend/src/store/languageContext.tsx`
+- 💾 Language selection is persisted (`localStorage`: `parking-system-language`)
+- 🧭 Language switchers added to Login page and App sidebar
+- ✅ UI text translated across main pages (dashboard, clients, subscriptions, management, billing, gate, reporting, simulator)
 
-### 2026-02-14 — E2E Testing Infrastructure Complete (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor) ✅
+### 2026-03-09 — CORS wildcard for dynamic LAN IP (Issue #79 fix) ✅
 
-✅ **E2E Tests - One-Time Visitor Scenario** (Issue #70: [Phase 2] E2E Test: Full Cycle for One-Time Visitor)
-- ✅ `OneTimeVisitorE2ETest` - complete parking cycle (Entry → Payment → Exit)
-- ✅ Testcontainers integration with docker-compose orchestration
-- ✅ 9 microservices tested in isolated environment
-- ✅ Test duration: ~2 minutes | Success rate: 100%
-- ✅ Windows 11 Home Edition support (Docker API compatibility fix)
-- ✅ Automated build script: `build-e2e-images.ps1`
-- 📊 **Test Coverage**: Entry gate, payment processing, exit gate, service discovery
-- 🏗️ **Architecture Improvements**:
-  - Ticket-based payment flow (ticketCode as natural key)
-  - Database schema synchronization (init.sql updated to match V8/V9 migrations)
-  - New endpoints: `/api/v1/billing/pay-test`, `/api/v1/billing/status-by-ticket`
-  - Support for nullable `vehicle_id` (one-time visitors without registration)
-- 📖 **Documentation**: [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
-- 📖 **Session Report**: [docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md](./docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md)
-- 🎯 **Next Steps**: Subscriber test scenario, subscription management tests
-
-### 2026-01-27 - Gate Control Service: Exit & Manual Control Endpoints (Issue #52) ✅
-
-✅ **Gate Control Service - Exit & Manual Control Endpoints Complete** (Issue #52)
-- ✅ POST /api/v1/gate/exit endpoint with OpenAPI-first implementation
-- ✅ POST /api/v1/gate/control endpoint for operator manual control
-- ✅ ExitRequest and ManualControlRequest DTOs with validation
-- ✅ ExitDecision and ManualControlResponse DTOs for responses
-- ✅ GateService.processExit implemented with BillingService integration (payment check)
-- ✅ Manual control logs operator actions to Reporting Service and GateEvent (MANUAL_OPEN)
-- ✅ Integration tests covering paid/unpaid exits and manual control - **ALL PASSING** ✅
-- 📖 **Controller:** [GateController.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/controller/GateController.java)
-- 📖 **Tests:** [GateControllerIntegrationTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/controller/GateControllerIntegrationTest.java)
-- 📖 **OpenAPI:** [openapi.yaml](./backend/gate-control-service/src/main/resources/openapi.yaml)
-- 🎯 **Next Steps:** None - Phase 2 complete!
-
-### 2026-01-26 - Gate Control Service: Entry REST Endpoint (Issue #50) ✅
-
-✅ **Gate Control Service - Entry REST API Complete** (Issue #50)
-- ✅ POST /api/v1/gate/entry endpoint with OpenAPI-first implementation
-- ✅ GateController implementing GateApi interface from OpenAPI specification
-- ✅ EntryRequest DTO with validation (license plate pattern, entry method, gate ID)
-- ✅ EntryResponse DTO with JsonNullable for optional ticket code
-- ✅ 5 comprehensive integration tests - **ALL PASSING** ✅
-  - Subscriber entry returns 201 without ticket
-  - One-time visitor returns 201 with unique ticket code
-  - Invalid license plate format returns 400
-  - Missing required fields returns 400
-  - Manual entry with operator ID succeeds
-- ✅ TestSecurityConfig for integration tests (permits all requests in test profile)
-- ✅ Full request/response validation with proper HTTP status codes
-- ✅ SLF4J logging with emojis for all operations
-- 📖 **Controller:** [GateController.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/controller/GateController.java)
-- 📖 **Tests:** [GateControllerIntegrationTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/controller/GateControllerIntegrationTest.java)
-- 📖 **OpenAPI:** [openapi.yaml](./backend/gate-control-service/src/main/resources/openapi.yaml)
-- 🎯 **Next Steps:** Exit decision logic and REST endpoint
-
-### 2026-01-26 - Gate Control Service: Entry Decision Logic (Issue #49) ✅
-
-✅ **Gate Control Service - Entry Decision Logic** (Issue #49)
-- ✅ GateService with processEntry(licensePlate) decision logic
-- ✅ EntryDecision DTO with action (OPEN/DENY), message, and ticket code
-- ✅ Subscriber path: automatic gate opening without ticket generation
-- ✅ Visitor path: unique ticket generation (TICKET-{timestamp}-{random})
-- ✅ GateEvent logging for all entry decisions (ENTRY, OPEN/DENY with reason)
-- ✅ 5 comprehensive unit tests - **ALL PASSING** ✅
-  - Subscriber grants access without ticket
-  - One-time visitor generates ticket and grants access
-  - Client service called exactly once for both paths
-  - Multiple visitors receive unique tickets
-- ✅ Integration with ClientServiceClient and GateEventRepository
-- 📖 **Service:** [GateService.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/service/GateService.java)
-- 📖 **DTO:** [EntryDecision.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/EntryDecision.java)
-- 📖 **Tests:** [GateServiceTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/service/GateServiceTest.java)
-
-### 2026-01-26 - Gate Control Service: Client Service Integration (Issue #48) ✅
-
-✅ **Gate Control Service - Client Service Integration** (Issue #48)
-- ✅ ClientServiceClient with WebClient for subscription validation
-- ✅ SubscriptionCheckResponse DTO with access grant status
-- ✅ Fail-safe error handling: all errors result in access denial
-- ✅ 5 comprehensive unit tests with MockWebServer - **ALL PASSING** ✅
-  - Active subscription validation (200 OK)
-  - Subscription not found handling (404)
-  - Inactive subscription handling
-  - Server error handling (500)
-  - Network error/timeout handling
-- ✅ SLF4J logging for all requests and errors
-- ✅ Integration with existing WebClientConfig
-- 📖 **Client:** [ClientServiceClient.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/client/ClientServiceClient.java)
-- 📖 **DTO:** [SubscriptionCheckResponse.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/dto/SubscriptionCheckResponse.java)
-- 📖 **Tests:** [ClientServiceClientTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/client/ClientServiceClientTest.java)
-
-### 2026-01-26 - Gate Control Service: GateEvent Entity Implementation (Issue #46) ✅
-
-✅ **Gate Control Service - Entity Layer** (Issue #46)
-- ✅ GateEvent JPA entity with two enums (EventType: ENTRY/EXIT/MANUAL_OPEN/ERROR, Decision: OPEN/DENY)
-- ✅ GateEventRepository with custom query methods (findByLicensePlateOrderByTimestampDesc, findByTimestampBetween)
-- ✅ Flyway migration V9: gate_events table with indexes and constraints
-- ✅ 5 comprehensive integration tests - **ALL PASSING** ✅
-- ✅ Test configuration with H2 in-memory database
-- ✅ Domain model architecture: Hibernate -> Domain model <- DTO
-- 📖 **Entity:** [GateEvent.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/entity/GateEvent.java)
-- 📖 **Repository:** [GateEventRepository.java](./backend/gate-control-service/src/main/java/com/parking/gate_control_service/repository/GateEventRepository.java)
-- 📖 **Tests:** [GateEventRepositoryTest.java](./backend/gate-control-service/src/test/java/com/parking/gate_control_service/repository/GateEventRepositoryTest.java)
-- 🎯 **Next Steps:** WebClient configuration for inter-service communication (Issue #47)
-
-### 2026-01-24 - Billing Service: Payment Status & Recording Endpoints (Issues #34, #35, #36) ✅
-
-✅ **Billing Service - Complete REST API Implementation** (Issues #34, #35, #36)
-- ✅ POST /api/v1/billing/calculate endpoint - fee calculation with OpenAPI validation
-- ✅ POST /api/v1/billing/pay endpoint - payment recording with transaction ID generation
-- ✅ GET /api/v1/billing/status endpoint - comprehensive payment status check with remaining fee calculation
-- ✅ OpenAPI-first REST controller implementing BillingApi interface
-- ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
-- ✅ BillingMapper for comprehensive DTO <-> Entity <-> Domain transformations
-- ✅ Global exception handler with proper HTTP status codes (400, 404, 409, 500)
-- ✅ Payment validation: insufficient amount detection, duplicate payment prevention
-- ✅ Payment status tracking: support for paid/unpaid tickets with history of all payment attempts
-- ✅ 10 integration tests covering all success/error scenarios - **ALL PASSING** ✅
-- ✅ Full OpenAPI documentation available via Swagger UI
-- 📊 **Total Test Coverage:** 57 tests (19 repository + 28 service + 10 integration) - **100% passing**
-- 📖 **Controller:** [BillingController.java](./backend/billing-service/src/main/java/com/parking/billing/controller/BillingController.java)
-- 📖 **Tests:** [BillingControllerIntegrationTest.java](./backend/billing-service/src/test/java/com/parking/billing/controller/BillingControllerIntegrationTest.java)
-- 🎉 **Status:** Phase 2 Billing Service **100% COMPLETE** - Ready for Gate Control Service integration!
-
-### 2026-01-18 - Billing Service: Complete Implementation (Issues #32, #33) ✅
-
-✅ **Billing Service - Service Layer Complete** (Issue #33)
-- ✅ BillingService with fee calculation logic (hourly rate + rounding up)
-- ✅ Payment recording with validation and unique transaction ID generation (TRX-{timestamp}-{random})
-- ✅ Domain models (ParkingEventDomain, PaymentDomain, TariffDomain)
-- ✅ BillingMapper for Entity <-> DTO transformation
-- ✅ Custom exceptions (ParkingEventNotFound, TicketAlreadyPaid, InsufficientPayment, TariffNotFound)
-- ✅ 28 unit tests (BillingService + mapper) - all passing
-- 📊 **Test Coverage:** Service ~95%, Repository ~90%
-- 📖 **Service:** [BillingService.java](./backend/billing-service/src/main/java/com/parking/billing/service/BillingService.java)
-
-### 2026-01-18 - Billing Service: ParkingEvent & Payment Entities (Issue #32) ✅
-
-✅ **Billing Service - Entity & Repository Layer** (Issue #32)
-- ✅ ParkingEvent entity with entry/exit tracking and method enums (SCAN, MANUAL, AUTO)
-- ✅ Payment entity with status tracking (PENDING, COMPLETED, FAILED, REFUNDED) and transaction management
-- ✅ ParkingEventRepository with custom queries (findByTicketCode, findByLicensePlateAndExitTimeIsNull, findByEntryTimeBetween)
-- ✅ PaymentRepository with payment status queries (findByParkingEventIdAndStatus, findByTransactionId)
-- ✅ 18 repository integration tests - all green
-- ✅ @PrePersist hooks for automatic timestamp initialization
-- 📖 **Entities:** [ParkingEvent.java](./backend/billing-service/src/main/java/com/parking/billing/entity/ParkingEvent.java), [Payment.java](./backend/billing-service/src/main/java/com/parking/billing/entity/Payment.java)
-- 📖 **Repositories:** [ParkingEventRepository.java](./backend/billing-service/src/main/java/com/parking/billing/repository/ParkingEventRepository.java), [PaymentRepository.java](./backend/billing-service/src/main/java/com/parking/billing/repository/PaymentRepository.java)
-
-### 2026-01-16 - Phase 2: Database Extensions & API Contracts (Issues #24-26) ✅
-
-✅ **Database - TARIFFS & Extended Tables** (Issues #24, #25)
-- ✅ V7 migration: TARIFFS table with 4 seed tariffs (ONE_TIME, DAILY, NIGHT, VIP)
-- ✅ V8 migration: Extended PARKING_EVENTS (license_plate, entry/exit_method, is_subscriber)
-- ✅ V8 migration: Extended PAYMENTS (status, transaction_id, operator_id)
-- ✅ 9 new indexes for performance optimization
-- 📖 **Migration Details**: [database/README.md](./database/README.md)
-
-✅ **API Contracts - Billing & Gate Control** (Issue #26)
-- ✅ OpenAPI 3.0.3 specification for Billing Service (3 endpoints)
-- ✅ OpenAPI 3.0.3 specification for Gate Control Service (3 endpoints)
-- 📖 **API Contracts:** [docs/api-contracts.md](./docs/api-contracts.md)
-
+- 🔧 **`SecurityConfiguration.java`**: `setAllowedOrigins()` → `setAllowedOriginPatterns()` — wildcard `http://192.168.*` support
+- 🔧 **`CorsFilter.java`**: added `isOriginAllowed()` with wildcard logic, updated default `@Value`
+- 🔧 **`application.yml`** + **`docker-compose.yml`**: hardcoded IP removed, `http://192.168.*` covers entire home LAN regardless of DHCP
+- ✅ React frontend at `http://192.168.1.X:5173` works with any dynamic IP without config changes
 
 ---
 
 ## 📈 Project Status & Roadmap
 
-### Current Status: Phase 2 - COMPLETE 🚀
+### Current Status: Phase 3 — Completed ✅
 
 ```
 Phase 0: ████████████████████ 100% ✅ COMPLETE
 Phase 1: ████████████████████ 100% ✅ COMPLETE
 Phase 2: ████████████████████ 100% ✅ COMPLETE
-Phase 3: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
+Phase 3: ████████████████████ 100% ✅ COMPLETE
 Phase 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
 Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
 ```
@@ -204,142 +45,97 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ P
 | **Phase 0** | 1 week | ✅ Complete | 100% | Infrastructure & Foundation |
 | **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
 | **Phase 2** | 2 weeks | ✅ Complete | 100% | Core Business Logic |
-| **Phase 3** | 2 weeks | ⏳ Pending | 0% | Integration & Security |
-| **Phase 4** | 3 weeks | ⏳ Pending | 0% | Frontend, Reports & E2E |
+| **Phase 3** | 2 weeks | ✅ Complete | 100% | Security, CORS & React Frontend |
+| **Phase 4** | 3 weeks | ⏳ Pending | 0% | Reports & Advanced E2E |
 | **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |
 
-📖 **Детальная дорожная карта:** [PROJECT_PHASES.md](./docs/PROJECT_PHASES.md)
+📖 **Detailed roadmap:** [PROJECT_PHASES.md](./docs/PROJECT_PHASES.md)
 
-### 🎯 Current Sprint Goals (Week 6)
+### 🎯 Phase 3 Completion
 
-**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (90%)**
+**Completed:**
+- ✅ Issue #78 — RBAC: role-based route protection in SecurityFilter
+- ✅ Issue #80 — Default OPERATOR user on application startup
+- ✅ Issue #72 — Subscription check: real DB logic in client-service
+- ✅ Issue #73 — E2E test: subscriber full parking cycle
+- ✅ Issue #79 — CORS configuration in api-gateway (wildcard LAN support)
+- ✅ Issue #74 — React frontend: project init, auth, role-based layout
 
-**Current Focus: Gate Control Service**
-- ✅ Issue #46: GateEvent entity & repository - **COMPLETED**
-- 🔄 Issue #47: WebClient configuration for inter-service calls - **IN PROGRESS**
-- ⏳ Issue #48: Entry decision logic service
-- ⏳ Issue #49: Exit decision logic service
-
-**Completed This Week:**
-- ✅ GateEvent JPA entity with enums (EventType, Decision)
-- ✅ GateEventRepository with custom queries
-- ✅ Flyway migration V9: gate_events table
-- ✅ 5 repository integration tests
-
-**Next Tasks:**
-1. Configure WebClient beans for Client, Billing, Management, Reporting services (Issue #47)
-2. Implement entry decision logic with subscription validation (Issue #48)
-3. Implement exit decision logic with payment verification (Issue #49)
-- ✅ Client Service: CRUD + subscription check
-- ✅ Management Service: available spots + status update
-- ✅ Reporting Service: log storage
-- ✅ API Gateway proxy verification
-- ✅ Tests & documentation
-
-**Phase 2 - Core Business Logic:** 🔄 **В ПРОЦЕССЕ (90%)**
-- ✅ TARIFFS table migration (Issue #24)
-- ✅ PARKING_EVENTS & PAYMENTS extensions (Issue #25)
-- ✅ API Contracts documentation (Issue #26)
-- ✅ Tariff entity implementation (Issue #31)
-- ✅ ParkingEvent & Payment entities (Issue #32)
-- ✅ Billing Service: fee calculation & payment processing (Issue #33)
-- ✅ Billing Service: fee calculation endpoint /calculate (Issue #34)
-- ✅ Billing Service: payment recording endpoint /pay (Issue #35)
-- ✅ Billing Service: payment status endpoint /status (Issue #36) ⭐ **NEW**
-- ⏳ Gate Control Service: entry/exit logic (Issue #37)
-- ⏳ Inter-service communication (Issue #38)
+**Status:**
+- ✅ Phase 3 scope completed
+- ⏳ Next focus: Phase 4 (Reports & Advanced E2E)
 
 ### 📊 Quick Stats
 
 | Metric | Value |
 |--------|-------|
-| **Total Issues** | 70 |
-| **Closed Issues** | 53 (76%) |
-| **Microservices** | 9 |
-| **Phase 1** | ✅ 100% Complete |
-| **Phase 2** | ✅ 100% Complete |
-| **E2E Tests** | ✅ Implemented |
-| **API Endpoints** | 54+ |
-| **Tests** | 100+ (unit + integration + E2E) |
-| **DB Migrations** | 9 (V0-V9) |
-| **Code Coverage** | ~90% avg |
+| **Microservices** | 7 backend + 1 frontend |
+| **Unit/Integration Tests** | 177+ passing |
+| **E2E Tests** | 2 scenarios (visitor + subscriber) |
+| **API Endpoints** | 20+ (via API Gateway) |
+| **DB Migrations** | 10 (V0–V9) |
+| **OpenAPI specs** | 5 services (OpenAPI-first) |
+| **UI Languages** | 4 (EN, DE, UA, RU) |
 
-### Recent Achievements
-
-**2026-02-14 - E2E Testing Infrastructure (Issue #70)**
-- ✅ OneTimeVisitorE2ETest - complete parking cycle test
-- ✅ Testcontainers integration with docker-compose
-- ✅ 9 microservices tested in isolated environment
-- ✅ Test duration: ~2 minutes | Success rate: 100%
-- ✅ Windows 11 Home Edition support (Docker API compatibility)
-- ✅ Ticket-based payment flow implementation
-- ✅ Database schema synchronization (init.sql updated to V8/V9)
-- ✅ New endpoints: `/api/v1/billing/pay-test`, `/api/v1/billing/status-by-ticket`
-- 📖 **Test:** [OneTimeVisitorE2ETest.java](./backend/e2e-tests/src/test/java/com/parking/e2e/OneTimeVisitorE2ETest.java)
-- 📖 **Documentation:** [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
-
-**2026-01-24 - Billing Service REST API Complete (Issues #34, #35, #36)**
-- ✅ OpenAPI-first BillingController implementing BillingApi interface
-- ✅ POST /api/v1/billing/calculate - fee calculation endpoint
-- ✅ POST /api/v1/billing/pay - payment recording endpoint
-- ✅ GET /api/v1/billing/status - comprehensive payment status endpoint with remaining fee ⭐ **NEW**
-- ✅ FeeCalculationRequest/Response, PaymentRequest/Response, PaymentStatusResponse DTOs
-- ✅ BillingMapper enhancements for comprehensive transformations
-- ✅ GlobalExceptionHandler with proper HTTP status codes (400, 404, 409, 500)
-- ✅ 10 integration tests - all passing (7 core + 3 for status)
-- ✅ Payment status tracking with history of all payment attempts
-- 📊 **Total Test Coverage:** 57 tests (100% passing)
-- 🎉 **Billing Service 100% COMPLETE** - Ready for Gate Control integration!
-
-**2026-01-18 - Billing Service Complete (Issues #32, #33)**
-- ✅ ParkingEvent & Payment JPA entities with @PrePersist hooks
-- ✅ Repositories with custom queries (18 tests)
-- ✅ BillingService with fee calculation & payment logic
-- ✅ Domain models & mapper implementation
-- ✅ Custom exceptions for business logic errors
-- ✅ 38 new unit tests (all passing) - Total: 80+ tests
-- 📊 Coverage: Service ~95%, Controller ~85%, Repository ~90%
-
-**2026-01-16 - Phase 2 Database & API Contracts (Issues #24-26)**
-- ✅ V7 migration: TARIFFS table with 4 seed tariffs
-- ✅ V8 migration: Extended PARKING_EVENTS & PAYMENTS
-- ✅ OpenAPI 3.0.3 specs for Billing & Gate Control
-
-### Next Steps
-
-**Immediate (This Week):**
-1. ✅ ~~Complete Billing Service implementation (Issues #32, #33, #34, #35, #36)~~ - DONE
-2. Implement Gate Control Service (Issue #37) - POST /entry, POST /exit, GET /status
-3. Add inter-service communication (Issue #38) - Billing <-> Gate Control
-
-**Upcoming (Next 2 Weeks):**
-1. Complete Phase 2: Business logic implementation
-2. Service-to-service communication with WebClient
-3. Begin Phase 3: Security & Integration (JWT, Spring Security)
+---
 
 ## 🏗️ System Architecture
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│    Frontend     │───▶│   API Gateway    │───▶│  Microservices  │
-│                 │    │                  │    │                 │
-│ React/Angular   │    │ • Route Mapping  │    │ • Client Svc    │
-│ Mobile App      │    │ • Load Balancer  │    │ • User Svc      │
-│ Admin Panel     │    │ • CORS Handler   │    │ • Parking Svc   │
-└─────────────────┘    │ • Monitoring     │    │ • Booking Svc   │
-                       └──────────────────┘    │ • Payment Svc   │
-                                │              │ • Billing Svc   │
-                                ▼              │ • Gate Ctrl Svc │
-                       ┌──────────────────┐    │ • Management    │
-                       │ Service Registry │    │ • Reporting     │
-                       │  (Eureka Server) │    └─────────────────┘
-                       └──────────────────┘             │
-                                                        ▼
-                                               ┌─────────────────┐
-                                               │   PostgreSQL    │
-                                               │    Database     │
-                                               └─────────────────┘
+  Browser / Mobile              React Frontend (Vite dev :5173)
+        │                                  │
+        │             proxy /api/*         │
+        └──────────────────────────────────┘
+                               │
+                               ▼
+                  ┌────────────────────────┐
+                  │      API Gateway       │  :8086
+                  │                        │
+                  │  • JWT auth (HS512)    │
+                  │  • RBAC (SecurityFilter│
+                  │  • CORS (CorsFilter)   │
+                  │  • Rate limit 60/min   │
+                  │  • Brute-force (10x)   │
+                  │  • Flyway migrations   │
+                  └────────────┬───────────┘
+                               │
+            ┌──────────────────┼──────────────────┐
+            │                  │                  │
+            ▼                  ▼                  ▼
+┌───────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│  client-service   │ │gate-control-svc  │ │  billing-service │
+│     :8081         │ │     :8082        │ │     :8083        │
+│                   │ │                  │ │                  │
+│ • Clients CRUD    │ │ • POST /entry    │ │ • GET  /status   │
+│ • Vehicles CRUD   │ │ • POST /exit     │ │ • POST /pay-test │
+│ • Subscriptions   │ │ • POST /control  │ │                  │
+│ • Sub.check API   │ │   (→ client :8081│ │                  │
+└───────────────────┘ └──────────────────┘ └──────────────────┘
+
+┌───────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│management-service │ │reporting-service │ │  eureka-server   │
+│     :8084         │ │     :8087        │ │     :8761        │
+│                   │ │                  │ │                  │
+│ • GET  /spots     │ │ • POST /log      │ │ • Service        │
+│ • GET  /available │ │ • GET  /logs     │ │   registry       │
+│ • GET  /search    │ │                  │ │                  │
+└───────────────────┘ └──────────────────┘ └──────────────────┘
+            │                  │
+            └──────────┬───────┘
+                       ▼
+        ┌──────────────────────────┐
+        │   PostgreSQL :5433       │
+        │   Redis       :6379      │
+        └──────────────────────────┘
+
+  ─────────────── Observability ────────────────
+  Prometheus :9090 → Grafana :3000
+  Jaeger     :16686
+  OTel Collector :4317/:4318
+  pgAdmin    :5050
 ```
+
+---
 
 ## 🚀 Quick Start
 
@@ -347,149 +143,201 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ P
 - Docker & Docker Compose
 - Java 21+
 - Maven 3.8+
+- Node.js 20+ (for frontend dev)
 
-### Launch System
+### Launch System (Backend)
 ```bash
 # Clone repository
 git clone <repository-url>
 cd parking-system
 
-# Start all services
+# Build all services
+mvn clean install -DskipTests
+
+# Start all containers
 docker-compose up -d
 
 # Check status
 docker-compose ps
 ```
 
+### Launch Frontend (Dev)
+```bash
+cd frontend
+npm install
+npm run dev
+# Opens at http://localhost:5173
+# Proxies /api/* → http://localhost:8086
+```
+
+---
+
+## ⚙️ CI/CD (GitHub Actions)
+
+This repository includes GitHub Actions workflows in `.github/workflows/` to automate CI and CD:
+
+- `ci.yml` — continuous integration: runs on push & PR; executes backend unit tests (Java 21 / Maven) and frontend checks (ESLint + TypeScript/Vite build). The workflow sets a test `JWT_SECRET` value for CI runs that need JWT.
+- `cd.yml` — build & push Docker images to GitHub Container Registry (GHCR). Triggered on pushes to `main` and on semantic version tags. It first builds backend JARs, then builds and pushes Docker images for each service and the frontend. A `deploy` job is included but commented out — enable it after configuring deployment secrets.
+- `e2e.yml` — end-to-end tests (manual `workflow_dispatch`). Builds images for E2E and runs Testcontainers-based E2E tests. Requires a runner with Docker available.
+
+Important notes before enabling the deploy job in `cd.yml`:
+
+- `cd.yml` uses `docker/login-action` with `GITHUB_TOKEN` to push to GHCR. GitHub provides `GITHUB_TOKEN` automatically; ensure repository permissions allow package write.
+- To enable the commented `deploy` job you must add repository secrets in GitHub Settings → Secrets: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH`.
+- Never commit private keys or secrets. Remove any local `ssh key.txt` files and add them to `.gitignore`.
+
+Local equivalents for common CI steps:
+
+```powershell
+# Run backend unit tests
+mvn clean test
+
+# Build backend jars (for Docker build inputs)
+mvn clean package -DskipTests
+
+# Build frontend image locally
+docker build -t parking-frontend:local frontend
+
+# Build a backend service image (example)
+docker build -t parking-api-gateway:local backend/api-gateway
+```
+
 ### Service Access
-- **API Gateway**: http://localhost:8086
-- **Eureka Server**: http://localhost:8761
-- **Client Service**: http://localhost:8081 (via Gateway)
-- **Management Service**: http://localhost:8083 (via Gateway)
-- **Test Interface**: [devops/test-login.html](./devops/test-login.html) - Browser-based API tester
-- **Grafana**: http://localhost:3000 (admin/admin123)
-- **Prometheus**: http://localhost:9090
-- **Jaeger**: http://localhost:16686
-- **pgAdmin**: http://localhost:5050 (admin@parking.com/admin)
-- **PostgreSQL**: localhost:5433 (parking_db/postgres/postgres)
+| Service | Address | Notes |
+|---------|---------|-------|
+| **React Frontend** | http://localhost:5173 | Vite dev server |
+| **API Gateway** | http://localhost:8086 | Entry point for all API calls |
+| **Eureka Server** | http://localhost:8761 | Service registry UI |
+| **Grafana** | http://localhost:3000 | admin / admin123 |
+| **Prometheus** | http://localhost:9090 | Metrics |
+| **Jaeger** | http://localhost:16686 | Distributed tracing |
+| **pgAdmin** | http://localhost:5050 | admin@parking.com / admin |
+| **PostgreSQL** | localhost:5433 | parking_db / postgres / postgres |
+| **Test Interface** | [devops/test-login.html](./devops/test-login.html) | Browser-based API tester |
+
+---
 
 ## 🔧 Microservices
 
 ### 1. API Gateway (Port 8086)
-- Centralized entry point
-- JWT authentication and authorization
-- Request routing to microservices
-- Security features:
-  - Rate limiting (100 req/min per IP)
-  - Brute force protection (5 failed attempts)
-  - Suspicious IP detection
-  - Security audit logging
-- CORS and basic security
-- Monitoring and metrics
+Centralized entry point for all API calls. All requests from frontend pass through here.
 
-📖 **Documentation**: See SESSION_DEVELOPMENT_2025-12-25_EN.md
+- **JWT authentication** — HS512, 30 min access / 12 h refresh tokens
+- **RBAC** — role-based route protection in `SecurityFilter`
+- **CORS** — wildcard `http://192.168.*` covers any LAN IP (DHCP-safe)
+- **Rate limiting** — 60 req/min per IP
+- **Brute-force protection** — lockout after 10 failed attempts
+- **Flyway** — manages all DB schema migrations (V0–V9)
+- **Service discovery** — routes to microservices via Eureka
+
+**Auth Endpoints:**
+- `POST /api/auth/login` — authenticate, returns JWT
+- `POST /api/auth/refresh` — refresh access token
+- `POST /api/auth/logout` — invalidate session
 
 ### 2. Client Service (Port 8081)
-- Client and vehicle management
-- CRUD operations for clients and vehicles
-- PostgreSQL database integration
-- JWT authentication via API Gateway
-- OpenAPI 3.0 specification
+Client, vehicle, and subscription management. OpenAPI-first (`src/main/resources/openapi.yaml` → generated interfaces).
 
 **Client Endpoints** (via API Gateway):
-- `POST /api/clients` - Create client
-- `GET /api/clients` - List all clients
-- `GET /api/clients/{id}` - Get client by ID
-- `PUT /api/clients/{id}` - Update client
-- `DELETE /api/clients/{id}` - Delete client
-- `GET /api/clients/search?phone={phone}` - Search by phone
+- `POST   /api/clients` — create client
+- `GET    /api/clients` — list all clients
+- `GET    /api/clients/{id}` — get by ID
+- `GET    /api/clients/search?phone={phone}` — search by phone
+- `PUT    /api/clients/{id}` — update client
+- `DELETE /api/clients/{id}` — delete client
 
-**Vehicle Endpoints** (via API Gateway):
-- `POST /api/clients/{clientId}/vehicles` - Create vehicle
-- `GET /api/vehicles` - List all vehicles
-- `GET /api/vehicles/{id}` - Get vehicle by ID
-- `PUT /api/vehicles/{id}` - Update vehicle
-- `DELETE /api/vehicles/{id}` - Delete vehicle
+**Vehicle Endpoints:**
+- `POST   /api/clients/{clientId}/vehicles` — add vehicle to client
+- `GET    /api/vehicles/{id}` — get vehicle by ID
+- `PUT    /api/vehicles/{id}` — update vehicle
+- `DELETE /api/vehicles/{id}` — delete vehicle
 
-📖 **Implementation:** Issues #16, #17
+**Subscription Endpoints:**
+- `GET    /api/v1/clients/subscriptions/check?licensePlate={plate}` — check active subscription (used by gate-control)
 
-### 3. Management Service (Port 8083)
-- Parking space management and monitoring
-- Real-time availability tracking
-- Search and filtering capabilities
-- PostgreSQL database integration
-- OpenAPI 3.0 specification
+### 3. Gate Control Service (Port 8082)
+Handles physical gate events. OpenAPI-first. Calls client-service to check subscriptions.
 
-**Parking Space Endpoints** (via API Gateway):
-- `GET /api/management/spots` - List all parking spaces
-- `GET /api/management/spots/available` - List available spaces
-- `GET /api/management/spots/available/count` - Count available spaces
-- `GET /api/management/spots/available/lot/{lotId}` - Available spaces by lot
-- `GET /api/management/spots/search?type={type}&status={status}` - Search with filters
+- `POST /api/gate/entry` — vehicle entry (returns ticket or subscriber pass)
+- `POST /api/gate/exit` — vehicle exit (calculates fee)
+- `POST /api/gate/control` — manual gate control (OPEN/CLOSE)
 
-**Supported Space Types:**
-- STANDARD, HANDICAPPED, ELECTRIC, VIP, COMPACT, OVERSIZED
+### 4. Billing Service (Port 8083)
+Parking fee calculation and payment recording.
 
-**Supported Statuses:**
-- AVAILABLE, OCCUPIED, RESERVED, MAINTENANCE, OUT_OF_SERVICE
+- `GET  /api/billing/status-by-ticket?ticketCode={code}` — payment status
+- `POST /api/billing/pay-test` — test payment endpoint
 
-📖 **Implementation:** Issue #18
+### 5. Management Service (Port 8084)
+Parking space inventory and availability. OpenAPI-first.
 
-### 4. Service Registry (Port 8761)
-- Eureka Server for service discovery
-- Microservice registration and discovery
-- Health checks and monitoring
+- `GET /api/management/spots` — all parking spaces
+- `GET /api/management/spots/available` — available spaces
+- `GET /api/management/spots/available/count` — count available
+- `GET /api/management/spots/available/lot/{lotId}` — available by lot
+- `GET /api/management/spots/search?type={type}&status={status}` — filtered search
 
-### 5. Observability Stack
-- **Prometheus** (Port 9090) - Metrics collection
-- **Grafana** (Port 3000) - Dashboards and visualization
-- **Jaeger** (Port 16686) - Distributed tracing
-- **OpenTelemetry Collector** (Port 4317/4318) - Telemetry collection
+**Space Types:** STANDARD, HANDICAPPED, ELECTRIC, VIP, COMPACT, OVERSIZED  
+**Statuses:** AVAILABLE, OCCUPIED, RESERVED, MAINTENANCE, OUT_OF_SERVICE
 
-### 6. Database Management
-- **PostgreSQL 16** (Port 5433) - Main database
-- **pgAdmin 4** (Port 5050) - Database management UI
-- **Redis 7** (Port 6379) - Caching and session storage
+### 6. Reporting Service (Port 8087)
+System event logging and audit trail. OpenAPI-first.
 
-### 7. Planned Services
-- **User Service** - System user management
-- **Parking Service** - Extended parking lot management
-- **Booking Service** - Parking space reservations
-- **Payment Service** - Payment processing
-- **Billing Service** - Billing and tariff plans
-- **Gate Control Service** - Parking gate management
-- **Reporting Service** - Reports and analytics
+- `POST /api/reporting/log` — log event from any service
+- `GET  /api/reporting/logs` — retrieve logs (filters: level, service, userId, date range)
+
+### 7. Eureka Server (Port 8761)
+Service registry — all microservices register here for discovery.
+
+### 8. Observability Stack
+- **Prometheus** (:9090) — metrics collection from all services
+- **Grafana** (:3000) — dashboards (admin/admin123)
+- **Jaeger** (:16686) — distributed tracing
+- **OpenTelemetry Collector** (:4317/:4318) — telemetry aggregation
+
+### 9. Infrastructure
+- **PostgreSQL 16** (:5433) — main database, schema managed by Flyway
+- **Redis 7** (:6379) — JWT blacklist, rate-limit counters, session cache
+- **pgAdmin 4** (:5050) — database UI
+
+---
 
 ## 📊 Technology Stack
 
 ### Backend
-- **Java 21** - Main programming language
-- **Spring Boot 3.5.8** - Microservices framework
-- **Spring Cloud 2025.0.0** - Microservices architecture
-- **Spring Security** - Authentication and authorization
-- **Spring Data JPA** - Database operations
-- **JWT (jjwt 0.12.6)** - Token-based authentication
-- **MapStruct** - DTO to Entity mapping
-- **Lombok** - Boilerplate code reduction
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **Java** | 21 | Main language |
+| **Spring Boot** | 3.2.8 | Microservices framework |
+| **Spring Cloud** | 2023.0.3 | Eureka, LoadBalancer |
+| **Spring Security** | (Boot managed) | Auth & RBAC |
+| **Spring Data JPA** | (Boot managed) | DB operations |
+| **Flyway** | (Boot managed) | DB migrations |
+| **JWT (jjwt)** | 0.12.6 | Token auth |
+| **MapStruct** | 1.5.5 | DTO mapping |
+| **Lombok** | 1.18.34 | Boilerplate reduction |
+| **OpenAPI Generator** | (Maven plugin) | OpenAPI-first codegen |
+
+### Frontend
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **React** | 19 | UI framework |
+| **TypeScript** | — | Type safety |
+| **Vite** | — | Build tool + dev proxy |
+| **Tailwind CSS** | 3 | Styling |
+| **Radix UI** | — | shadcn/ui components |
+| **React Router** | 6 | Client-side routing |
+| **TanStack Query** | 5 | Server state management |
+| **Zustand** | 4 | Client state (auth store) |
+| **Axios** | — | HTTP client |
 
 ### Infrastructure
-- **Docker & Docker Compose** - Containerization
-- **PostgreSQL 16** - Main database
-- **Redis 7** - Caching and session storage
-- **Eureka Server** - Service Registry
-- **Spring Cloud Gateway** - API Gateway
-- **Maven** - Build system
+- **Docker & Docker Compose** — containerization
+- **PostgreSQL 16** — main database
+- **Redis 7** — caching & session storage
+- **OpenTelemetry** — distributed tracing instrumentation
 
-### Observability
-- **Prometheus** - Metrics collection
-- **Grafana** - Monitoring dashboards
-- **Jaeger** - Distributed tracing
-- **OpenTelemetry** - Telemetry instrumentation
-
-### Documentation & Testing
-- **OpenAPI 3 / Swagger UI** - API documentation
-- **JUnit 5** - Unit testing
-- **Spring Boot Test** - Integration testing
+---
 
 ## 🗄️ Database
 
@@ -497,445 +345,305 @@ docker-compose ps
 - **Database**: `parking_db`
 - **Username**: `postgres`
 - **Password**: `postgres`
-- **Port**: `5433` (Docker), `5432` (local)
+- **Port**: `5433` (host) / `5432` (inside Docker network)
 
 ### Flyway Migrations
 
-Database schema is managed using **Flyway** for version-controlled migrations.
+Schema managed by **Flyway** (runs on api-gateway startup).  
+Files: `backend/api-gateway/src/main/resources/db/migration/`
 
-**Migration Files:** `backend/api-gateway/src/main/resources/db/migration/`
+| Version | File | Description |
+|---------|------|-------------|
+| V0 | `V0__Baseline.sql` | Baseline marker |
+| V1 | `V1__initial_schema.sql` | Core tables: users, clients, vehicles, subscriptions, logs |
+| V2 | `V2__add_parking_lots.sql` | Parking lot facilities |
+| V3 | `V3__add_parking_spaces.sql` | Individual parking spaces |
+| V4 | `V4__add_bookings.sql` | Reservation system |
+| V5 | `V5__insert_test_parking_data.sql` | Seed data for dev/testing |
+| V6 | `V6__extend_logs_table.sql` | Extended logging fields |
+| V7 | `V7__create_tariffs_table.sql` | Billing tariffs |
+| V8 | `V8__extend_parking_events_and_payments.sql` | Parking events & payments |
+| V9 | `V9__create_gate_events_table.sql` | Gate hardware events |
 
-| Version | File | Description | Tables |
-|---------|------|-------------|--------|
-| V0 | `V0__baseline.sql` | Baseline | - |
-| V1 | `V1__initial_schema.sql` | Core schema | 8 tables |
-| V2 | `V2__add_parking_lots.sql` | Parking facilities | parking_lots |
-| V3 | `V3__add_parking_spaces.sql` | Parking spaces | parking_spaces |
-| V4 | `V4__add_bookings.sql` | Reservations | bookings |
-
-**Quick Commands:**
 ```powershell
-# Test migrations
-cd devops
-.\test-flyway-migrations.ps1
-
 # View migration history
-docker exec parking_db psql -U postgres -d parking_db -c "SELECT * FROM flyway_schema_history;"
+docker exec parking_db psql -U postgres -d parking_db -c "SELECT version, description, installed_on FROM flyway_schema_history ORDER BY installed_rank;"
 ```
 
-📖 **Complete Guide:** [Database README](./database/README.md)
-
-### Data Schema
+### Core Schema (abbreviated)
 ```sql
--- Users (for authentication)
-CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(100) UNIQUE,
-    user_role VARCHAR(20) NOT NULL DEFAULT 'USER',
-    enabled BOOLEAN NOT NULL DEFAULT TRUE,
-    account_locked_until TIMESTAMP,
-    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
-    -- ... + 30 additional security fields
-);
+-- System users (authentication)
+users (id, username, password_hash, user_role, enabled, failed_login_attempts, ...)
 
--- Clients
-CREATE TABLE clients (
-    id BIGSERIAL PRIMARY KEY,
-    full_name VARCHAR(255) NOT NULL,
-    phone_number VARCHAR(20) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE,
-    registered_at TIMESTAMP DEFAULT NOW()
-);
+-- Parking clients
+clients (id, full_name, phone_number, email, registered_at)
 
--- Vehicles
-CREATE TABLE vehicles (
-    id BIGSERIAL PRIMARY KEY,
-    client_id BIGINT REFERENCES clients(id),
-    license_plate VARCHAR(20) UNIQUE NOT NULL,
-    make VARCHAR(100),
-    model VARCHAR(100),
-    color VARCHAR(50),
-    vehicle_type VARCHAR(50)
-);
+-- Client vehicles
+vehicles (id, client_id→clients, license_plate, is_allowed, ...)
+
+-- Subscriptions
+subscriptions (id, client_id→clients, start_date, end_date, type, is_active)
+
+-- Parking spaces
+parking_lots (id, name, address, capacity, ...)
+parking_spaces (id, lot_id→parking_lots, space_number, type, status)
+
+-- Events & billing
+parking_events (id, license_plate, entry_time, exit_time, ticket_code, ...)
+payments (id, event_id→parking_events, amount, paid_at, ...)
+gate_events (id, gate_id, action, result, timestamp, ...)
+tariffs (id, name, price_per_hour, ...)
 ```
+
+---
 
 ## 🔑 Test Credentials
 
-### For Development and Testing:
+Users are seeded by `database/init.sql` (via Docker init) and additionally ensured by `UserSecurityService.initializeDefaultUsers()` on startup.
 
-| Username | Password | Role | Email |
+| Username | Password | Role | Notes |
 |----------|----------|------|-------|
-| **admin** | `parking123` | ADMIN | admin@parking.com |
-| **user** | `user1234` | USER | user@parking.com |
-| **manager** | `manager123` | MANAGER | manager@parking.com |
+| **admin** | `parking123` | ADMIN | Full access |
+| **operator** | `parking123` | OPERATOR | Gate & billing ops |
+| **manager** | `manager123` | MANAGER | Reports & management |
 
-**⚠️ IMPORTANT:** These credentials are for development only! For production, use strong passwords and environment variables.
+**⚠️ Development only.** Use strong passwords and env vars in production.
 
-### Quick Authentication Test:
+### Quick Auth Test
 ```powershell
 # PowerShell
-$body = @{ username = "admin"; password = "parking123" } | ConvertTo-Json
-Invoke-RestMethod -Uri "http://localhost:8086/api/auth/login" -Method POST -ContentType "application/json" -Body $body
+$body = '{"username":"admin","password":"parking123"}'
+$r = Invoke-WebRequest -Uri "http://localhost:8086/api/auth/login" -Method POST -ContentType "application/json" -Body $body -UseBasicParsing
+$r.Content | ConvertFrom-Json | Select-Object accessToken, user
 ```
-
 ```bash
-# Bash/cURL
-curl -X POST http://localhost:8086/api/auth/login \
+# curl
+curl -s -X POST http://localhost:8086/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"parking123"}'
+  -d '{"username":"admin","password":"parking123"}' | jq .accessToken
 ```
 
-## 🔧 Configuration
+---
 
-### Environment Variables
-```bash
-# Database
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5433/parking_db
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=postgres
+## 🔒 Security & RBAC
 
-# JWT Security
-JWT_SECRET=<YOUR_64_CHAR_SECRET>
-JWT_ACCESS_TOKEN_EXPIRATION=3600
-JWT_REFRESH_TOKEN_EXPIRATION=604800
+### Route Permissions (SecurityFilter)
 
-# Eureka
-EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+| Route | Required Roles |
+|-------|---------------|
+| `POST/PUT/DELETE /api/gate/*` | OPERATOR, ADMIN |
+| `POST/PUT/DELETE /api/billing/*` | OPERATOR, ADMIN |
+| `GET/POST/PUT/DELETE /api/clients/*` | ADMIN, MANAGER, OPERATOR |
+| `write ops /api/management/*` | ADMIN, MANAGER |
+| `GET /api/reporting/*` | ADMIN, MANAGER, OPERATOR |
 
-# Application
-SERVER_PORT=8080
-SPRING_PROFILES_ACTIVE=development
-```
-
-### Docker Compose Services
+### JWT Configuration
 ```yaml
-services:
-  # Database
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: parking_db
-      POSTGRES_USER: postgres  
-      POSTGRES_PASSWORD: postgres
-    ports: ["5433:5432"]
-
-  # Cache
-  redis:
-    image: redis:7-alpine
-    ports: ["6379:6379"]
-
-  # Service Registry
-  eureka-server:
-    build: ./backend/eureka-server
-    ports: ["8761:8761"]
-
-  # API Gateway  
-  api-gateway:
-    build: ./backend/api-gateway
-    ports: ["8086:8080"]
-    depends_on: [eureka-server, postgres, redis]
-
-  # Client Service
-  client-service:
-    build: ./backend/client-service
-    ports: ["8081:8080"] 
-    depends_on: [postgres, eureka-server]
+jwt:
+  access-token-expiration: 1800    # 30 minutes
+  refresh-token-expiration: 43200  # 12 hours
+  secret: ${JWT_SECRET}            # HS512, min 64 chars
 ```
 
-## 📚 Documentation
+### Rate Limiting
+- 60 requests/min per IP (configurable via `RATE_LIMIT_MINUTE`)
+- Brute-force lockout after 10 failed login attempts (`BRUTE_FORCE_THRESHOLD`)
 
-### Development History
-- **[Session Logs](./docs/sessions/)** - Detailed development session logs
-  - [2026-02-14 - E2E Testing Implementation](./docs/sessions/SESSION_DEVELOPMENT_2026-02-14.md)
-  - [2025-12-25 - Project Setup](./docs/sessions/SESSION_DEVELOPMENT_2025-12-25_EN.md)
-  - [2026-01-03 - Issue #16 Client CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-03_EN.md)
-  - [2026-01-04 - Issue #17 Vehicle CRUD](./docs/sessions/SESSION_DEVELOPMENT_2026-01-04_EN.md)
-  - [2026-01-11 - Issue #18 Management API (Day 1)](./docs/sessions/SESSION_DEVELOPMENT_2026-01-11_EN.md)
-  - [2026-01-12 - Issue #18 Finalization (Day 2)](./docs/sessions/SESSION_DEVELOPMENT_2026-01-12_EN.md)
-
-### Phase Reports
-- **[Phase 0 Summary](./docs/reports/PHASE_0_SUMMARY.md)** - Infrastructure foundation completion
-- **[Phase 1 Week 1 Report](./docs/reports/PHASE_1_WEEK_1_REPORT.md)** - Basic backend CRUD progress
-
-### Architecture and Security
-- **[Authentication Architecture](./docs/AUTHENTICATION.md)** - JWT authentication system
-- **[Security Architecture](./docs/SECURITY_ARCHITECTURE.md)** - Security features and components
-- **[Observability Setup](./docs/OBSERVABILITY_SETUP.md)** - Monitoring and tracing
-
-### Database & Deployment
-- **[Database README](./database/README.md)** - Database schema and Flyway migrations guide
-- **[Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
-- **[Production Migration Process](./docs/PRODUCTION_MIGRATION_PROCESS.md)** - Safe migration deployment to production
-- **[Production Config Quick Ref](./docs/PRODUCTION_CONFIG_QUICK_REF.md)** - Production Flyway configuration
-- **[Migration Tasks](./docs/DATABASE_MIGRATION_TASKS_EN.md)** - Database migration task breakdown
-
-### Specialized Documentation
-- **[DevOps README](./devops/README.md)** - Deployment instructions and scripts
-- **[API Documentation](./docs/API-Gateway-Developer-Guide.md)** - API Gateway guide
+---
 
 ## 🧪 Testing
 
-### E2E Tests (End-to-End)
-```bash
-# Prerequisites
-cd backend/e2e-tests
-.\build-e2e-images.ps1  # Build Docker images
+### E2E Tests
+```powershell
+# Run both E2E scenarios (requires Docker services running)
+cd devops
+.\run-e2e-tests.ps1
 
-# Run tests
-mvn test
-
-# Run specific test
-mvn test -Dtest=OneTimeVisitorE2ETest
+# Or directly with Maven
+cd backend
+mvn test -Pe2e
 ```
 
-**Test Coverage:**
-- ✅ One-time visitor full cycle (Entry → Payment → Exit)
-- ✅ All 9 microservices integration
-- ✅ Database operations (PostgreSQL)
-- ✅ Service discovery (Eureka)
-- ✅ API Gateway routing
-
-📖 **Documentation**: [backend/e2e-tests/README.md](./backend/e2e-tests/README.md)
+**E2E Scenarios:**
+- ✅ `OneTimeVisitorE2ETest` — Entry → ticket → payment → exit
+- ✅ `SubscriberE2ETest` — Entry with active subscription → free exit
 
 ### Unit & Integration Tests
 ```bash
-# Unit tests
+# Run all unit + integration tests
+mvn clean test
+
+# Single module
+cd backend/api-gateway
 mvn test
-
-# Integration tests
-mvn verify
-
-# Test all modules
-mvn clean test -f pom.xml
 ```
+
+**Test counts (approximate):**
+- api-gateway: ~80 tests
+- client-service: ~26 tests
+- gate-control-service: ~30 tests
+- billing-service: ~20 tests
+- management-service: ~21 tests
+- **Total: 177+ tests**
 
 ### Manual Testing
-
-#### Test Authentication
 ```bash
-# Get JWT token
-curl -X POST http://localhost:8086/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"parking123"}'
-
-# Use token to access protected endpoint
-curl -X GET http://localhost:8086/api/clients \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-#### Health Checks
-```bash
-# API Gateway health
+# Health checks
 curl http://localhost:8086/actuator/health
-
-# Client Service health
 curl http://localhost:8081/actuator/health
 
-# Eureka dashboard
-open http://localhost:8761
+# Authenticated request
+TOKEN=$(curl -s -X POST http://localhost:8086/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"parking123"}' | jq -r .accessToken)
+
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8086/api/clients
 ```
 
-### PowerShell Scripts for Testing
-Located in `devops/` folder:
-- `check-system.ps1` - Complete system health check
-- `test-auth.ps1` - Authentication testing
-- `test-client-service-via-gateway.ps1` - Proxy testing
-- `full-rebuild.ps1` - Full rebuild and test
+---
 
-## 📚 API Documentation
+## 🔧 Configuration
 
-### Interactive Documentation
-- **Swagger UI**: http://localhost:8086/swagger-ui.html
-- **OpenAPI JSON**: http://localhost:8086/v3/api-docs
+### Key Environment Variables
+```bash
+# JWT (MUST be 64+ chars in production)
+JWT_SECRET=<YOUR_64_CHAR_SECRET>
+JWT_ACCESS_TOKEN_EXPIRATION=1800    # seconds
+JWT_REFRESH_TOKEN_EXPIRATION=43200  # seconds
 
-### Developer Guides
-- **[API Gateway Developer Guide](./docs/API-Gateway-Developer-Guide.md)** - Complete guide for API Gateway
-- **[Authentication Components](./docs/AUTHENTICATION_COMPONENTS.md)** - JWT authentication system
-- **[Brute Force Protection](./docs/BRUTE_FORCE_PROTECTION.md)** - Security features
+# CORS (comma-separated, supports wildcards)
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://192.168.*
 
-### Postman Collection
-Available in `/docs` folder for easy API testing.
+# Rate limiting
+RATE_LIMIT_MINUTE=60
+BRUTE_FORCE_THRESHOLD=10
 
-## 🎯 System Features
+# Database
+SPRING_DATASOURCE_URL=jdbc:postgresql://parking_db:5432/parking_db
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=postgres
 
-### Core Services
-1. **`client-service`**: Manages client database and subscriptions, verifies their validity
-2. **`gate-control-service`**: Receives events from scanners, decides on vehicle admission, manages barrier gates
-3. **`billing-service`**: Calculates parking session costs and records payments
-4. **`management-service`**: Tracks available parking spaces, provides API for information displays
-5. **`reporting-service`**: Collects system logs and generates reports
+# Redis
+SPRING_REDIS_HOST=parking_redis
+SPRING_REDIS_PORT=6379
 
-### Functional Requirements
-* **Automatic Mode:** Free access for subscribers (license plate recognition). Ticket issuance/payment for one-time visitors
-* **Manual Mode:** Operator control of entry/exit and fee calculation (fallback for automation failure)
-* **Logging:** Complete log of arrivals/departures and audit trail of operator/administrator actions
-* **Security:** Role-based authentication and authorization (`ADMIN`, `OPERATOR`) using Spring Security
+# Eureka
+EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+```
 
-## 🛠️ Running the Project
+### Production Security Checklist
+- [ ] Change all default passwords
+- [ ] Set `JWT_SECRET` to a 64+ char random string
+- [ ] Set `SPRING_DATASOURCE_PASSWORD` to a strong password
+- [ ] Set `SPRING_REDIS_PASSWORD`
+- [ ] Enable HTTPS/TLS
+- [ ] Set `SPRING_PROFILES_ACTIVE=production`
+- [ ] Restrict `CORS_ALLOWED_ORIGINS` to your domain
 
-### Using Docker Compose
-Quick deployment of the entire stack (PostgreSQL, all microservices, and Frontend).
-
-**Prerequisites:** Docker and Docker Compose installed.
-
-1. **Build the Images:**
-   ```bash
-   # Build all Java services
-   cd backend
-   mvn clean install
-   
-   # Build Docker images
-   cd ..
-   docker-compose build
-   ```
-
-2. **Start the Services:**
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **Verify Services:**
-   ```bash
-   # Check container status
-   docker-compose ps
-   
-   # Check logs
-   docker-compose logs -f api-gateway
-   ```
-
-### Default Access Points
-
-| Service | Address | Credentials |
-| :--- | :--- | :--- |
-| **API Gateway** | `http://localhost:8086` | admin/parking123 |
-| **Eureka Server** | `http://localhost:8761` | - |
-| **Frontend Web UI** | `http://localhost:3000` | - |
-| **PostgreSQL** | `localhost:5433` | postgres/postgres |
-| **pgAdmin** | `http://localhost:5050` | admin@parking.com/admin |
+---
 
 ## 💻 Development
 
 ### Project Structure
-
 ```
 parking-system/
-├── backend/              # Spring Boot microservices
-│   ├── api-gateway/      # API Gateway with JWT auth
-│   ├── client-service/   # Client management
-│   ├── eureka-server/    # Service discovery
-│   └── ...               # Other services
-├── frontend/             # React web interface
-├── devops/               # Docker files and scripts
-│   ├── *.ps1             # PowerShell automation scripts
-│   └── observability/    # Prometheus, Grafana configs
-├── database/             # SQL scripts
-│   └── init.sql          # Database initialization
-└── docs/                 # Documentation
+├── backend/
+│   ├── api-gateway/          # JWT auth, RBAC, CORS, Flyway, proxy
+│   ├── client-service/       # Clients, vehicles, subscriptions
+│   ├── gate-control-service/ # Gate entry/exit/control
+│   ├── billing-service/      # Fees & payments
+│   ├── management-service/   # Parking space inventory
+│   ├── reporting-service/    # Audit logs & reports
+│   ├── eureka-server/        # Service registry
+│   ├── parking-common/       # Shared DTOs/utils
+│   └── e2e-tests/            # End-to-end test suite
+├── frontend/                 # React 19 + Vite + TypeScript
+│   └── src/
+│       ├── api/              # Axios service clients
+│       ├── pages/            # Route pages
+│       ├── components/       # Shared UI components
+│       ├── layouts/          # AppLayout with sidebar
+│       ├── store/            # Zustand auth store + language context
+│       ├── i18n/             # Translation dictionaries (en/de/uk/ru)
+│       └── types/            # TypeScript types
+├── database/
+│   └── init.sql              # DB init (runs once on first Docker start)
+├── devops/                   # PowerShell scripts, Docker configs
+│   └── observability/        # Prometheus, Grafana, OTel configs
+└── docs/                     # Architecture & API documentation
 ```
+
+### OpenAPI-First Services
+
+Five business services follow the **OpenAPI-first** approach — `openapi.yaml` is the source of truth, Maven plugin generates Java interfaces, controllers implement them:
+
+| Service | Spec | Generated package |
+|---------|------|-------------------|
+| `client-service` | `src/main/resources/openapi.yaml` | `generated.controller` |
+| `gate-control-service` | `src/main/resources/openapi.yaml` | `generated.api` |
+| `billing-service` | `src/main/resources/openapi.yaml` | `generated.api` |
+| `management-service` | `src/main/resources/openapi.yaml` | `generated.api` |
+| `reporting-service` | `src/main/resources/openapi.yaml` | `generated.controller` |
+
+Generated interfaces reside in `target/generated-sources/openapi/`. Controllers implement these interfaces (`implements GateApi`, `implements BillingApi`, etc.).
+
+> **`api-gateway`** does **not** use OpenAPI-first — it is infrastructure, not a business API. Its controllers are either auth endpoints (`AuthController`) or transparent proxy controllers that forward requests to downstream services.
 
 ### Development Workflow
-
-1. **Start Infrastructure:**
-   ```bash
-   cd devops
-   docker-compose -f docker-compose.infrastructure.yml up -d
-   ```
-
-2. **Run Services Locally:**
-   ```bash
-   cd backend/api-gateway
-   mvn spring-boot:run
-   ```
-
-3. **Run Tests:**
-   ```bash
-   mvn test
-   ```
-
-### Running Tests
-
-To run all Unit and Integration tests:
 ```bash
-cd backend
-./mvnw test
+# 1. Start infrastructure only
+docker-compose up -d postgres redis eureka-server
+
+# 2. Run a service locally (hot-reload)
+cd backend/api-gateway
+mvn spring-boot:run
+
+# 3. Frontend dev server (proxies /api/* to :8086)
+cd frontend
+npm run dev
 ```
 
-## 🔒 Production Security
+---
 
-### Critical Environment Variables for Production:
+## 📚 Documentation
 
-```bash
-# JWT Security (MUST be 64+ characters)
-JWT_SECRET=<GENERATE_STRONG_64_CHAR_SECRET>
-JWT_ACCESS_TOKEN_EXPIRATION=1800   # 30 minutes
-JWT_REFRESH_TOKEN_EXPIRATION=43200  # 12 hours
+### Architecture & Security
+- [Authentication Architecture](./docs/AUTHENTICATION.md)
+- [Security Architecture](./docs/SECURITY_ARCHITECTURE.md)
+- [Observability Setup](./docs/OBSERVABILITY_SETUP.md)
+- [API Contracts](./docs/api-contracts.md)
 
-# Database with strong credentials
-SPRING_DATASOURCE_PASSWORD=<STRONG_DB_PASSWORD_32_CHARS+>
+### Database & Deployment
+- [Database README](./database/README.md)
+- [Deployment Guide](./docs/DEPLOYMENT_GUIDE.md)
+- [Production Config Quick Ref](./docs/PRODUCTION_CONFIG_QUICK_REF.md)
 
-# Redis with authentication
-SPRING_REDIS_PASSWORD=<STRONG_REDIS_PASSWORD>
+### DevOps Scripts (`devops/`)
+| Script | Purpose |
+|--------|---------|
+| `start-all.ps1` | Start full system |
+| `stop-system.ps1` | Stop all containers |
+| `full-rebuild.ps1` | Rebuild all images and restart |
+| `run-e2e-tests.ps1` | Run E2E test suite |
+| `check-system.ps1` | Health check all services |
+| `backup-db.ps1` | Backup PostgreSQL |
+| `unlock-account.ps1` | Unlock brute-force locked user |
+| `reset-brute-force.ps1` | Reset failed login counter |
 
-# Production profile
-SPRING_PROFILES_ACTIVE=production
-
-# Rate limiting (more restrictive for production)
-RATE_LIMIT_MINUTE=30
-BRUTE_FORCE_THRESHOLD=5
-```
-
-**📖 Complete security documentation:** See "Production Readiness" section in `SESSION_DEVELOPMENT_2025-12-25_EN.md`
-
-### Security Best Practices
-- Use environment variables for all secrets
-- Enable HTTPS/TLS in production
-- Implement proper logging and monitoring
-- Regular security audits
-- Keep dependencies updated
-
-## 📝 Future Enhancements
-
-### Short-term
-- [ ] Integration with message broker (Kafka/RabbitMQ)
-- [ ] WebSocket support for real-time notifications
-- [ ] Frontend application (React/Angular)
-- [ ] Complete all microservices implementation
-
-### Mid-term
-- [ ] Multiple subscription types (day/night, limited entry)
-- [ ] Mobile application (iOS/Android)
-- [ ] Advanced reporting and analytics
-- [ ] CI/CD pipeline (GitHub Actions)
-
-### Long-term
-- [ ] Cloud deployment (AWS/GCP/Azure)
-- [ ] Kubernetes orchestration
-- [ ] Multi-language support (i18n)
-- [ ] AI-powered parking optimization
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+3. Commit your changes (`git commit -m 'feat: Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 📞 Support
-
-For questions and support:
-- 📧 Email: support@parking-system.com
-- 💬 Issues: [GitHub Issues](https://github.com/your-repo/parking-system/issues)
-- 📖 Documentation: See `/docs` folder
+This project is licensed under the MIT License.
 
 ---
 
-**Made with ❤️ using Spring Boot and Docker**
+**Made with ❤️ using Spring Boot and React**

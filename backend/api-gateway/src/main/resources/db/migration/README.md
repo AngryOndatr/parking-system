@@ -24,7 +24,7 @@ Examples:
 ## Current Schema
 
 The baseline version is **V0** (existing schema).
-Current latest migration: **V8** (parking_events and payments extended, 2026-01-16).
+Current latest migration: **V9** (gate_events table, 2026-02-14).
 
 ### Applied Migrations:
 - V0: Baseline
@@ -32,10 +32,11 @@ Current latest migration: **V8** (parking_events and payments extended, 2026-01-
 - V2: Parking lots
 - V3: Parking spaces
 - V4: Bookings
-- V5: Test data for parking spaces/lots
+- V5: Test data for parking spaces/lots (includes subscriber AA1234BB for E2E tests)
 - V6: Extended logs table (service, meta columns)
 - V7: Tariffs table with seed data (ONE_TIME, DAILY, NIGHT, VIP)
 - V8: Extended parking_events and payments (license_plate, entry/exit methods, payment status, transaction tracking)
+- V9: gate_events table (gate hardware event log)
 
 For complete migration history, see [database/README.md](../../../../database/README.md).
 

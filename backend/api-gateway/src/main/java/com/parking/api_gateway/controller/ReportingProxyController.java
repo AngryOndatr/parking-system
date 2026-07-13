@@ -48,7 +48,7 @@ public class ReportingProxyController {
 
             log.info("✅ [REPORTING PROXY] Reporting Service responded: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
@@ -122,7 +122,7 @@ public class ReportingProxyController {
 
             log.info("✅ [REPORTING PROXY] Reporting Service responded: {}", response.getStatusCode());
             return ResponseEntity.status(response.getStatusCode())
-                    .headers(response.getHeaders())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
                     .body(response.getBody());
 
         } catch (HttpClientErrorException e) {
@@ -136,7 +136,91 @@ public class ReportingProxyController {
     }
 
     /**
-     * Extract headers from incoming request
+     * Proxy GET /api/reporting/audit — all business-event audit logs
+     */
+    @GetMapping("/audit")
+    public ResponseEntity<?> getAuditLogs(
+            @RequestParam(required = false) String service,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) Integer limit,
+            HttpServletRequest request) {
+        return proxyGet(buildUrl("/api/reporting/audit",
+                param("service", service), param("from", from), param("to", to), param("limit", limit)),
+                request);
+    }
+
+    /**
+     * Proxy GET /api/reporting/audit/client/{clientId} — client history
+     */
+    @GetMapping("/audit/client/{clientId}")
+    public ResponseEntity<?> getClientHistory(
+            @PathVariable Long clientId,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) Integer limit,
+            HttpServletRequest request) {
+        return proxyGet(buildUrl("/api/reporting/audit/client/" + clientId,
+                param("from", from), param("to", to), param("limit", limit)),
+                request);
+    }
+
+    /**
+     * Proxy GET /api/reporting/audit/vehicle/{licensePlate} — vehicle history
+     */
+    @GetMapping("/audit/vehicle/{licensePlate}")
+    public ResponseEntity<?> getVehicleHistory(
+            @PathVariable String licensePlate,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(required = false) Integer limit,
+            HttpServletRequest request) {
+        return proxyGet(buildUrl("/api/reporting/audit/vehicle/" + licensePlate,
+                param("from", from), param("to", to), param("limit", limit)),
+                request);
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+
+    private ResponseEntity<?> proxyGet(String targetUrl, HttpServletRequest request) {
+        log.info("🎯 [REPORTING PROXY] GET {}", targetUrl);
+        try {
+            HttpHeaders headers = extractHeaders(request);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(targetUrl, HttpMethod.GET, entity, String.class);
+            log.info("✅ [REPORTING PROXY] responded: {}", response.getStatusCode());
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(ProxyUtils.filterResponseHeaders(response.getHeaders()))
+                    .body(response.getBody());
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("💥 [REPORTING PROXY] {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error communicating with Reporting Service: " + e.getMessage());
+        }
+    }
+
+    private String buildUrl(String path, String... queryParts) {
+        StringBuilder sb = new StringBuilder(REPORTING_SERVICE_URL + path);
+        boolean first = true;
+        for (String part : queryParts) {
+            if (part != null) {
+                sb.append(first ? "?" : "&").append(part);
+                first = false;
+            }
+        }
+        return sb.toString();
+    }
+
+    private String param(String name, Object value) {
+        return value != null ? name + "=" + value : null;
+    }
+
+    /**
+     * Extract headers from incoming request.
+     * Hop-by-hop and Accept-Encoding headers are stripped via ProxyUtils so that
+     * RestTemplate can transparently decompress gzip and we avoid double-chunked encoding.
      */
     private HttpHeaders extractHeaders(HttpServletRequest request) {
         HttpHeaders headers = new HttpHeaders();
@@ -145,11 +229,8 @@ public class ReportingProxyController {
         if (headerNames != null) {
             while (headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
-                String headerValue = request.getHeader(headerName);
-
-                // Forward all headers except Host
-                if (!"host".equalsIgnoreCase(headerName)) {
-                    headers.add(headerName, headerValue);
+                if (ProxyUtils.shouldForwardRequestHeader(headerName)) {
+                    headers.put(headerName, Collections.list(request.getHeaders(headerName)));
                 }
             }
         }

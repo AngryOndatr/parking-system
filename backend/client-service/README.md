@@ -12,12 +12,13 @@ The Client Service is responsible for:
 
 ## Technology Stack
 
-- **Spring Boot 3.5.8**
+- **Spring Boot 3.2.8**
 - **Spring Data JPA** - Database access
 - **PostgreSQL** - Production database
 - **H2** - Testing database
 - **Eureka Client** - Service discovery
-- **OpenAPI 3.0** - API specification and code generation
+- **OpenAPI 3.0** - API specification and code generation (OpenAPI-first)
+- **OpenAPI Generator Maven Plugin 7.6.0** - Interface generation
 - **Hibernate** - ORM
 
 ## Features
@@ -33,6 +34,11 @@ The Client Service is responsible for:
 - Link vehicles to clients (client_id foreign key)
 - Unique license plate enforcement
 - Full validation with appropriate HTTP status codes
+
+✅ **Subscription Check (Issue #72)**
+- Real DB lookup via JPA: active subscription by license plate
+- JOIN: vehicles → clients → subscriptions WHERE isActive=true AND endDate > NOW()
+- Used by gate-control-service for subscriber detection
 
 ## API Endpoints
 
@@ -743,11 +749,12 @@ docker run -d \
 
 - **Issue #16:** CLIENT-SVC — CRUD for CLIENTS ✅ Complete
 - **Issue #17:** CLIENT-SVC — CRUD for VEHICLES ✅ Complete
+- **Issue #72:** Subscription check: real DB logic ✅ Complete
 
 ---
 
 **Service Port:** 8081  
 **API Gateway Port:** 8086  
-**Version:** 1.0.0  
-**Last Updated:** 2026-01-13
+**Version:** 0.0.1-SNAPSHOT (Spring Boot 3.2.8)  
+**Last Updated:** 2026-03-09
 

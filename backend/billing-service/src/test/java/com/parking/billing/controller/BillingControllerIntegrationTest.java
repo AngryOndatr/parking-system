@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Integration tests for BillingController.
- * Tests the /api/v1/billing/calculate endpoint with real database interactions.
+ * Tests the /api/billing/calculate endpoint with real database interactions.
  */
 @SpringBootTest(classes = com.parking.billing_service.BillingServiceApplication.class)
 @AutoConfigureMockMvc
@@ -82,7 +82,7 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/billing/calculate - Success: Calculate fee for 2 hours")
+    @DisplayName("POST /api/billing/calculate - Success: Calculate fee for 2 hours")
     void calculateFee_Success_TwoHours() throws Exception {
         // Given: Parking event with 2 hours duration
         ParkingEvent event = createParkingEvent("TICKET-001", 2);
@@ -99,7 +99,7 @@ class BillingControllerIntegrationTest {
         request.setIsSubscriber(false);
 
         // When & Then: Calculate fee
-        mockMvc.perform(post("/api/v1/billing/calculate")
+        mockMvc.perform(post("/api/billing/calculate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -112,7 +112,7 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/billing/calculate - Success: Calculate fee for 1.5 hours (rounds up)")
+    @DisplayName("POST /api/billing/calculate - Success: Calculate fee for 1.5 hours (rounds up)")
     void calculateFee_Success_OneAndHalfHours_RoundsUp() throws Exception {
         // Given: Parking event with 1.5 hours duration
         ParkingEvent event = createParkingEvent("TICKET-002", 0);
@@ -129,7 +129,7 @@ class BillingControllerIntegrationTest {
         request.setIsSubscriber(false);
 
         // When & Then: Calculate fee (should round up to 2 hours = 100.00)
-        mockMvc.perform(post("/api/v1/billing/calculate")
+        mockMvc.perform(post("/api/billing/calculate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -141,7 +141,7 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/billing/calculate - Error 404: Ticket not found")
+    @DisplayName("POST /api/billing/calculate - Error 404: Ticket not found")
     void calculateFee_Error404_TicketNotFound() throws Exception {
         // Given: Non-existent parking event
         LocalDateTime now = LocalDateTime.now();
@@ -155,7 +155,7 @@ class BillingControllerIntegrationTest {
         request.setIsSubscriber(false);
 
         // When & Then: Should return 404
-        mockMvc.perform(post("/api/v1/billing/calculate")
+        mockMvc.perform(post("/api/billing/calculate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -166,7 +166,7 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/billing/calculate - Error 400: Ticket already paid")
+    @DisplayName("POST /api/billing/calculate - Error 400: Ticket already paid")
     void calculateFee_Error400_TicketAlreadyPaid() throws Exception {
         // Given: Parking event with completed payment
         ParkingEvent event = createParkingEvent("TICKET-003", 2);
@@ -191,7 +191,7 @@ class BillingControllerIntegrationTest {
         request.setIsSubscriber(false);
 
         // When & Then: Should return 400 (already paid)
-        mockMvc.perform(post("/api/v1/billing/calculate")
+        mockMvc.perform(post("/api/billing/calculate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -202,7 +202,7 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/billing/pay - Success: Process payment")
+    @DisplayName("POST /api/billing/pay - Success: Process payment")
     void processPayment_Success() throws Exception {
         // Given: Parking event without payment
         ParkingEvent event = createParkingEvent("TICKET-004", 3);
@@ -214,7 +214,7 @@ class BillingControllerIntegrationTest {
         request.setPaymentMethod(PaymentRequest.PaymentMethodEnum.CARD);
 
         // When & Then: Process payment
-        mockMvc.perform(post("/api/v1/billing/pay")
+        mockMvc.perform(post("/api/billing/pay")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -228,7 +228,7 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/billing/pay - Error 400: Insufficient payment amount")
+    @DisplayName("POST /api/billing/pay - Error 400: Insufficient payment amount")
     void processPayment_Error400_InsufficientAmount() throws Exception {
         // Given: Parking event requiring 150.00 (3 hours)
         ParkingEvent event = createParkingEvent("TICKET-005", 3);
@@ -240,7 +240,7 @@ class BillingControllerIntegrationTest {
         request.setPaymentMethod(PaymentRequest.PaymentMethodEnum.CASH);
 
         // When & Then: Should return 400
-        mockMvc.perform(post("/api/v1/billing/pay")
+        mockMvc.perform(post("/api/billing/pay")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -250,7 +250,7 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/billing/status - Success: Check payment status")
+    @DisplayName("GET /api/billing/status - Success: Check payment status")
     void getPaymentStatus_Success() throws Exception {
         // Given: Parking event with completed payment
         ParkingEvent event = createParkingEvent("TICKET-006", 2);
@@ -265,7 +265,7 @@ class BillingControllerIntegrationTest {
         paymentRepository.save(payment);
 
         // When & Then: Check status
-        mockMvc.perform(get("/api/v1/billing/status")
+        mockMvc.perform(get("/api/billing/status")
                         .param("parkingEventId", event.getId().toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -275,14 +275,14 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/billing/status - Success: Check unpaid status with remaining fee")
+    @DisplayName("GET /api/billing/status - Success: Check unpaid status with remaining fee")
     void getPaymentStatus_Unpaid_WithRemainingFee() throws Exception {
         // Given: Parking event without payment (2 hours parking = 100 UAH)
         ParkingEvent event = createParkingEvent("TICKET-007", 2);
         parkingEventRepository.save(event);
 
         // When & Then: Check status
-        mockMvc.perform(get("/api/v1/billing/status")
+        mockMvc.perform(get("/api/billing/status")
                         .param("parkingEventId", event.getId().toString()))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -292,10 +292,10 @@ class BillingControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/billing/status - Error 404: Parking event not found")
+    @DisplayName("GET /api/billing/status - Error 404: Parking event not found")
     void getPaymentStatus_NotFound() throws Exception {
         // When & Then: Check status for non-existent event
-        mockMvc.perform(get("/api/v1/billing/status")
+        mockMvc.perform(get("/api/billing/status")
                         .param("parkingEventId", "999999"))
                 .andDo(print())
                 .andExpect(status().isNotFound());

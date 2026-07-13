@@ -21,9 +21,9 @@
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| POST | /api/v1/billing/calculate | Calculate parking fee | 200, 400, 404, 500 |
-| POST | /api/v1/billing/pay | Process payment | 201, 400, 404, 409, 500 |
-| GET | /api/v1/billing/status?parkingEventId={id} | Get payment status | 200, 400, 404, 500 |
+| POST | /api/billing/calculate | Calculate parking fee | 200, 400, 404, 500 |
+| POST | /api/billing/pay | Process payment | 201, 400, 404, 409, 500 |
+| GET | /api/billing/status?parkingEventId={id} | Get payment status | 200, 400, 404, 500 |
 
 ### Management Service (Port 8083) ⭐ IMPLEMENTED
 
@@ -46,9 +46,9 @@
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| POST | /api/v1/gate/entry | Process vehicle entry | 201, 400, 403, 409, 500 |
-| POST | /api/v1/gate/exit | Process vehicle exit | 200, 400, 404, 409, 500 |
-| POST | /api/v1/gate/control | Manual gate control | 200, 400, 403, 404, 500 |
+| POST | /api/gate/entry | Process vehicle entry | 201, 400, 403, 409, 500 |
+| POST | /api/gate/exit | Process vehicle exit | 200, 400, 404, 409, 500 |
+| POST | /api/gate/control | Manual gate control | 200, 400, 403, 404, 500 |
 
 ---
 
@@ -79,4 +79,3 @@ See [api-contracts.md](./api-contracts.md) for complete endpoint documentation w
 - Error scenarios
 - Testing examples
 - Integration notes
-

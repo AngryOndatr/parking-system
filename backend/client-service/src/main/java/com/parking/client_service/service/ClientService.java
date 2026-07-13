@@ -1,5 +1,6 @@
 package com.parking.client_service.service;
 
+import com.parking.client_service.audit.AuditLogger;
 import com.parking.client_service.dto.ClientRequestDto;
 import com.parking.client_service.generated.model.ClientRequest;
 import com.parking.client_service.generated.model.ClientResponse;
@@ -7,8 +8,10 @@ import com.parking.client_service.exception.ConflictException;
 import com.parking.client_service.exception.ResourceNotFoundException;
 import com.parking.client_service.mapper.ClientMapper;
 import com.parking.client_service.repository.ClientRepository;
+import com.parking.client_service.repository.VehicleRepository;
 import com.parking.common.domain.ClientDomain;
 import com.parking.common.entity.Client;
+import com.parking.common.entity.Vehicle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,10 +29,15 @@ public class ClientService {
 
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
+    private final VehicleRepository vehicleRepository;
+    private final AuditLogger auditLogger;
 
-    public ClientService(ClientRepository clientRepository, ClientMapper clientMapper) {
+    public ClientService(ClientRepository clientRepository, ClientMapper clientMapper,
+                         VehicleRepository vehicleRepository, AuditLogger auditLogger) {
         this.clientRepository = clientRepository;
-        this.clientMapper = clientMapper;
+        this.clientMapper     = clientMapper;
+        this.vehicleRepository = vehicleRepository;
+        this.auditLogger      = auditLogger;
     }
 
     @Transactional
@@ -54,6 +62,10 @@ public class ClientService {
         Client savedClient = clientRepository.save(client);
         log.info("Successfully created client with id: {}, phone: {}", savedClient.getId(), savedClient.getPhoneNumber());
 
+        auditLogger.audit("CLIENT_CREATED", "CLIENT", savedClient.getId(),
+                savedClient.getId(), null,
+                "Client created: " + savedClient.getFullName() + " (" + savedClient.getPhoneNumber() + ")");
+
         // Map to response while still in transaction (defensive, prevents lazy issues)
         return clientMapper.toResponse(savedClient);
     }
@@ -77,7 +89,10 @@ public class ClientService {
         client.setRegisteredAt(LocalDateTime.now());
 
         Client savedClient = clientRepository.save(client);
-        log.info("Successfully created client with id: {}, phone: {}", savedClient.getId(), savedClient.getPhoneNumber());
+
+        auditLogger.audit("CLIENT_CREATED", "CLIENT", savedClient.getId(),
+                savedClient.getId(), null,
+                "Client created: " + savedClient.getFullName() + " (" + savedClient.getPhoneNumber() + ")");
 
         return clientMapper.toResponse(savedClient);
     }
@@ -119,6 +134,25 @@ public class ClientService {
         return result;
     }
 
+    /** Find the client who owns a vehicle with the given license plate. */
+    @Transactional(readOnly = true)
+    public Optional<ClientResponse> findClientByLicensePlate(String plate) {
+        log.debug("Searching for client by license plate: {}", plate);
+        return vehicleRepository.findByLicensePlate(plate.toUpperCase().trim())
+                .map(Vehicle::getClient)
+                .map(clientMapper::toResponse);
+    }
+
+    /** Case-insensitive substring search by full name. */
+    @Transactional(readOnly = true)
+    public List<ClientResponse> findClientsByName(String name) {
+        log.debug("Searching for clients by name: {}", name);
+        return clientRepository.findByFullNameContainingIgnoreCase(name.trim())
+                .stream()
+                .map(clientMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public ClientResponse updateClient(Long id, ClientRequestDto requestDto) {
         log.info("Updating client with id: {}", id);
@@ -158,6 +192,10 @@ public class ClientService {
         Client saved = clientRepository.save(domain.getEntity());
         log.info("Successfully updated client with id: {}, phone: {}", saved.getId(), saved.getPhoneNumber());
 
+        auditLogger.audit("CLIENT_UPDATED", "CLIENT", saved.getId(),
+                saved.getId(), null,
+                "Client updated: " + saved.getFullName() + " (" + saved.getPhoneNumber() + ")");
+
         // return response while in transaction
         return clientMapper.toResponse(saved);
     }
@@ -172,8 +210,12 @@ public class ClientService {
                     return new ResourceNotFoundException("Client not found with id: " + id);
                 });
 
+        String name = existing.getFullName();
         clientRepository.delete(existing);
         log.info("Successfully deleted client with id: {}", id);
+
+        auditLogger.audit("CLIENT_DELETED", "CLIENT", id, id, null,
+                "Client deleted: " + name + " (id=" + id + ")");
     }
 
     // New overload: update using generated ClientRequest

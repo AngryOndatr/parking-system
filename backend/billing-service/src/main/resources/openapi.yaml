@@ -24,7 +24,7 @@ paths:
   # =================================================================
   # CALCULATE PARKING FEE
   # =================================================================
-  /api/v1/billing/calculate:
+  /api/billing/calculate:
     post:
       tags:
         - Billing
@@ -101,14 +101,14 @@ paths:
                 status: 404
                 error: "Not Found"
                 message: "Parking event with ID 12345 not found"
-                path: "/api/v1/billing/calculate"
+                path: "/api/billing/calculate"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
   # =================================================================
   # PROCESS PAYMENT
   # =================================================================
-  /api/v1/billing/pay:
+  /api/billing/pay:
     post:
       tags:
         - Billing
@@ -170,7 +170,7 @@ paths:
                 status: 400
                 error: "Bad Request"
                 message: "Amount must be greater than zero"
-                path: "/api/v1/billing/pay"
+                path: "/api/billing/pay"
         '404':
           description: Parking event not found
           content:
@@ -188,14 +188,14 @@ paths:
                 status: 409
                 error: "Conflict"
                 message: "A completed payment already exists for parking event 12345"
-                path: "/api/v1/billing/pay"
+                path: "/api/billing/pay"
         '500':
           $ref: '#/components/responses/InternalServerError'
 
   # =================================================================
   # GET PAYMENT STATUS
   # =================================================================
-  /api/v1/billing/status:
+  /api/billing/status:
     get:
       tags:
         - Billing
@@ -540,7 +540,7 @@ components:
         path:
           type: string
           description: Request path where error occurred
-          example: "/api/v1/billing/calculate"
+          example: "/api/billing/calculate"
 
   # =================================================================
   # REUSABLE RESPONSES
@@ -557,7 +557,7 @@ components:
             status: 400
             error: "Bad Request"
             message: "Invalid request parameters"
-            path: "/api/v1/billing/calculate"
+            path: "/api/billing/calculate"
 
     InternalServerError:
       description: Internal server error
@@ -570,5 +570,4 @@ components:
             status: 500
             error: "Internal Server Error"
             message: "An unexpected error occurred"
-            path: "/api/v1/billing/calculate"
-
+            path: "/api/billing/calculate"

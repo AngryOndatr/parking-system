@@ -1,11 +1,16 @@
 spring:
   application:
     name: Gate Control Service
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
   datasource:
     url: jdbc:postgresql://localhost:5432/parking_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: false  # Schema is managed by api-gateway Flyway migrations
   jpa:
     hibernate:
       ddl-auto: validate
@@ -17,6 +22,16 @@ spring:
 
 server:
   port: 8080
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:
@@ -32,6 +47,11 @@ springdoc:
     title: Gate Control Service API
     version: 1.0.0
     description: API for gate control and vehicle management
+
+# Reporting / Audit trail
+reporting:
+  service:
+    url: ${REPORTING_SERVICE_URL:http://reporting-service:8084}
 
 # Inter-service communication URLs
 services:

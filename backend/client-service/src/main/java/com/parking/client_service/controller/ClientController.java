@@ -21,6 +21,7 @@ import java.util.List;
 @Slf4j
 public class ClientController implements ClientApi {
 
+
     private final ClientService clientService;
 
     public ClientController(ClientService clientService) {
@@ -112,6 +113,23 @@ public class ClientController implements ClientApi {
                 });
     }
 
+
+    // --- 5b. Search by license plate ---
+    @GetMapping(value = "/search", params = "plate")
+    public ResponseEntity<ClientResponse> searchClientByPlate(@RequestParam String plate) {
+        log.info("🚗 [CLIENT CONTROLLER] GET /api/clients/search?plate={}", plate);
+        return clientService.findClientByLicensePlate(plate)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // --- 5c. Search by name (returns list) ---
+    @GetMapping(value = "/search", params = "name")
+    public ResponseEntity<List<ClientResponse>> searchClientsByName(@RequestParam String name) {
+        log.info("👤 [CLIENT CONTROLLER] GET /api/clients/search?name={}", name);
+        if (name.trim().length() < 2) return ResponseEntity.ok(List.of());
+        return ResponseEntity.ok(clientService.findClientsByName(name));
+    }
 
     // --- 6. Update ---
     @Override

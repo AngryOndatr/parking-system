@@ -6,20 +6,8 @@ This directory contains Docker Compose configurations for deploying the parking-
 
 ### Docker Compose Files
 
-1. **docker-compose.infrastructure.yml** — Base infrastructure
-   - PostgreSQL (database)
-   - Redis (cache and sessions)
-   - Eureka Server (service discovery)
-
-2. **docker-compose.services.yml** — Application microservices
-   - API Gateway
-   - Client Service
-   - Gate Control Service
-   - Billing Service
-   - Management Service
-   - Reporting Service
-
-3. **docker-compose.yml** — Full configuration (legacy, for backwards compatibility)
+**`../docker-compose.yml`** (project root) — ⭐ **Primary** — full stack including observability  
+All infrastructure + all services + Prometheus + Grafana + Jaeger + OTel Collector + pgAdmin
 
 ### Management Scripts
 
@@ -52,7 +40,6 @@ This directory contains Docker Compose configurations for deploying the parking-
 |----------|-------------|-------------|
 | Web API tester guide | [TEST_LOGIN_README_EN.md](TEST_LOGIN_README_EN.md) | [TEST_LOGIN_README_RU.md](TEST_LOGIN_README_RU.md) |
 | Monitoring & tracing | [OBSERVABILITY_README_EN.md](OBSERVABILITY_README_EN.md) | [OBSERVABILITY_README_RU.md](OBSERVABILITY_README_RU.md) |
-| Script fix notes | [README_SCRIPT_FIX_EN.md](README_SCRIPT_FIX_EN.md) | [README_SCRIPT_FIX_RU.md](README_SCRIPT_FIX_RU.md) |
 
 ## Quick Start
 
@@ -113,12 +100,6 @@ test-login.html
 # Start the full system
 .\start-system.ps1
 
-# Infrastructure only
-.\start-system.ps1 infrastructure
-
-# Services only (if infrastructure is already running)
-.\start-system.ps1 services
-
 # Stop
 .\stop-system.ps1
 
@@ -129,17 +110,8 @@ test-login.html
 ### Option 2: Manual startup
 
 ```powershell
-# Create network (once)
-docker network create parking-network
-
-# Start infrastructure
-docker-compose -f docker-compose.infrastructure.yml up -d
-
-# Wait for Eureka to start (30 sec)
-Start-Sleep -Seconds 30
-
-# Start services
-docker-compose -f docker-compose.services.yml up -d
+# From project root
+docker-compose -f docker-compose.yml up -d
 
 # Check status
 docker ps
@@ -155,7 +127,12 @@ After startup the following endpoints are available:
 - **Gate Control Service**: http://localhost:8082
 - **Billing Service**: http://localhost:8083
 - **Management Service**: http://localhost:8084
-- **Reporting Service**: http://localhost:8085
+- **Reporting Service**: http://localhost:8087
+- **Grafana**: http://localhost:3000
+- **Prometheus**: http://localhost:9090
+- **Jaeger**: http://localhost:16686
+- **pgAdmin**: http://localhost:5050
+- **React Frontend** (dev): http://localhost:5173
 
 ### Health Checks
 
@@ -264,9 +241,7 @@ curl and PowerShell examples for all endpoints:
 docker system prune -f
 
 # Rebuild and start
-docker-compose -f docker-compose.infrastructure.yml build --no-cache
-docker-compose -f docker-compose.services.yml build --no-cache
-.\start-system.ps1
+.\full-rebuild.ps1
 ```
 
 ## Technologies

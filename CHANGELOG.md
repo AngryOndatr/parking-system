@@ -11,11 +11,300 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### In Progress
 
-- Subscriber E2E test scenario
-- CI/CD integration for E2E tests (GitHub Actions)
+- Phase 4 planning and report features backlog
 
 ### Recently Completed
-- ✅ **E2E Tests Fully Green** (Issue #70) — One-Time Visitor full cycle 100% passing - 2026-03-07
+- ✅ **[Phase 3] Tech Debt: unify API path versioning across microservices** (Issue #81) — 2026-07-13
+- ✅ **[Phase 3] Frontend multilingual support documentation and context sync** (Issue #84) — 2026-07-13
+- ✅ **[Phase 3] Frontend: Billing Operator UI (payment processing)** (Issue #76) — 2026-07-13
+- ✅ **[Phase 3] Frontend: Gate Emulation UI (vehicle entry and exit)** (Issue #75) — 2026-07-13
+- ✅ **[Phase 3] Phase status updated to completed** — 2026-07-13
+- ✅ **[Phase 3] Backend / client-service: Subscription CRUD endpoints (create, list, deactivate)** (Issue #83) — 2026-03-30
+- ✅ **[Phase 3] Frontend: Responsive Layout Overhaul — mobile sidebar, adaptive grids, card views** (Issue #82) — 2026-03-30
+- ✅ **[Phase 3] CORS wildcard for dynamic LAN IP** (Issue #79 fix) — 2026-03-09
+- ✅ **[Phase 3] React frontend: project init, auth, base layout** (Issue #74) — 2026-03-08
+- ✅ **[Phase 3] CORS configuration in api-gateway** (Issue #79) — 2026-03-08
+- ✅ **[Phase 3] E2E test: subscriber full parking cycle** (Issue #73) — 2026-03-08
+- ✅ **[Phase 3] Subscription check: real DB logic in client-service** (Issue #72) — 2026-03-08
+- ✅ **[Phase 3] Add default OPERATOR user on application startup** (Issue #80) — 2026-03-08
+- ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
+
+## [Issue #81] - 2026-07-13
+
+### Changed — Tech Debt: unify API path versioning across microservices (Issue #81)
+
+**Problem:** API path versioning was inconsistent (`/api/v1/gate/*`, `/api/v1/billing/*` vs
+unversioned routes in other services), which increased maintenance overhead in RBAC,
+OpenAPI contracts, frontend clients, tests, and docs.
+
+#### `GateControlProxyController.java` / `BillingProxyController.java` (api-gateway)
+- Proxy mappings migrated to unified non-versioned paths: `/api/gate/*` and `/api/billing/*`
+
+#### `SecurityFilter.java` (api-gateway)
+- RBAC route rules updated to match unified gate/billing paths without `/v1`
+
+#### `openapi.yaml` (gate-control-service, billing-service)
+- Endpoint paths normalized to non-versioned gateway contract
+
+#### Frontend + tests + docs
+- Frontend API clients, E2E/integration tests, scripts, and API docs aligned to unified paths
+
+## [Issue #84] - 2026-07-13
+
+### Added — Frontend multilingual support documentation and context sync (Issue #84)
+
+**Problem:** multilingual support (EN/DE/UA/RU) existed in frontend code, but AI context docs
+and project documentation were not fully synchronized with the implemented i18n architecture.
+
+#### `.github/copilot-instructions.md` / `CLAUDE.md`
+- Added i18n architecture notes and maintenance context for EN/DE/UA/RU support
+
+#### `README.md` / `README_RU.md` / `frontend/README.md`
+- Updated language-support documentation and translation workflow references
+
+#### `docs/sessions/SESSION_DEVELOPMENT_2026-07-13_EN.md` / `docs/sessions/SESSION_DEVELOPMENT_2026-07-13_RU.md`
+- Added session-level documentation snapshots for multilingual rollout updates
+
+## [Issue #76] - 2026-07-13
+
+### Added — Frontend: Billing Operator UI (payment processing) (Issue #76)
+
+**Problem:** operators had no dedicated UI flow to check ticket payment status and complete
+payments from the frontend.
+
+#### `BillingPage.tsx` (frontend)
+- Implemented ticket status lookup UI and payment submission flow for operator/admin roles
+- Added response-state rendering for paid/unpaid and completed payment status
+
+#### `billing.ts` (frontend API)
+- Added billing endpoints integration for status-by-ticket and payment processing flows
+
+## [Issue #75] - 2026-07-13
+
+### Added — Frontend: Gate Emulation UI (vehicle entry and exit) (Issue #75)
+
+**Problem:** there was no operator UI to emulate gate entry/exit and validate gate-control
+behavior end-to-end from the frontend.
+
+#### `GatePage.tsx` (frontend)
+- Added entry/exit forms for operator flow with API-backed submission
+- Added result rendering for ticket code and gate status outcomes
+
+#### `gate.ts` (frontend API)
+- Added gateway integrations for vehicle entry and exit operations
+
+## [Issue #83] - 2026-03-30
+
+### Added — Backend / client-service: Subscription CRUD endpoints (Issue #83)
+
+**Problem:** subscriptions existed at DB/entity level, but there were no REST endpoints to
+create, list, or deactivate subscriptions for operational use.
+
+#### `SubscriptionController.java` (client-service)
+- Added create/list/deactivate subscription endpoints
+
+#### `SubscriptionService.java` / `SubscriptionRepository.java` / `SubscriptionMapper.java` (client-service)
+- Implemented business logic, repository support, and DTO mapping for subscription lifecycle
+
+#### Tests (client-service)
+- Added/updated unit and controller tests for create, list, and deactivate behavior
+
+## [Issue #82] - 2026-03-30
+
+### Added — Frontend: Responsive Layout Overhaul (Issue #82)
+
+**Problem:** desktop-oriented layout patterns caused poor usability on mobile and small tablets
+(fixed sidebar, dense tables, non-adaptive action rows).
+
+#### `AppLayout.tsx` / `PageHeader.tsx` (frontend)
+- Implemented responsive layout shell and reusable adaptive page header patterns
+
+#### `ReportingPage.tsx`, `BillingPage.tsx`, `ManagementPage.tsx`, `DashboardPage.tsx`, `ClientsPage.tsx`
+- Migrated key screens to adaptive grid/card behavior with improved small-screen usability
+
+## [Issue #74] - 2026-03-08
+
+### Added — React frontend: project init, auth, and base layout (Issue #74)
+
+**Problem:** project lacked frontend foundation for authenticated role-based user flows and
+protected navigation.
+
+#### Frontend foundation (React + TypeScript + Vite)
+- Initialized app scaffold, routing, auth store, and API client integration
+- Implemented login flow, protected routes, and role-based base layout/navigation
+
+
+---
+
+## [0.15.1] - 2026-03-09
+
+### Fixed — CORS wildcard for dynamic LAN IP (Issue #79 fix)
+
+**Problem:** `setAllowedOrigins()` in Spring Security does not support wildcard patterns —
+`http://192.168.*` was silently ignored, so CORS preflight returned 403 whenever the
+machine's DHCP address changed.
+
+#### `SecurityConfiguration.java` (api-gateway)
+- `setAllowedOrigins(origins)` → `setAllowedOriginPatterns(originPatterns)` — native Spring
+  wildcard support (`http://192.168.*` matches any IP + any port in that subnet)
+- Updated `@Value` default to include `http://192.168.*`
+
+#### `CorsFilter.java` (api-gateway)
+- Added `isOriginAllowed(origin)` with prefix-wildcard logic (entries ending with `*`
+  are matched as prefix, e.g. `http://192.168.*` matches `http://192.168.1.42:5173`)
+- Updated `@Value` default to include `http://192.168.*`
+
+#### `application.yml` (api-gateway)
+- Default `cors.allowed-origins` updated: `http://192.168.*` replaces hard-coded IP
+
+#### `docker-compose.yml`
+- `CORS_ALLOWED_ORIGINS` updated: removed `192.168.1.5:5173` / `192.168.1.5:3000`,
+  replaced with single `http://192.168.*` wildcard — no more manual IP updates on DHCP change
+
+
+
+## [0.15.0] - 2026-03-08
+
+### Added — CORS configuration in api-gateway (Issue #79)
+
+#### `CorsFilter.java` (new, api-gateway)
+- Registered at `@Order(0)` — executes before `SecurityFilter` (`@Order(1)`)
+- `ALLOWED_ORIGINS`: `http://localhost:5173` (Vite), `http://localhost:3000` (CRA)
+- Sets headers: `Access-Control-Allow-Origin`, `Allow-Methods`, `Allow-Headers`, `Expose-Headers`, `Max-Age`
+- `allowCredentials` intentionally **omitted** (`false`) — JWT stored in `localStorage`, sent via `Authorization` header; no cookies
+- OPTIONS preflight: returns **HTTP 200 immediately**, does NOT invoke `filterChain.doFilter()` (SecurityFilter bypassed)
+
+#### `SecurityFilter.java` (api-gateway)
+- Added step **0.5**: bypass OPTIONS requests — `filterChain.doFilter()` called without JWT check, CORS headers already set by `CorsFilter`
+
+#### `SecurityConfiguration.java` (api-gateway)
+- Replaced `allowedOriginPatterns("*")` + `allowCredentials(true)` with exact origins `localhost:5173`, `localhost:3000` and `allowCredentials=false`
+- Aligns Spring Security CORS config with `CorsFilter` as single source of truth
+
+#### `CorsFilterTest.java` (new, 4 tests)
+- `preflight_allowedOrigin_returns200WithCorsHeaders` — OPTIONS from `localhost:5173` → 200, correct headers, chain NOT invoked
+- `preflight_port3000_returns200` — OPTIONS from `localhost:3000` → 200, chain NOT invoked
+- `get_allowedOrigin_addsCorsHeadersAndPassesThrough` — GET from allowed origin → headers added, chain invoked
+- `request_unknownOrigin_noCorsHeaders` — unknown origin → no CORS headers
+
+#### Test Results
+```
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0  (CorsFilterTest)
+api-gateway total: 12 tests, 0 failures
+Full project: 177 tests, 0 failures, BUILD SUCCESS
+```
+
+---
+
+## [0.14.0] - 2026-03-08
+
+### Added — E2E test: subscriber full parking cycle (Issue #73)
+
+#### `SubscriberE2ETest.java` (new, e2e-tests)
+- Same structure as `OneTimeVisitorE2ETest` — spins up full stack via `docker-compose-e2e.yml`
+- Pre-condition: `licensePlate=AA1234BB` seeded in `init.sql` with active ANNUAL subscription
+- **Step 1** — `POST /api/v1/gate/entry`: expects `201`, `isSubscriber=true`, `gateStatus=OPENED`, `ticketCode=null`
+- **Step 2** — `POST /api/v1/gate/exit` (no ticketCode): expects `200`, `paymentRequired=false`, `gateStatus=OPENED`
+- **Step 3** — `GET /api/v1/billing/status?parkingEventId=N`: expects `404` (no payment record for subscriber)
+- `waitForServices()` includes additional check for Client Service (`/api/v1/clients/subscriptions/check`)
+- Discovered by surefire pattern `**/*E2ETest.java` — runs sequentially after `OneTimeVisitorE2ETest`
+- No changes to `docker-compose-e2e.yml` — `client-service` and `CLIENT_SERVICE_URL` already configured
+
+#### Run
+```
+mvn test -Pe2e
+```
+
+---
+
+## [0.13.0] - 2026-03-08
+
+### Added — Subscription check: real DB logic in client-service (Issue #72)
+
+#### `Subscription.java` (new, parking-common)
+- JPA entity mapped to existing `subscriptions` table
+- Fields: `id`, `client` (ManyToOne → Client), `startDate`, `endDate`, `type`, `isActive`
+
+#### `SubscriptionRepository.java` (new, client-service)
+- JPQL query `findActiveByLicensePlate(licensePlate, now)`:
+  traverses `vehicles → clients → subscriptions` with `isActive = true AND endDate > :now`
+
+#### `SubscriptionCheckController.java` (client-service)
+- Replaced hardcoded stub (always `false`) with real DB lookup via `SubscriptionRepository`
+- Returns `isAccessGranted=true` + `subscriptionId` when active subscription found
+- Returns `isAccessGranted=false` + `subscriptionId=null` when not found
+- Added `@RequiredArgsConstructor` for constructor injection
+
+#### Tests (new)
+- `SubscriptionRepositoryTest` (`@DataJpaTest`, 3 tests):
+  - `findActiveByLicensePlate_activeSubscription_returnsPresent` — plate AA1234BB → present
+  - `findActiveByLicensePlate_expiredSubscription_returnsEmpty` — expired/inactive → empty
+  - `findActiveByLicensePlate_unknownPlate_returnsEmpty` — unknown plate → empty
+- `SubscriptionCheckControllerTest` (MockMvc, 2 tests):
+  - `checkSubscription_activeSubscription_returnsAccessGranted` — mock returns subscription → 200 + `isAccessGranted=true`
+  - `checkSubscription_noSubscription_returnsAccessDenied` — mock returns empty → 200 + `isAccessGranted=false`
+
+#### Test Results
+```
+Tests run: 5 new (3 repo + 2 controller), Failures: 0
+client-service total: 31 tests, 0 failures
+Full project: 173 tests, 0 failures, BUILD SUCCESS
+```
+
+---
+
+## [0.12.0] - 2026-03-08
+
+### Added — Default OPERATOR user on startup (Issue #80)
+
+#### `UserSecurityService.java` (api-gateway)
+- Refactored `initializeDefaultUsers()`: replaced `countActiveUsers() == 0` check with
+  per-user `existsByUsername()` guards — each user is created independently and idempotently
+- Added `createDefaultOperatorUser()`:
+  - `username=operator`, `password=ParkingOperator2025!` (BCrypt-hashed)
+  - `role=OPERATOR`, `forcePasswordChange=true`, `enabled=true`
+  - Logs a WARNING with the temporary password on first creation
+
+#### `UserSecurityServiceDefaultUsersTest.java` (new)
+- `createsBothUsersWhenDbIsEmpty` — verifies both admin + operator saved with correct roles and BCrypt hashes
+- `doesNotCreateDuplicatesWhenUsersExist` — verifies `save()` is never called when both users exist
+- `createsOnlyOperatorWhenAdminExists` — verifies partial creation is independent
+
+#### Test Results
+```
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0  (UserSecurityServiceDefaultUsersTest)
+Total project: 168 tests, 0 failures, BUILD SUCCESS
+```
+
+---
+
+## [0.11.0] - 2026-03-08
+
+### Added — RBAC: Role-Based Route Protection in SecurityFilter (Issue #78)
+
+#### `SecurityFilter.java` (api-gateway)
+- Added `ROUTE_ROLES` static map defining allowed roles per `METHOD:/path-prefix` rule:
+  - `POST|PUT|DELETE /api/v1/gate/**` → `{OPERATOR, ADMIN}`
+  - `POST|PUT|DELETE /api/v1/billing/**` → `{OPERATOR, ADMIN}`
+  - `GET|POST|PUT|DELETE /api/clients/**` → `{ADMIN, MANAGER, OPERATOR}`
+  - `POST|PUT|DELETE /api/management/**` → `{ADMIN, MANAGER}`
+  - `GET|POST|PUT|DELETE /api/reporting/**` → `{ADMIN, MANAGER, OPERATOR}`
+- Added **step 4.5** in `doFilterInternal` — RBAC check after JWT validation; returns **HTTP 403** with JSON body `{"error":"Forbidden","message":"Access denied: insufficient role for this operation"}` on role mismatch
+- Added `isRoleAllowed(method, path, roleStr)` — package-private for unit-testing; first-match-wins prefix scan against `ROUTE_ROLES`
+- **Fixed bug**: `validateJwtToken()` was reading wrong JWT claim names (`user_id` → `userId`, `roles` → `role`); request attribute renamed from `roles` to `role` accordingly
+- Backward-compatible: public paths, Docker-bypass (whitelisted/internal IPs), and E2E profile (`SPRING_AUTOCONFIGURE_EXCLUDE`) are **not affected**
+
+#### `SecurityFilterRbacTest.java` (new)
+- `operatorDeniedOnManagementWriteRoute()` — pure unit test: `isRoleAllowed("POST", "/api/management/…", "OPERATOR")` → `false`
+- `adminAllowedOnAllProtectedRoutes()` — pure unit test: ADMIN passes all 6 protected route patterns
+- `operatorGets403OnManagementWrite()` — full HTTP pipeline: mocked JWT returning role=OPERATOR → filter returns 403
+- `adminPassesManagementWrite()` — full HTTP pipeline: mocked JWT returning role=ADMIN → filter chain invoked → 200
+
+#### Test Results
+```
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0  (SecurityFilterRbacTest)
+Total project: 165 tests, 0 failures, BUILD SUCCESS
+```
 - ✅ Bug Fix: `BillingController.getPaymentStatus` — restored 404 for unknown events - 2026-03-07
 - ✅ Bug Fix: `JacksonConfig` — removed `Jackson2ObjectMapperBuilder` dependency (broke `@DataJpaTest`) - 2026-03-07
 - ✅ Bug Fix: `PaymentStatusResponse.remainingFee` — restored `BigDecimal` type - 2026-03-07
@@ -663,8 +952,6 @@ Full project unit tests: **161 tests, 0 failures, BUILD SUCCESS**
   - OpenTelemetry integration
 - **Docker:**
   - docker-compose.yml for all services
-  - docker-compose.infrastructure.yml for infrastructure
-  - docker-compose.services.yml for microservices
   - docker-compose.observability.yml for monitoring
 - **Security:**
   - BCrypt password hashing

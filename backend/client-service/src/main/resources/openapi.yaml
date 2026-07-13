@@ -18,6 +18,12 @@ tags:
   - name: Vehicle
     description: Operations with vehicles
     x-interface-name: VehicleApi
+  - name: Subscription
+    description: Subscription check operations for gate access control
+    x-interface-name: SubscriptionApi
+  - name: SubscriptionManagement
+    description: Manage client subscriptions — create, list, deactivate
+    x-interface-name: SubscriptionManagementApi
 
 paths:
   # =================================================================
@@ -322,6 +328,150 @@ paths:
                 items:
                   $ref: '#/components/schemas/VehicleResponse'
 
+  # =================================================================
+  # SUBSCRIPTION MANAGEMENT  (create / list / deactivate)
+  # =================================================================
+  /api/clients/{clientId}/subscriptions:
+    post:
+      tags:
+        - SubscriptionManagement
+      summary: Create a subscription for a client
+      operationId: createSubscription
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+            examples:
+              monthly:
+                summary: Monthly subscription
+                value:
+                  type: MONTHLY
+                  startDate: "2026-04-01T00:00:00Z"
+                  endDate:   "2026-05-01T00:00:00Z"
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Active subscription of this type already exists for the client
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags:
+        - SubscriptionManagement
+      summary: List all subscriptions for a client
+      operationId: getSubscriptionsByClient
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: List of subscriptions (may be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/clients/subscriptions/{id}:
+    delete:
+      tags:
+        - SubscriptionManagement
+      summary: Deactivate a subscription (soft delete — sets isActive=false)
+      operationId: deactivateSubscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Subscription deactivated
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # =================================================================
+  # SUBSCRIPTIONS (check — used by gate-control-service)
+  # =================================================================
+  /api/clients/subscriptions/check:
+    get:
+      tags:
+        - Subscription
+      summary: Check if a vehicle has an active subscription
+      description: |
+        Used by Gate Control Service to decide whether to open the gate
+        without issuing a ticket. Returns isAccessGranted=true only when
+        an active (isActive=true, endDate > now) subscription is found
+        for the given license plate via vehicles → clients → subscriptions.
+      operationId: checkSubscription
+      parameters:
+        - name: licensePlate
+          in: query
+          required: true
+          description: Vehicle license plate to look up
+          schema:
+            type: string
+            example: AA1234BB
+      responses:
+        '200':
+          description: Subscription check result (always 200, see isAccessGranted)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionCheckResponse'
+              examples:
+                active:
+                  summary: Active subscription found
+                  value:
+                    isAccessGranted: true
+                    licensePlate: AA1234BB
+                    subscriptionId: 1
+                    message: Active subscription found
+                notFound:
+                  summary: No active subscription
+                  value:
+                    isAccessGranted: false
+                    licensePlate: ZZ0000ZZ
+                    subscriptionId: null
+                    message: No active subscription found
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   schemas:
     # --- Schemas for Client (DTO) ---
@@ -436,6 +586,97 @@ components:
         message:
           type: string
           example: Client with ID 123 not found.
+
+    # --- Schemas for Subscription Management ---
+    SubscriptionRequest:
+      type: object
+      required:
+        - type
+        - startDate
+        - endDate
+      properties:
+        type:
+          type: string
+          enum: [MONTHLY, QUARTERLY, ANNUAL, CUSTOM]
+          description: Subscription plan type
+          example: MONTHLY
+        startDate:
+          type: string
+          format: date-time
+          description: Subscription start (inclusive)
+          example: "2026-04-01T00:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          description: Subscription end (exclusive) — must be after startDate
+          example: "2026-05-01T00:00:00Z"
+        parkingSpaceId:
+          type: integer
+          format: int64
+          description: Optional — reserve a specific parking space for the subscription period
+          example: 7
+
+    SubscriptionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 5
+        clientId:
+          type: integer
+          format: int64
+          example: 12
+        type:
+          type: string
+          example: MONTHLY
+        startDate:
+          type: string
+          format: date-time
+          example: "2026-04-01T00:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          example: "2026-05-01T00:00:00Z"
+        isActive:
+          type: boolean
+          example: true
+        parkingSpaceId:
+          type: integer
+          format: int64
+          description: Reserved parking space ID (absent if none)
+          example: 7
+        spaceNumber:
+          type: string
+          description: Reserved parking space number (e.g. A-01)
+          example: "A-01"
+
+    # --- Schema for Subscription Check ---
+    SubscriptionCheckResponse:
+      type: object
+      properties:
+        isAccessGranted:
+          type: boolean
+          description: true if an active subscription was found for the given license plate
+          example: true
+        licensePlate:
+          type: string
+          description: License plate that was checked
+          example: AA1234BB
+        subscriptionId:
+          type: integer
+          format: int64
+          nullable: true
+          description: ID of the found subscription, null when not found
+          example: 1
+        message:
+          type: string
+          description: Human-readable result message
+          example: Active subscription found
+      required:
+        - isAccessGranted
+        - licensePlate
+        - message
 
   responses:
     NotFoundError:

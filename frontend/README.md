@@ -1,15 +1,116 @@
-# Backend
+# 🖥️ Parking System — React Frontend
 
-This directory contains the Spring Boot microservice code for the parking system.
+React SPA для системы управления парковкой. Часть микросервисного проекта [Parking System](../README.md).
 
-## Structure
+## Tech Stack
 
-TBD - Will be organized as the application develops.
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **React** | 19 | UI framework |
+| **TypeScript** | — | Type safety |
+| **Vite** | — | Build tool + dev proxy |
+| **Tailwind CSS** | 3 | Styling |
+| **Radix UI** | — | shadcn/ui components (Dialog, DropdownMenu, Separator) |
+| **React Router** | 6 | Client-side routing |
+| **TanStack Query** | 5 | Server state management |
+| **Zustand** | 4 | Client state (auth store) |
+| **Axios** | — | HTTP client |
+| **Lucide React** | — | Icons |
 
-## Technologies
+## Project Structure
 
-- Java
-- Spring Boot
-- Spring Data JPA
-- Spring Security
-- Maven/Gradle
+```
+src/
+├── api/              # Axios service clients
+│   ├── auth.ts       # POST /api/auth/login, /refresh, /logout
+│   ├── clients.ts    # /api/clients, /api/vehicles
+│   ├── gate.ts       # /api/gate/entry, /exit, /control
+│   ├── billing.ts    # /api/billing/*
+│   ├── management.ts # /api/management/spots/*
+│   └── reporting.ts  # /api/reporting/*
+├── pages/            # Route pages
+│   ├── LoginPage.tsx
+│   ├── DashboardPage.tsx
+│   ├── GatePage.tsx
+│   ├── ClientsPage.tsx
+│   ├── BillingPage.tsx
+│   ├── ManagementPage.tsx
+│   └── ReportingPage.tsx
+├── components/       # Shared UI components
+├── layouts/          # AppLayout with role-based sidebar
+├── store/            # Zustand stores
+│   └── authStore.ts  # JWT in localStorage, role decoded from token
+│   └── languageContext.tsx # LanguageProvider + useLanguage hook
+├── i18n/
+│   └── translations.ts # EN/DE/UA/RU dictionaries
+└── types/            # TypeScript types
+```
+
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Start dev server (http://localhost:5173)
+npm run dev
+
+# Build for production
+npm run build
+```
+
+> Dev server proxies all `/api/*` requests → `http://localhost:8086` (API Gateway).  
+> Backend must be running: `docker-compose up -d`
+
+## Authentication
+
+JWT stored in `localStorage`. Role decoded from token payload (`atob`).
+
+| Username | Password | Role | Redirect after login |
+|----------|----------|------|----------------------|
+| `admin` | `parking123` | ADMIN | `/clients` |
+| `operator` | `parking123` | OPERATOR | `/gate` |
+| `manager` | `manager123` | MANAGER | `/management` |
+
+## Role-Based Navigation
+
+| Role | Accessible pages |
+|------|-----------------|
+| ADMIN | All pages |
+| OPERATOR | Gate, Billing |
+| MANAGER | Clients, Management, Reporting |
+
+## Internationalization (i18n)
+
+- Supported UI languages: **English (EN)**, **Deutsch (DE)**, **Українська (UA, code `uk`)**, **Русский (RU)**.
+- App-level provider: `LanguageProvider` in `src/store/languageContext.tsx` (mounted in `App.tsx`).
+- Translation dictionaries: `src/i18n/translations.ts`.
+- Selected language is persisted in `localStorage` (`parking-system-language`).
+- Language switchers are available in:
+  - Login page (`src/pages/LoginPage.tsx`)
+  - Sidebar/app layout (`src/layouts/AppLayout.tsx`)
+
+## Vite Proxy Config
+
+```typescript
+// vite.config.ts
+server: {
+  proxy: {
+    '/api': 'http://localhost:8086'
+  }
+}
+```
+
+## Available Scripts
+
+```bash
+npm run dev      # Dev server with HMR
+npm run build    # Production build (tsc + vite build)
+npm run preview  # Preview production build
+npm run lint     # ESLint
+```
+
+## Notes
+
+- `allowedHosts: 'all'` in vite.config.ts allows access from LAN (mobile testing at `http://192.168.1.X:5173`)
+- CORS on API Gateway covers `http://192.168.*` wildcard — no config change needed for DHCP IP changes

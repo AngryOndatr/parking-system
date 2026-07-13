@@ -1,36 +1,34 @@
-﻿# Скрипт для запуска и проверки инфраструктуры Parking System
+﻿# Скрипт для запуска инфраструктуры Parking System
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Parking System Infrastructure Setup" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Переход в директорию, где расположен скрипт (devops)
-Set-Location $PSScriptRoot
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$composeFile = "$projectRoot\docker-compose.yml"
 
 # Шаг 1: Остановка всех контейнеров
-Write-Host "[1/5] Остановка существующих контейнеров..." -ForegroundColor Yellow
-docker-compose -f docker-compose.infrastructure.yml down 2>$null
-docker-compose -f docker-compose.services.yml down 2>$null
+Write-Host "[1/4] Остановка существующих контейнеров..." -ForegroundColor Yellow
+docker-compose -f $composeFile down 2>$null
 Start-Sleep -Seconds 3
 
 # Шаг 2: Очистка сети
-Write-Host "[2/5] Очистка Docker сетей..." -ForegroundColor Yellow
+Write-Host "[2/4] Очистка Docker сетей..." -ForegroundColor Yellow
 docker network prune -f 2>$null
 Start-Sleep -Seconds 2
 
 # Шаг 3: Запуск инфраструктуры
-Write-Host "[3/5] Запуск инфраструктуры (PostgreSQL, Redis, Eureka, Observability)..." -ForegroundColor Yellow
-docker-compose -f docker-compose.infrastructure.yml up -d
+Write-Host "[3/4] Запуск инфраструктуры (PostgreSQL, Redis, Eureka, Observability)..." -ForegroundColor Yellow
+docker-compose -f $composeFile up -d postgres redis eureka-server pgadmin prometheus grafana jaeger otel-collector
 
 # Ожидание запуска
-Write-Host "[4/5] Ожидание запуска контейнеров (30 секунд)..." -ForegroundColor Yellow
+Write-Host "[4/4] Ожидание запуска контейнеров (30 секунд)..." -ForegroundColor Yellow
 Start-Sleep -Seconds 30
 
-# Шаг 4: Проверка статуса
-Write-Host "[5/5] Проверка статуса контейнеров..." -ForegroundColor Yellow
+# Проверка статуса
 Write-Host ""
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+docker ps --format "table {{.Names}}`t{{.Status}}`t{{.Ports}}"
 Write-Host ""
 
 # Проверка проблемных контейнеров
@@ -65,17 +63,16 @@ Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Доступные сервисы:" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "PostgreSQL:       http://localhost:5432" -ForegroundColor White
+Write-Host "PostgreSQL:       localhost:5433" -ForegroundColor White
 Write-Host "pgAdmin:          http://localhost:5050" -ForegroundColor White
-Write-Host "Redis:            http://localhost:6379" -ForegroundColor White
+Write-Host "Redis:            localhost:6379" -ForegroundColor White
 Write-Host "Eureka:           http://localhost:8761" -ForegroundColor White
 Write-Host "Prometheus:       http://localhost:9090" -ForegroundColor White
-Write-Host "Grafana:          http://localhost:3000 (admin/admin123)" -ForegroundColor White
+Write-Host "Grafana:          http://localhost:3000 (admin/admin)" -ForegroundColor White
 Write-Host "Jaeger UI:        http://localhost:16686" -ForegroundColor White
 Write-Host "OTEL Collector:   http://localhost:4317 (gRPC)" -ForegroundColor White
 Write-Host "                  http://localhost:4318 (HTTP)" -ForegroundColor White
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Для запуска сервисов выполните:" -ForegroundColor Green
-Write-Host "docker-compose -f docker-compose.services.yml up -d" -ForegroundColor Yellow
-
+Write-Host "Для запуска всей системы выполните:" -ForegroundColor Green
+Write-Host "docker-compose -f $composeFile up -d" -ForegroundColor Yellow

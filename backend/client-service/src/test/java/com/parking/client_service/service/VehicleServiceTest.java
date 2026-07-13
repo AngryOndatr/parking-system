@@ -1,5 +1,6 @@
 package com.parking.client_service.service;
 
+import com.parking.client_service.audit.AuditLogger;
 import com.parking.client_service.dto.VehicleRequestDto;
 import com.parking.client_service.exception.ConflictException;
 import com.parking.client_service.exception.ResourceNotFoundException;
@@ -36,6 +37,9 @@ class VehicleServiceTest {
 
     @Mock
     private VehicleMapper vehicleMapper;
+
+    @Mock
+    private AuditLogger auditLogger;
 
     @InjectMocks
     private VehicleService vehicleService;

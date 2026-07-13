@@ -192,7 +192,7 @@ When Testcontainers is running, the API Gateway is available at `http://localhos
 
 ```bash
 # Entry
-POST /api/v1/gate/entry
+POST /api/gate/entry
 {
   "licensePlate": "ABC-1234",
   "entryMethod": "SCAN",
@@ -200,7 +200,7 @@ POST /api/v1/gate/entry
 }
 
 # Exit
-POST /api/v1/gate/exit
+POST /api/gate/exit
 {
   "licensePlate": "ABC-1234",
   "ticketCode": "TKT-...",
@@ -213,10 +213,10 @@ POST /api/v1/gate/exit
 
 ```bash
 # Get status
-GET /api/v1/billing/status?parkingEventId=123
+GET /api/billing/status?parkingEventId=123
 
 # Pay
-POST /api/v1/billing/pay
+POST /api/billing/pay
 {
   "parkingEventId": 123,
   "amount": 100.0,

@@ -151,7 +151,7 @@
 | 2.12 | **WebClient Configuration** | WebClient beans for inter-service communication | Client, Billing, Management, Reporting | ✅ | #47 |
 | 2.13 | **Client Service Integration** | ClientServiceClient for subscription validation | Client Service, WebClient | ✅ | #48 |
 | 2.14 | **Entry Decision Logic** | Service layer for entry decisions with subscriber/visitor paths | Client Service, GateEvent | ✅ | #49 |
-| 2.15 | **Entry REST Endpoint** | POST /api/v1/gate/entry with OpenAPI (5 integration tests) | GateService, WebClient | ✅ | #50 |
+| 2.15 | **Entry REST Endpoint** | POST /api/gate/entry with OpenAPI (5 integration tests) | GateService, WebClient | ✅ | #50 |
 | 2.16 | **Exit Decision Logic** | Service layer for exit decisions | Billing Service | ⏳ | #51 |
 | 2.17 | **POST /exit** | Exit endpoint with OpenAPI | GateService, WebClient | ⏳ | #52 |
 | 2.18 | **E2E Integration Test** | One-Time Visitor Full Cycle Test (Testcontainers) | All Services, Docker | 🔄 | #70 |

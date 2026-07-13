@@ -56,7 +56,7 @@ if ($apiStatus -like "*Up*") {
 } else {
     Write-Host "  ✗ API Gateway не запущен" -ForegroundColor Red
     Write-Host "  Запуск API Gateway..." -ForegroundColor Yellow
-    docker-compose -f docker-compose.services.yml up -d api-gateway
+    docker-compose -f "$PSScriptRoot\..\docker-compose.yml" up -d api-gateway
     Write-Host "  Ожидание (30 секунд)..." -ForegroundColor Gray
     Start-Sleep -Seconds 30
 }

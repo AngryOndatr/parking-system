@@ -206,3 +206,6 @@ logging:
     com.parking: ${LOGGING_LEVEL:INFO}
     org.springframework.security: ${SECURITY_LOGGING_LEVEL:WARN}
     root: WARN
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://192.168.*,null}

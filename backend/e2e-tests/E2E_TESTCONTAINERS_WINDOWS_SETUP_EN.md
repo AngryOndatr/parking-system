@@ -37,8 +37,8 @@ testcontainers.pull.pause.timeout=120s
 
 ### 3. API Gateway Routes
 Updated proxy controllers in API Gateway to use `/api/v1/*` instead of `/api/*` to match service contracts:
-- `GateControlProxyController`: `/api/gate/*` → `/api/v1/gate/*`
-- `BillingProxyController`: `/api/billing/*` → `/api/v1/billing/*` (added calculate, pay, status methods)
+- `GateControlProxyController`: `/api/gate/*` → `/api/gate/*`
+- `BillingProxyController`: `/api/billing/*` → `/api/billing/*` (added calculate, pay, status methods)
 
 ### 4. Docker Compose Dependencies
 Removed circular dependency in `docker-compose-e2e.yml`:
@@ -144,4 +144,3 @@ docker logs <container_id>
 - https://java.testcontainers.org/features/configuration/
 - https://docs.docker.com/engine/api/
 - https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.observability
-

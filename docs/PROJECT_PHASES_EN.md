@@ -179,9 +179,9 @@ Implement complex business logic and service-to-service communication.
   - ✅ Tariff entity implementation
   - ✅ ParkingEvent & Payment entities with repositories
   - ✅ BillingService with fee calculation & payment logic
-  - ✅ POST /api/v1/billing/calculate endpoint
-  - ✅ POST /api/v1/billing/pay endpoint
-  - ✅ GET /api/v1/billing/status endpoint
+  - ✅ POST /api/billing/calculate endpoint
+  - ✅ POST /api/billing/pay endpoint
+  - ✅ GET /api/billing/status endpoint
 - 🔄 **Gate Control Service In Progress (57%):**
   - ✅ GateEvent entity with EventType (ENTRY, EXIT, MANUAL_OPEN, ERROR) and Decision (OPEN, DENY) enums
   - ✅ GateEventRepository with license plate and timestamp queries
@@ -194,8 +194,8 @@ Implement complex business logic and service-to-service communication.
 
 ### Next Steps
 - ⏳ Implement exit decision logic with billing integration (Issue #50)
-- ⏳ Create REST endpoint POST /api/v1/gate/entry (Issue #51)
-- ⏳ Create REST endpoint POST /api/v1/gate/exit (Issue #52)
+- ⏳ Create REST endpoint POST /api/gate/entry (Issue #51)
+- ⏳ Create REST endpoint POST /api/gate/exit (Issue #52)
 - ⏳ Integration tests for Gate Control Service
 
 ---
@@ -381,4 +381,3 @@ This document is updated:
 ---
 
 **[← Back to README](../README.md)** | **[Kanban Board →](https://github.com/your-repo/parking-system/projects/1)**
-

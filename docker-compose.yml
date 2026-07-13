@@ -164,6 +164,8 @@ services:
       SPRING_APPLICATION_NAME: api-gateway
       # JWT Configuration - Master key used by all services
       JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
+      # CORS - wildcard covers any LAN IP (dynamic DHCP), no need to update on IP change
+      CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:3000,http://192.168.*,null"
       # OpenTelemetry configuration
       MANAGEMENT_TRACING_ENABLED: "true"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
@@ -226,12 +228,16 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://parking_db:5432/parking_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_FLYWAY_ENABLED: "false"  # Schema managed by api-gateway Flyway
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
       SPRING_APPLICATION_NAME: gate-control-service
       CLIENT_SERVICE_URL: http://client-service:8081
+      BILLING_SERVICE_URL: http://billing-service:8080
       # JWT Configuration - MUST match api-gateway
       JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
+      # Disable default Spring Security (protected by api-gateway)
+      SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration,org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration"
       # OpenTelemetry configuration
       MANAGEMENT_TRACING_ENABLED: "true"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
@@ -265,6 +271,8 @@ services:
       SPRING_APPLICATION_NAME: billing-service
       # JWT Configuration - MUST match api-gateway
       JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
+      # Disable default Spring Security (protected by api-gateway)
+      SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration"
       # OpenTelemetry configuration
       MANAGEMENT_TRACING_ENABLED: "true"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
@@ -299,6 +307,8 @@ services:
       SERVER_PORT: 8083
       # JWT Configuration - MUST match api-gateway
       JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
+      # Disable default Spring Security (protected by api-gateway)
+      SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration"
       # OpenTelemetry configuration
       MANAGEMENT_TRACING_ENABLED: "true"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces
@@ -332,6 +342,8 @@ services:
       SPRING_APPLICATION_NAME: reporting-service
       # JWT Configuration - MUST match api-gateway
       JWT_SECRET: ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction
+      # Disable default Spring Security (protected by api-gateway)
+      SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration"
       # OpenTelemetry configuration
       MANAGEMENT_TRACING_ENABLED: "true"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://parking_otel_collector:4318/v1/traces

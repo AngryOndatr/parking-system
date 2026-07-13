@@ -418,7 +418,7 @@ Parking fee calculation and payment processing. Integrates with parking events, 
 ### Endpoints
 
 
-### POST /api/v1/billing/calculate
+### POST /api/billing/calculate
 
 Calculate parking fee for a parking event.
 
@@ -495,7 +495,7 @@ Response:
 
 ---
 
-### POST /api/v1/billing/pay
+### POST /api/billing/pay
 
 Process payment for a parking event.
 
@@ -570,7 +570,7 @@ Response:
 
 ---
 
-### GET /api/v1/billing/status
+### GET /api/billing/status
 
 Get payment status for a parking event.
 
@@ -583,7 +583,7 @@ Get payment status for a parking event.
 **Example Request:**
 
 ```
-GET /api/v1/billing/status?parkingEventId=12345
+GET /api/billing/status?parkingEventId=12345
 ```
 
 **Success Response (200 OK) - Paid:**
@@ -649,5 +649,4 @@ GET /api/v1/billing/status?parkingEventId=12345
 - **500 Internal Server Error:** Server error
 
 ---
-
 

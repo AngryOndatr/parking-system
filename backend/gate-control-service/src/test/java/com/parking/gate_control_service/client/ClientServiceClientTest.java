@@ -1,6 +1,8 @@
 package com.parking.gate_control_service.client;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.parking.gate_control_service.dto.SubscriptionCheckResponse;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -9,6 +11,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
@@ -30,13 +35,26 @@ class ClientServiceClientTest {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
 
+        // Configure ObjectMapper with JsonNullable support
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new Jdk8Module());
+        objectMapper.registerModule(new org.openapitools.jackson.nullable.JsonNullableModule());
+
+        // Configure WebClient with custom Jackson codec
+        ExchangeStrategies strategies = ExchangeStrategies.builder()
+                .codecs(configurer -> {
+                    configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+                    configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
+                })
+                .build();
+
         String baseUrl = mockWebServer.url("/").toString();
         WebClient webClient = WebClient.builder()
                 .baseUrl(baseUrl)
+                .exchangeStrategies(strategies)
                 .build();
 
         clientServiceClient = new ClientServiceClient(webClient);
-        objectMapper = new ObjectMapper();
     }
 
     @AfterEach
@@ -71,7 +89,7 @@ class ClientServiceClientTest {
 
         // Verify request
         RecordedRequest request = mockWebServer.takeRequest();
-        assertThat(request.getPath()).contains("/api/v1/clients/subscriptions/check");
+        assertThat(request.getPath()).contains("/api/clients/subscriptions/check");
         assertThat(request.getPath()).contains("licensePlate=" + licensePlate);
     }
 
@@ -96,7 +114,7 @@ class ClientServiceClientTest {
 
         // Verify request was made
         RecordedRequest request = mockWebServer.takeRequest();
-        assertThat(request.getPath()).contains("/api/v1/clients/subscriptions/check");
+        assertThat(request.getPath()).contains("/api/clients/subscriptions/check");
         assertThat(request.getPath()).contains("licensePlate=" + licensePlate);
     }
 
@@ -128,7 +146,7 @@ class ClientServiceClientTest {
 
     @Test
     @DisplayName("Check subscription - Server error returns access denied")
-    void checkSubscription_ServerError_ReturnsAccessDenied() throws Exception {
+    void checkSubscription_ServerError_ReturnsAccessDenied() {
         // Arrange
         String licensePlate = "GHI789";
         mockWebServer.enqueue(new MockResponse()
@@ -162,3 +180,4 @@ class ClientServiceClientTest {
         assertThat(response.getIsAccessGranted()).isFalse();
     }
 }
+

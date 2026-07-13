@@ -14,4 +14,5 @@ import java.math.BigDecimal;
 public class PaymentStatusResponse {
     private Boolean isPaid;
     private BigDecimal remainingFee;
+    private Long parkingEventId;
 }

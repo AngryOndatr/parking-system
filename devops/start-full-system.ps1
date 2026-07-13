@@ -5,7 +5,8 @@ Write-Host "  Parking System Full Startup" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-Set-Location $PSScriptRoot
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$composeFile = "$projectRoot\docker-compose.yml"
 
 # Запуск инфраструктуры
 Write-Host "[1/3] Запуск инфраструктуры..." -ForegroundColor Yellow
@@ -17,7 +18,7 @@ Start-Sleep -Seconds 15
 
 # Запуск сервисов
 Write-Host "[3/3] Запуск микросервисов (API Gateway, Client Service)..." -ForegroundColor Yellow
-docker-compose -f docker-compose.services.yml up -d
+docker-compose -f $composeFile up -d
 
 Write-Host ""
 Write-Host "Ожидание запуска сервисов (30 секунд)..." -ForegroundColor Yellow
@@ -87,7 +88,7 @@ Write-Host "Просмотр логов Client Service:" -ForegroundColor White
 Write-Host "  docker logs client-service -f" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Перезапуск сервисов:" -ForegroundColor White
-Write-Host "  docker-compose -f docker-compose.services.yml restart" -ForegroundColor Gray
+Write-Host "  docker-compose -f $composeFile restart" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Остановка всей системы:" -ForegroundColor White
 Write-Host "  .\stop-system.ps1" -ForegroundColor Gray

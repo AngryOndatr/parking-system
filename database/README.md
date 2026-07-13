@@ -17,19 +17,16 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 | V2 | `V2__add_parking_lots.sql` | Parking facilities management | parking_lots | ✅ |
 | V3 | `V3__add_parking_spaces.sql` | Individual parking spaces | parking_spaces | ✅ |
 | V4 | `V4__add_bookings.sql` | Reservation system | bookings | ✅ |
-| V5 | `V5__insert_test_parking_data.sql` | Test data for development | N/A (inserts) | ✅ |
+| V5 | `V5__insert_test_parking_data.sql` | Test data for development (incl. subscriber AA1234BB) | N/A (inserts) | ✅ |
 | V6 | `V6__extend_logs_table.sql` | Extend logs table | logs (service, meta columns) | ✅ |
 | V7 | `V7__create_tariffs_table.sql` | Tariffs and pricing | tariffs | ✅ |
 | V8 | `V8__extend_parking_events_and_payments.sql` | Extend parking events and payments | parking_events, payments (extended) | ✅ |
+| V9 | `V9__create_gate_events_table.sql` | Gate hardware event log | gate_events | ✅ |
 
-**Latest Migration (V8 - 2026-01-16):**
-- Extended `parking_events` table: added license_plate, entry_method, exit_method, is_subscriber, created_at
-- Extended `payments` table: added status, transaction_id, operator_id, created_at
-- Added CHECK constraints for entry/exit methods, payment methods, and status values
-- Added indexes for performance: ticket_code, entry_time, license_plate, transaction_id
-- Added FK constraints with proper ON DELETE behavior
-- Added UNIQUE constraint: only one COMPLETED payment per parking_event_id
-- Required for Phase 2 / Issue #25
+**Latest Migration (V9 - 2026-02-14):**
+- Added `gate_events` table for logging physical gate hardware events
+- Tracks: gate_id, action (OPEN/CLOSE), result (SUCCESS/FAILURE), timestamp, operator_id
+- Required for Phase 2 / Issue #52 (manual gate control audit trail)
 
 **Note:** V1 already includes comprehensive user security features (2FA, brute-force protection, soft delete, etc.). The legacy file `users_security_migration.sql` was removed as duplicate (2026-01-16).
 
@@ -55,7 +52,7 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 - 2 RESERVED
 - 2 MAINTENANCE/OUT_OF_SERVICE
 
-### Total Tables: 14
+### Total Tables: 15
 
 **Core Tables:**
 - `users` - User authentication and security (38 fields)
@@ -67,10 +64,12 @@ The Parking System uses PostgreSQL database with Flyway for version-controlled s
 - `payments` - Payment transactions
 - `logs` - System audit logs
 
-**New Tables (via Flyway):**
+**Infrastructure Tables (via Flyway):**
 - `parking_lots` - Parking facilities
 - `parking_spaces` - Individual spaces
 - `bookings` - Space reservations
+- `tariffs` - Pricing rules (ONE_TIME, DAILY, NIGHT, VIP)
+- `gate_events` - Gate hardware event log
 
 ---
 

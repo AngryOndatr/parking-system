@@ -6,6 +6,7 @@ import com.parking.billing.exception.InsufficientPaymentException;
 import com.parking.billing.exception.ParkingEventNotFoundException;
 import com.parking.billing.exception.TariffNotFoundException;
 import com.parking.billing.exception.TicketAlreadyPaidException;
+import com.parking.billing.audit.AuditLogger;
 import com.parking.billing.repository.ParkingEventRepository;
 import com.parking.billing.repository.PaymentRepository;
 import com.parking.billing_service.repository.TariffRepository;
@@ -43,6 +44,9 @@ class BillingServiceTest {
 
     @Mock
     private PaymentRepository paymentRepository;
+
+    @Mock
+    private AuditLogger auditLogger;
 
     @InjectMocks
     private BillingService billingService;

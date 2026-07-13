@@ -70,3 +70,7 @@ springdoc:
     version: 1.0.0
     description: API to manage clients and vehicles
 
+# Reporting / Audit trail
+reporting:
+  service:
+    url: ${REPORTING_SERVICE_URL:http://reporting-service:8084}

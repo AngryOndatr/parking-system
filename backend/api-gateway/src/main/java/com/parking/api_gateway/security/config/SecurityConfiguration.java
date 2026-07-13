@@ -1,6 +1,7 @@
 package com.parking.api_gateway.security.config;
 
 import com.parking.api_gateway.security.filter.SecurityFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -36,6 +37,9 @@ import java.util.List;
 public class SecurityConfiguration {
     
     private final SecurityFilter securityFilter;
+
+    @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://192.168.*,null}")
+    private String corsAllowedOrigins;
 
     /**
      * Configure Security Filter Chain
@@ -110,25 +114,32 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Configure CORS settings
+     * Configure CORS settings.
+     * Mirrors CorsFilter.java — specific origins, no credentials (JWT via Authorization header).
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow null origin for file:// protocol testing (local HTML files)
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedOrigins(List.of("null")); // Explicitly allow null origin
+        List<String> originPatterns = Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+
+        // setAllowedOriginPatterns supports wildcards like "http://192.168.*"
+        // whereas setAllowedOrigins does not
+        configuration.setAllowedOriginPatterns(originPatterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setExposedHeaders(List.of("Authorization"));
+        // false: JWT is stored in localStorage and sent via Authorization header — no cookies
+        configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
-        log.info("✓ CORS configuration created (allowing null origin for file:// testing)");
+        log.info("✓ CORS configuration: originPatterns={}, allowCredentials=false", originPatterns);
         return source;
     }
 
@@ -145,4 +156,3 @@ public class SecurityConfiguration {
         }
     }
 }
-

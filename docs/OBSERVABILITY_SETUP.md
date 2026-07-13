@@ -51,16 +51,16 @@ cd C:\Users\user\Projects\parking-system\devops
 ### Ручной запуск
 
 ```powershell
-cd C:\Users\user\Projects\parking-system\devops
+cd C:\Users\user\Projects\parking-system
 
 # Запуск инфраструктуры с observability
-docker-compose -f docker-compose.infrastructure.yml up -d
+docker-compose -f docker-compose.yml up -d postgres redis eureka-server pgadmin prometheus grafana jaeger otel-collector
 
 # Проверка статуса
-docker-compose -f docker-compose.infrastructure.yml ps
+docker-compose -f docker-compose.yml ps
 
 # Запуск сервисов (они автоматически подключатся к OTEL Collector)
-docker-compose -f docker-compose.services.yml up -d
+docker-compose -f docker-compose.yml up -d
 ```
 
 ## 🔧 Конфигурация сервисов
@@ -197,13 +197,13 @@ docker logs parking_otel_collector
 3. **`address already in use` для порта 8889**
    ```powershell
    # Остановите все контейнеры
-   docker-compose -f docker-compose.infrastructure.yml down
+   docker-compose -f ..\docker-compose.yml down
    
    # Проверьте, что порт свободен
    netstat -ano | Select-String "8889"
    
    # Запустите заново
-   docker-compose -f docker-compose.infrastructure.yml up -d
+   docker-compose -f ..\docker-compose.yml up -d
    ```
 
 4. **`grpc: addrConn.createTransport failed` для Jaeger**
@@ -229,19 +229,19 @@ docker exec parking_prometheus wget -O- http://api-gateway:8080/actuator/prometh
 
 ```powershell
 # Просмотр всех контейнеров observability
-docker ps --filter "name=parking_" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+docker ps --filter "name=parking_" --format "table {{.Names}}`t{{.Status}}`t{{.Ports}}"
 
-# Логи всех observability сервисов
-docker-compose -f docker-compose.infrastructure.yml logs -f prometheus grafana jaeger otel-collector
+# Логи observability сервисов
+docker-compose -f ..\docker-compose.yml logs -f prometheus grafana jaeger otel-collector
 
 # Перезапуск observability stack
-docker-compose -f docker-compose.infrastructure.yml restart prometheus grafana jaeger otel-collector
+docker-compose -f ..\docker-compose.yml restart prometheus grafana jaeger otel-collector
 
 # Остановка observability (но не БД и Redis)
 docker stop parking_prometheus parking_grafana parking_jaeger parking_otel_collector parking_pgadmin
 
 # Очистка volumes (ВНИМАНИЕ: удаляет все данные!)
-docker-compose -f docker-compose.infrastructure.yml down -v
+docker-compose -f ..\docker-compose.yml down -v
 ```
 
 ## 🎓 Best Practices

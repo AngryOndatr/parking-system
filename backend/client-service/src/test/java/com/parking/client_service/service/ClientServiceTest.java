@@ -1,9 +1,11 @@
 package com.parking.client_service.service;
 
+import com.parking.client_service.audit.AuditLogger;
 import com.parking.client_service.dto.ClientRequestDto;
 import com.parking.client_service.generated.model.ClientResponse;
 import com.parking.client_service.mapper.ClientMapper;
 import com.parking.client_service.repository.ClientRepository;
+import com.parking.client_service.repository.VehicleRepository;
 import com.parking.common.entity.Client;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +27,13 @@ public class ClientServiceTest {
     private ClientRepository clientRepository;
 
     @Mock
+    private VehicleRepository vehicleRepository;
+
+    @Mock
     private ClientMapper clientMapper;
+
+    @Mock
+    private AuditLogger auditLogger;
 
     @InjectMocks
     private ClientService clientService;
@@ -90,4 +98,3 @@ public class ClientServiceTest {
         assertThat(maybe.get().getId()).isEqualTo(2L);
     }
 }
-

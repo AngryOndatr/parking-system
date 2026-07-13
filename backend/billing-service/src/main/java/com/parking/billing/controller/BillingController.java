@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -130,6 +131,14 @@ public class BillingController implements BillingApi {
         log.info("Received payment status request for parking event: {}", parkingEventId);
 
         try {
+            // Verify that a billing record (ParkingEvent) actually exists for this ID.
+            // Gate-control-service uses its own gate_events table with independent IDs,
+            // so subscriber events will never have a matching parking_events row → 404.
+            if (!parkingEventRepository.existsById(parkingEventId)) {
+                log.warn("No billing record found for parkingEventId={}", parkingEventId);
+                throw new ParkingEventNotFoundException("No billing record for parking event: " + parkingEventId);
+            }
+
             boolean isPaid = billingService.isEventPaid(parkingEventId);
             BigDecimal remainingFee = billingService.getRemainingFee(parkingEventId);
 
@@ -160,7 +169,7 @@ public class BillingController implements BillingApi {
      * @param ticketCode the ticket code
      * @return payment status response
      */
-    @org.springframework.web.bind.annotation.GetMapping("/api/v1/billing/status-by-ticket")
+    @org.springframework.web.bind.annotation.GetMapping("/api/billing/status-by-ticket")
     public ResponseEntity<PaymentStatusResponse> getPaymentStatusByTicket(
             @org.springframework.web.bind.annotation.RequestParam String ticketCode) {
         log.info("Received payment status request for ticket: {}", ticketCode);
@@ -185,12 +194,21 @@ public class BillingController implements BillingApi {
             return ResponseEntity.ok(response);
 
         } catch (ParkingEventNotFoundException e) {
-            log.warn("Parking event not found for ticket {}, returning unpaid status", ticketCode);
-            // Return unpaid status for unknown tickets
-            PaymentStatusResponse response = new PaymentStatusResponse();
-            response.setParkingEventId(0L); // Dummy ID
-            response.setIsPaid(false);
-            response.setRemainingFee(org.openapitools.jackson.nullable.JsonNullable.of(0.0));
+            log.warn("Parking event not found for ticket {}, creating a new ParkingEvent", ticketCode);
+            // Create a ParkingEvent so the client can proceed to payment
+            ParkingEvent newEvent = new ParkingEvent();
+            newEvent.setTicketCode(ticketCode);
+            newEvent.setLicensePlate("UNKNOWN");
+            newEvent.setEntryTime(LocalDateTime.now().minusHours(1)); // fallback: 1 hour ago
+            newEvent.setExitTime(LocalDateTime.now());               // lock fee calculation time
+            newEvent.setIsSubscriber(false);
+            newEvent.setEntryMethod(ParkingEvent.EntryMethod.SCAN);
+            ParkingEvent saved = parkingEventRepository.save(newEvent);
+            log.info("Created ParkingEvent id={} for unknown ticket {}", saved.getId(), ticketCode);
+
+            BigDecimal remainingFee = billingService.getRemainingFee(saved.getId());
+            PaymentStatusResponse response = billingMapper.toPaymentStatusResponse(
+                    saved.getId(), false, remainingFee);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error getting payment status by ticket: {}", e.getMessage(), e);
@@ -206,7 +224,7 @@ public class BillingController implements BillingApi {
      * @param request payment request with ticketCode, licensePlate and amount
      * @return payment response
      */
-    @PostMapping("/api/v1/billing/pay-test")
+    @PostMapping("/api/billing/pay-test")
     public ResponseEntity<PaymentResponse> processTestPayment(@RequestBody Map<String, Object> request) {
         log.info("🧪 TEST ENDPOINT: Received simplified payment request: {}", request);
 
@@ -260,5 +278,45 @@ public class BillingController implements BillingApi {
             throw new RuntimeException("Test payment failed: " + e.getMessage(), e);
         }
     }
-}
 
+    /**
+     * Test endpoint to create a ParkingEvent without payment.
+     * Useful for UI to request tariff calculation without paying.
+     *
+     * @param request contains ticketCode, licensePlate, and optional entryMinutesAgo
+     * @return created parking event details
+     */
+    @PostMapping("/api/billing/test-event")
+    public ResponseEntity<Map<String, Object>> createTestParkingEvent(@RequestBody Map<String, Object> request) {
+        log.info("🧪 TEST ENDPOINT: Preparing parking event: {}", request);
+        try {
+            String ticketCode = (String) request.getOrDefault("ticketCode", "TEST-" + System.currentTimeMillis());
+            String licensePlate = (String) request.getOrDefault("licensePlate", "E2E-TEST");
+            int entryMinutesAgo = request.containsKey("entryMinutesAgo")
+                    ? Math.max(((Number) request.get("entryMinutesAgo")).intValue(), 0)
+                    : 120;
+
+            ParkingEvent parkingEvent = parkingEventRepository.findByTicketCode(ticketCode)
+                    .orElseGet(() -> {
+                        ParkingEvent event = new ParkingEvent();
+                        event.setTicketCode(ticketCode);
+                        event.setLicensePlate(licensePlate);
+                        event.setEntryTime(LocalDateTime.now().minusMinutes(entryMinutesAgo));
+                        event.setIsSubscriber(false);
+                        event.setEntryMethod(ParkingEvent.EntryMethod.SCAN);
+                        return parkingEventRepository.save(event);
+                    });
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("parkingEventId", parkingEvent.getId());
+            response.put("ticketCode", parkingEvent.getTicketCode());
+            response.put("licensePlate", parkingEvent.getLicensePlate());
+            response.put("entryTime", parkingEvent.getEntryTime());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("❌ Error creating test parking event: {}", e.getMessage(), e);
+            throw new RuntimeException("Test parking event creation failed: " + e.getMessage(), e);
+        }
+    }
+}

@@ -1,5 +1,6 @@
 package com.parking.gate_control_service.service;
 
+import com.parking.gate_control_service.audit.AuditLogger;
 import com.parking.gate_control_service.client.BillingServiceClient;
 import com.parking.gate_control_service.client.ClientServiceClient;
 import com.parking.gate_control_service.dto.EntryDecision;
@@ -35,6 +36,9 @@ class GateServiceTest {
 
     @Mock
     private GateEventRepository gateEventRepository;
+
+    @Mock
+    private AuditLogger auditLogger;
 
     @InjectMocks
     private GateService gateService;
@@ -248,3 +252,4 @@ class GateServiceTest {
         assertThat(decision.getMessage()).contains("No valid ticket or subscription");
     }
 }
+

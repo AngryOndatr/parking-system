@@ -1,8 +1,8 @@
 package com.parking.gate_control_service.client;
 
 import com.parking.gate_control_service.dto.PaymentStatusResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -12,9 +12,12 @@ import java.util.Map;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class BillingServiceClient {
     private final WebClient billingServiceWebClient;
+
+    public BillingServiceClient(@Qualifier("billingServiceWebClient") WebClient billingServiceWebClient) {
+        this.billingServiceWebClient = billingServiceWebClient;
+    }
 
     public PaymentStatusResponse checkPaymentStatus(Long parkingEventId) {
         try {
@@ -23,7 +26,7 @@ public class BillingServiceClient {
             // Deserialize to Map first to handle JsonNullable fields
             Map<String, Object> responseMap = billingServiceWebClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/api/v1/billing/status")
+                            .path("/api/billing/status")
                             .queryParam("parkingEventId", parkingEventId)
                             .build())
                     .retrieve()
@@ -84,7 +87,7 @@ public class BillingServiceClient {
             // Deserialize to Map first to handle JsonNullable fields
             Map<String, Object> responseMap = billingServiceWebClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/api/v1/billing/status-by-ticket")
+                            .path("/api/billing/status-by-ticket")
                             .queryParam("ticketCode", ticketCode)
                             .build())
                     .retrieve()
@@ -113,11 +116,20 @@ public class BillingServiceClient {
                 }
             }
 
-            log.info("Parsed payment status for ticket {}: isPaid={}, remainingFee={}", ticketCode, isPaid, remainingFee);
+            Object parkingEventIdObj = responseMap.get("parkingEventId");
+            Long parkingEventId = null;
+            if (parkingEventIdObj instanceof Number) {
+                long id = ((Number) parkingEventIdObj).longValue();
+                parkingEventId = id > 0 ? id : null; // treat 0 as absent
+            }
+
+            log.info("Parsed payment status for ticket {}: isPaid={}, remainingFee={}, parkingEventId={}",
+                    ticketCode, isPaid, remainingFee, parkingEventId);
 
             return PaymentStatusResponse.builder()
                     .isPaid(isPaid)
                     .remainingFee(remainingFee)
+                    .parkingEventId(parkingEventId)
                     .build();
 
         } catch (WebClientResponseException.NotFound e) {

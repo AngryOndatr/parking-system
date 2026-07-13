@@ -37,8 +37,8 @@ testcontainers.pull.pause.timeout=120s
 
 ### 3. API Gateway Routes
 Обновлены прокси-контроллеры в API Gateway для использования `/api/v1/*` вместо `/api/*`:
-- `GateControlProxyController`: `/api/gate/*` → `/api/v1/gate/*`
-- `BillingProxyController`: `/api/billing/*` → `/api/v1/billing/*` (добавлены методы calculate, pay, status)
+- `GateControlProxyController`: `/api/gate/*` → `/api/gate/*`
+- `BillingProxyController`: `/api/billing/*` → `/api/billing/*` (добавлены методы calculate, pay, status)
 
 ### 4. Docker Compose Dependencies
 Удалена циклическая зависимость в `docker-compose-e2e.yml`:
@@ -118,4 +118,3 @@ docker-compose -f docker-compose-e2e.yml down -v
 ## Полезные ссылки
 - https://java.testcontainers.org/on_failure.html
 - https://java.testcontainers.org/features/configuration/
-
