@@ -7,6 +7,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import RoleRedirect from '@/components/RoleRedirect'
 import GatePage from '@/pages/GatePage'
 import ClientsPage from '@/pages/ClientsPage'
+import ClientEditPage from '@/pages/ClientEditPage'
 import ManagementPage from '@/pages/ManagementPage'
 import BillingPage from '@/pages/BillingPage'
 import ReportingPage from '@/pages/ReportingPage'
@@ -66,6 +67,7 @@ export default function App() {
                   }
                 >
                   <Route index element={<ClientsPage />} />
+                  <Route path=":id/edit" element={<ClientEditPage />} />
                 </Route>
 
                 {/* ADMIN + MANAGER */}

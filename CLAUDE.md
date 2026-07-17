@@ -37,7 +37,7 @@ parking-system/
 | client-service       | 8081          | 8081          |
 | gate-control-service | 8080          | 8082          |
 | billing-service      | 8080          | 8083          |
-| reporting-service    | 8080          | 8084          |
+| reporting-service    | 8080          | 8087          |
 | eureka-server        | 8761          | 8761          |
 | PostgreSQL           | 5432          | **5433**      |
 | Redis                | 6379          | 6379          |
@@ -156,7 +156,7 @@ Migration scripts live in `backend/api-gateway/src/main/resources/db/migration/`
 | V8 | `V8__extend_parking_events_and_payments.sql` | license_plate, entry/exit_method, is_subscriber, transaction_id |
 | V9 | `V9__create_gate_events_table.sql` | gate_events table |
 | V10 | `V10__extend_logs_audit_trail.sql` | action, entity_type, entity_id, client_id, license_plate in logs |
-| V11 | `V11__subscription_parking_space.sql` | parking_space_id in subscriptions |
+| V11 | `V11__add_parking_space_to_subscription.sql` | parking_space_id in subscriptions |
 
 > **Next migration:** V12. Always add new scripts to api-gateway; never alter an existing migration file.
 

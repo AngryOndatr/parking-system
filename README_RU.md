@@ -73,7 +73,7 @@
 | **Юнит/интеграционных тестов** | 177+ |
 | **E2E-тестов** | 2 сценария (разовый + абонент) |
 | **API-эндпоинтов** | 20+ (через API Gateway) |
-| **Миграций БД** | 10 (V0–V9) |
+| **Миграций БД** | 12 (V0–V11) |
 | **OpenAPI-спецификации** | 5 сервисов (OpenAPI-first) |
 | **Языков UI** | 4 (EN, DE, UA, RU) |
 
@@ -188,7 +188,7 @@ docker build -t parking-api-gateway:local backend/api-gateway
 - **CORS** — wildcard `http://192.168.*` (DHCP-safe)
 - **Ограничение запросов** — 60 req/min на IP
 - **Защита от брутфорса** — блокировка после 10 неудачных попыток
-- **Flyway** — управляет миграциями БД (V0–V9)
+- **Flyway** — управляет миграциями БД (V0–V11)
 
 ### 2. Client Service (порт 8081)
 OpenAPI-first. Управление клиентами, ТС и подписками.
@@ -290,6 +290,8 @@ OpenAPI-first. Централизованное логирование и ауд
 | V7 | `V7__create_tariffs_table.sql` | Тарифы |
 | V8 | `V8__extend_parking_events_and_payments.sql` | Расширение событий/платежей |
 | V9 | `V9__create_gate_events_table.sql` | Лог событий шлагбаума |
+| V10 | `V10__extend_logs_audit_trail.sql` | Расширенные поля аудита в logs |
+| V11 | `V11__add_parking_space_to_subscription.sql` | `parking_space_id` в subscriptions |
 
 ---
 
@@ -300,7 +302,7 @@ OpenAPI-first. Централизованное логирование и ауд
 | Пользователь | Пароль | Роль | Примечание |
 |-------------|--------|------|-----------|
 | **admin** | `parking123` | ADMIN | Полный доступ |
-| **operator** | `parking123` | OPERATOR | Шлагбаум и биллинг |
+| **operator** | `operator123` | OPERATOR | Шлагбаум и биллинг |
 | **manager** | `manager123` | MANAGER | Отчёты и управление |
 
 **⚠️ Только для разработки.** В продакшене используйте надёжные пароли и переменные окружения.
@@ -317,7 +319,7 @@ OpenAPI-first. Централизованное логирование и ауд
 | `POST/PUT/DELETE /api/billing/*` | OPERATOR, ADMIN |
 | `GET/POST/PUT/DELETE /api/clients/*` | ADMIN, MANAGER, OPERATOR |
 | write ops `/api/management/*` | ADMIN, MANAGER |
-| `GET /api/reporting/*` | ADMIN, MANAGER, OPERATOR |
+| `GET/POST/PUT/DELETE /api/reporting/*` | ADMIN, MANAGER, OPERATOR |
 
 ### Конфигурация JWT
 ```yaml

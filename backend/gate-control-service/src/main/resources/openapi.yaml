@@ -10,9 +10,9 @@ info:
     email: support@parkingsystem.com
 
 servers:
-  - url: http://localhost:8083
+  - url: http://localhost:8080
     description: Gate Control Service Development Server
-  - url: http://gate-control-service:8083
+  - url: http://gate-control-service:8080
     description: Gate Control Service Docker Network
 
 tags:

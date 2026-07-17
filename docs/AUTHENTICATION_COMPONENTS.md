@@ -70,19 +70,19 @@ public Mono<ResponseEntity<AuthResponse>> login(
 - `jti` - уникальный ID токена (UUID)
 - `sub` - username
 - `userId` - ID пользователя
-- `role` - роль пользователя (ADMIN, USER, MANAGER)
+- `role` - роль пользователя (ADMIN, MANAGER, OPERATOR)
 - `email` - email
 - `firstName`, `lastName` - имя и фамилия
 - `ipAddress` - IP адрес клиента
 - `userAgentHash` - хеш User-Agent
 - `tokenType` - "ACCESS"
 
-**Время жизни:** 1 час (3600 секунд)
+**Время жизни:** 30 минут (1800 секунд)
 
 #### `createRefreshToken()`
 Генерирует Refresh Token:
 - Минимальные claims (только userId, username)
-- **Время жизни:** 24 часа (86400 секунд)
+- **Время жизни:** 12 часов (43200 секунд)
 
 #### `validateToken()`
 Проверяет валидность токена:
@@ -116,7 +116,7 @@ public Mono<ResponseEntity<AuthResponse>> login(
 ```java
 private String username;
 private String password; // BCrypt hash
-private Role role; // ADMIN, USER, MANAGER
+private Role role; // ADMIN, MANAGER, OPERATOR
 private Boolean enabled;
 private Boolean accountNonLocked;
 private Integer failedLoginAttempts;
@@ -146,8 +146,8 @@ Optional<UserSecurityEntity> findByEmail(String email);
 security:
   jwt:
     secret: ${JWT_SECRET:ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789}
-    access-token-expiration: 3600  # 1 час
-    refresh-token-expiration: 86400  # 24 часа
+    access-token-expiration: 1800  # 30 минут
+    refresh-token-expiration: 43200  # 12 часов
     issuer: parking-system
 ```
 
@@ -346,4 +346,3 @@ docker logs api-gateway --tail 50
 
 **Создано:** 2025-12-21  
 **Версия API Gateway:** 0.0.1-SNAPSHOT
-

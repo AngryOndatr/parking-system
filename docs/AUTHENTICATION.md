@@ -15,18 +15,18 @@ Password: parking123
 Role: ADMIN
 ```
 
-### 2. Обычный пользователь
+### 2. Оператор
 ```
-Username: user
-Password: user123
-Role: USER
+Username: operator
+Password: operator123
+Role: OPERATOR
 ```
 
-### 3. Менеджер (администратор)
+### 3. Менеджер
 ```
 Username: manager
 Password: manager123
-Role: ADMIN
+Role: MANAGER
 ```
 
 ## Как получить JWT токен
@@ -113,7 +113,7 @@ Write-Host "Access Token: $token"
 
 ## Как использовать JWT токен
 
-### Для прямого доступа к Client Service
+### Для прямого доступа к Client Service (обход Gateway)
 
 **Endpoint:** `GET http://localhost:8081/api/clients`
 
@@ -144,19 +144,19 @@ curl.exe http://localhost:8081/api/clients `
 
 ### Через API Gateway (рекомендуется)
 
-**Endpoint:** `GET http://localhost:8086/client-service/api/clients`
+**Endpoint:** `GET http://localhost:8086/api/clients`
 
 API Gateway автоматически проксирует запросы к Client Service через Eureka Service Discovery.
 
 **Пример (Linux/Mac/Git Bash):**
 ```bash
-curl http://localhost:8086/client-service/api/clients \
+curl http://localhost:8086/api/clients \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **PowerShell:**
 ```powershell
-Invoke-WebRequest -Uri "http://localhost:8086/client-service/api/clients" `
+Invoke-WebRequest -Uri "http://localhost:8086/api/clients" `
     -Headers @{"Authorization" = "Bearer $token"} `
     -UseBasicParsing
 ```
@@ -227,7 +227,7 @@ $headers = @{
     "Authorization" = "Bearer $token"
 }
 
-$clients = Invoke-WebRequest -Uri "http://localhost:8086/client-service/api/clients" `
+$clients = Invoke-WebRequest -Uri "http://localhost:8086/api/clients" `
     -Headers $headers `
     -UseBasicParsing
 
@@ -271,4 +271,3 @@ JWT_SECRET: "ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789"
 ```
 
 **Важно:** В production используйте надежный JWT_SECRET длиной минимум 64 символа!
-

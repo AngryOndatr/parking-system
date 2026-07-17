@@ -14,10 +14,17 @@ export interface CreateClientRequest {
   email: string
 }
 
+export interface UpdateClientRequest {
+  fullName: string
+  phoneNumber: string
+  email: string
+}
+
 export interface Vehicle {
   id: number
   clientId: number
   licensePlate: string
+  isAllowed?: boolean
   vehicleType: string
   model?: string
   color?: string
@@ -36,6 +43,11 @@ export async function getClientById(id: number): Promise<Client> {
 
 export async function createClient(data: CreateClientRequest): Promise<Client> {
   const res = await apiClient.post<Client>('/clients', data)
+  return res.data
+}
+
+export async function updateClient(id: number, data: UpdateClientRequest): Promise<Client> {
+  const res = await apiClient.put<Client>(`/clients/${id}`, data)
   return res.data
 }
 
@@ -61,6 +73,25 @@ export async function searchClientsByName(name: string): Promise<Client[]> {
 export async function getVehicles(): Promise<Vehicle[]> {
   const res = await apiClient.get<Vehicle[]>('/vehicles')
   return res.data
+}
+
+export async function getVehiclesByClient(clientId: number): Promise<Vehicle[]> {
+  const res = await apiClient.get<Vehicle[]>(`/clients/${clientId}/vehicles`)
+  return res.data
+}
+
+export async function addVehicleToClient(clientId: number, data: { licensePlate: string }): Promise<Vehicle> {
+  const res = await apiClient.post<Vehicle>(`/clients/${clientId}/vehicles`, data)
+  return res.data
+}
+
+export async function updateVehicle(id: number, data: { licensePlate?: string; clientId?: number; isAllowed?: boolean }): Promise<Vehicle> {
+  const res = await apiClient.put<Vehicle>(`/vehicles/${id}`, data)
+  return res.data
+}
+
+export async function deleteVehicle(id: number): Promise<void> {
+  await apiClient.delete(`/vehicles/${id}`)
 }
 
 export async function checkSubscription(licensePlate: string): Promise<{ isAccessGranted: boolean; licensePlate: string; subscriptionId: number | null; message: string }> {

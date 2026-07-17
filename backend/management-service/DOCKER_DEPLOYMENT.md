@@ -227,8 +227,8 @@ Open: devops/test-login.html
 
 ### Phase 2 Services (Future)
 - gate-control-service (8082)
-- billing-service (8084)
-- reporting-service (8085)
+- billing-service (8083)
+- reporting-service (8087)
 
 ### Enhancements
 - [ ] Add Spring Cloud Config for centralized configuration
@@ -259,4 +259,3 @@ cd backend/parking-common && mvn clean install && cd ../..
 cd backend/management-service && mvn clean package && cd ../..
 cd devops && docker-compose up -d --build management-service
 ```
-

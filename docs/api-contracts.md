@@ -1,9 +1,9 @@
 # API Contracts Documentation
 
 **Version:** 2.0.0  
-**Last Updated:** 2026-01-16  
+**Last Updated:** 2026-07-17  
 **Coverage:** All 5 microservices  
-**Status:** Phase 1 Complete ⭐ | Phase 2 Documented 📋
+**Status:** Implemented and verified
 
 ---
 
@@ -12,15 +12,13 @@
 ### Implemented Services (Phase 1) ⭐
 - [Client Service API](#client-service-api) - Port 8081
 - [Management Service API](#management-service-api) - Port 8083  
-- [Reporting Service API](#reporting-service-api) - Port 8084
+- [Reporting Service API](#reporting-service-api) - Port 8080
 
-### Documented Services (Phase 2) 📋
-- [Billing Service API](#billing-service-api) - Port 8082
-- [Gate Control Service API](#gate-control-service-api) - Port 8083
+### Additional Services
+- [Billing Service API](#billing-service-api) - Port 8080
+- [Gate Control Service API](#gate-control-service-api) - Port 8080
 
 ### Reference
-- [Error Handling](#error-handling)
-- [Testing](#testing)
 - [Service Ports](#service-ports)
 
 ---
@@ -43,14 +41,14 @@ This document provides comprehensive API documentation for all microservices in 
 | Service | Port | Status | Base URL (Docker) |
 |---------|------|--------|-------------------|
 | Client Service | 8081 | ⭐ IMPLEMENTED | http://client-service:8081 |
-| Billing Service | 8082 | 📋 DOCUMENTED | http://billing-service:8082 |
+| Billing Service | 8080 | ⭐ IMPLEMENTED | http://billing-service:8080 |
 | Management Service | 8083 | ⭐ IMPLEMENTED | http://management-service:8083 |
-| Reporting Service | 8084 | ⭐ IMPLEMENTED | http://reporting-service:8084 |
-| Gate Control Service | 8085 | 📋 DOCUMENTED | http://gate-control-service:8085 |
+| Reporting Service | 8080 | ⭐ IMPLEMENTED | http://reporting-service:8080 |
+| Gate Control Service | 8080 | ⭐ IMPLEMENTED | http://gate-control-service:8080 |
 
 ### Authentication
 
-All endpoints require JWT authentication via API Gateway (port 8080/8086) except:
+All endpoints require JWT authentication via API Gateway (port 8086) except:
 - Internal service-to-service calls
 - Public endpoints (marked explicitly)
 
@@ -307,8 +305,8 @@ Get count of available parking spaces.
 Search parking spaces by type and status.
 
 **Query Parameters:**
-- `type` (optional) - Space type: STANDARD, VIP, DISABLED, ELECTRIC_CHARGING
-- `status` (optional) - Status: AVAILABLE, OCCUPIED, RESERVED, OUT_OF_SERVICE
+- `type` (optional) - Space type: STANDARD, HANDICAPPED, ELECTRIC, VIP, COMPACT, OVERSIZED
+- `status` (optional) - Status: AVAILABLE, OCCUPIED, RESERVED, MAINTENANCE, OUT_OF_SERVICE
 
 **Example:** `GET /api/management/spots/search?type=VIP&status=AVAILABLE`
 
@@ -331,8 +329,8 @@ Search parking spaces by type and status.
 ## Reporting Service API ⭐
 
 **Status:** IMPLEMENTED (Phase 1)  
-**Port:** 8084  
-**Base URL:** http://localhost:8084 | http://reporting-service:8084  
+**Port:** 8080  
+**Base URL:** http://localhost:8080 | http://reporting-service:8080  
 **OpenAPI Spec:** `backend/reporting-service/src/main/resources/openapi.yaml`
 
 ### Description
@@ -405,11 +403,11 @@ Get log entries with optional filters.
 
 ---
 
-## Billing Service API 📋
+## Billing Service API ⭐
 
-**Status:** DOCUMENTED (Phase 2)  
-**Port:** 8082  
-**Base URL:** http://localhost:8082 | http://billing-service:8082  
+**Status:** IMPLEMENTED  
+**Port:** 8080  
+**Base URL:** http://localhost:8080 | http://billing-service:8080  
 **OpenAPI Spec:** `backend/billing-service/src/main/resources/openapi.yaml`
 
 ### Description
@@ -650,3 +648,17 @@ GET /api/billing/status?parkingEventId=12345
 
 ---
 
+## Gate Control Service API ⭐
+
+**Status:** IMPLEMENTED  
+**Port:** 8080  
+**Base URL:** http://localhost:8080 | http://gate-control-service:8080  
+**OpenAPI Spec:** `backend/gate-control-service/src/main/resources/openapi.yaml`
+
+### Endpoints
+
+- `POST /api/gate/entry` - Vehicle entry (ticket/subscriber flow)
+- `POST /api/gate/exit` - Vehicle exit (payment/subscription checks)
+- `POST /api/gate/control` - Manual gate control
+
+---

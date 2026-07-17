@@ -460,7 +460,7 @@ When running in Docker:
 - **API Gateway:** http://localhost:8086
 - **Client Service:** http://client-service:8081 (internal)
 - **Management Service:** http://management-service:8083 (internal)
-- **Reporting Service:** http://reporting-service:8084 (internal)
+- **Reporting Service:** http://reporting-service:8080 (internal)
 
 All external requests go through API Gateway on port 8086.
 
@@ -468,4 +468,3 @@ All external requests go through API Gateway on port 8086.
 
 **Last Updated:** 2026-01-13  
 **Related Issue:** #21
-

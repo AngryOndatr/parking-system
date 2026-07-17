@@ -69,7 +69,7 @@ JWT stored in `localStorage`. Role decoded from token payload (`atob`).
 | Username | Password | Role | Redirect after login |
 |----------|----------|------|----------------------|
 | `admin` | `parking123` | ADMIN | `/clients` |
-| `operator` | `parking123` | OPERATOR | `/gate` |
+| `operator` | `operator123` | OPERATOR | `/gate` |
 | `manager` | `manager123` | MANAGER | `/management` |
 
 ## Role-Based Navigation

@@ -10,9 +10,9 @@ info:
     email: support@parkingsystem.com
 
 servers:
-  - url: http://localhost:8082
+  - url: http://localhost:8080
     description: Billing Service Development Server
-  - url: http://billing-service:8082
+  - url: http://billing-service:8080
     description: Billing Service Docker Network
 
 tags:

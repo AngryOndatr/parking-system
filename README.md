@@ -73,7 +73,7 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ P
 | **Unit/Integration Tests** | 177+ passing |
 | **E2E Tests** | 2 scenarios (visitor + subscriber) |
 | **API Endpoints** | 20+ (via API Gateway) |
-| **DB Migrations** | 10 (V0–V9) |
+| **DB Migrations** | 12 (V0–V11) |
 | **OpenAPI specs** | 5 services (OpenAPI-first) |
 | **UI Languages** | 4 (EN, DE, UA, RU) |
 
@@ -227,7 +227,7 @@ Centralized entry point for all API calls. All requests from frontend pass throu
 - **CORS** — wildcard `http://192.168.*` covers any LAN IP (DHCP-safe)
 - **Rate limiting** — 60 req/min per IP
 - **Brute-force protection** — lockout after 10 failed attempts
-- **Flyway** — manages all DB schema migrations (V0–V9)
+- **Flyway** — manages all DB schema migrations (V0–V11)
 - **Service discovery** — routes to microservices via Eureka
 
 **Auth Endpoints:**
@@ -364,6 +364,8 @@ Files: `backend/api-gateway/src/main/resources/db/migration/`
 | V7 | `V7__create_tariffs_table.sql` | Billing tariffs |
 | V8 | `V8__extend_parking_events_and_payments.sql` | Parking events & payments |
 | V9 | `V9__create_gate_events_table.sql` | Gate hardware events |
+| V10 | `V10__extend_logs_audit_trail.sql` | Extended audit trail fields |
+| V11 | `V11__add_parking_space_to_subscription.sql` | `parking_space_id` in subscriptions |
 
 ```powershell
 # View migration history
@@ -404,7 +406,7 @@ Users are seeded by `database/init.sql` (via Docker init) and additionally ensur
 | Username | Password | Role | Notes |
 |----------|----------|------|-------|
 | **admin** | `parking123` | ADMIN | Full access |
-| **operator** | `parking123` | OPERATOR | Gate & billing ops |
+| **operator** | `operator123` | OPERATOR | Gate & billing ops |
 | **manager** | `manager123` | MANAGER | Reports & management |
 
 **⚠️ Development only.** Use strong passwords and env vars in production.
@@ -435,7 +437,7 @@ curl -s -X POST http://localhost:8086/api/auth/login \
 | `POST/PUT/DELETE /api/billing/*` | OPERATOR, ADMIN |
 | `GET/POST/PUT/DELETE /api/clients/*` | ADMIN, MANAGER, OPERATOR |
 | `write ops /api/management/*` | ADMIN, MANAGER |
-| `GET /api/reporting/*` | ADMIN, MANAGER, OPERATOR |
+| `GET/POST/PUT/DELETE /api/reporting/*` | ADMIN, MANAGER, OPERATOR |
 
 ### JWT Configuration
 ```yaml

@@ -9,7 +9,7 @@ Central entry point for all Parking System API calls. Handles JWT authentication
 - **CORS** — `CorsFilter` with wildcard `http://192.168.*` for LAN access
 - **Rate limiting** — 60 req/min per IP (Redis-backed)
 - **Brute-force protection** — lockout after 10 failed login attempts
-- **Flyway** — manages all DB schema migrations (V0–V9)
+- **Flyway** — manages all DB schema migrations (V0–V11)
 - **Proxy controllers** — transparent forwarding to downstream services
 
 ## Auth Endpoints
@@ -44,7 +44,7 @@ Request
 | `POST/PUT/DELETE /api/billing/*` | OPERATOR, ADMIN |
 | `GET/POST/PUT/DELETE /api/clients/*` | ADMIN, MANAGER, OPERATOR |
 | write ops `/api/management/*` | ADMIN, MANAGER |
-| `GET /api/reporting/*` | ADMIN, MANAGER, OPERATOR |
+| `GET/POST/PUT/DELETE /api/reporting/*` | ADMIN, MANAGER, OPERATOR |
 
 ## Test Configuration
 
@@ -87,7 +87,7 @@ cors:
 | Username | Password | Role |
 |----------|----------|------|
 | `admin` | `parking123` | ADMIN |
-| `operator` | `parking123` | OPERATOR |
+| `operator` | `operator123` | OPERATOR |
 | `manager` | `manager123` | MANAGER |
 
 Seeded by `database/init.sql`. Also ensured on startup by `UserSecurityService.initializeDefaultUsers()`.

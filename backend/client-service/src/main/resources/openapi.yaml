@@ -6,9 +6,9 @@ info:
     This is the central service for registering and identifying subscribers.
   version: 1.0.0
 servers:
-  - url: http://localhost:8080 # Internal container port
+  - url: http://localhost:8081
     description: Client Service Development Server
-  - url: http://client-service:8080 # Internal Docker network name
+  - url: http://client-service:8081
     description: Client Service Docker Network
 
 tags:

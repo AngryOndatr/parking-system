@@ -6,9 +6,9 @@ info:
     Provides endpoints for persisting logs and generating reports.
   version: 1.0.0
 servers:
-  - url: http://localhost:8084
+  - url: http://localhost:8080
     description: Reporting Service Development Server
-  - url: http://reporting-service:8084
+  - url: http://reporting-service:8080
     description: Reporting Service Docker Network
 
 tags:
@@ -263,4 +263,3 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-

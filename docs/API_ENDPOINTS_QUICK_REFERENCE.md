@@ -1,81 +1,81 @@
 # API Endpoints Quick Reference
 
-**Last Updated:** 2026-01-16
+**Last Updated:** 2026-07-17
 
-## All Microservices Endpoints Summary
+## Runtime ports (project root `docker-compose.yml`)
 
-### Client Service (Port 8081) ⭐ IMPLEMENTED
+| Service | Internal port | External port |
+|---------|---------------|---------------|
+| api-gateway | 8080 | 8086 |
+| client-service | 8081 | 8081 |
+| gate-control-service | 8080 | 8082 |
+| billing-service | 8080 | 8083 |
+| management-service | 8083 | 8084 |
+| reporting-service | 8080 | 8087 |
 
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| GET | /api/clients | Get all clients | 200 |
-| POST | /api/clients | Create client | 201 |
-| GET | /api/clients/{id} | Get client by ID | 200, 404 |
-| GET | /api/clients/search?phone={phone} | Search by phone | 200, 404 |
-| POST | /api/clients/{clientId}/vehicles | Add vehicle to client | 201, 404, 409 |
-| GET | /api/vehicles | Get all vehicles | 200 |
-| GET | /api/vehicles/{id} | Get vehicle by ID | 200, 404 |
-| DELETE | /api/vehicles/{id} | Delete vehicle | 204, 404 |
+> External client calls should go through API Gateway: `http://localhost:8086/api/...`
 
-### Billing Service (Port 8082) 📋 DOCUMENTED
+## Endpoint summary (all implemented)
 
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| POST | /api/billing/calculate | Calculate parking fee | 200, 400, 404, 500 |
-| POST | /api/billing/pay | Process payment | 201, 400, 404, 409, 500 |
-| GET | /api/billing/status?parkingEventId={id} | Get payment status | 200, 400, 404, 500 |
+### Client Service
 
-### Management Service (Port 8083) ⭐ IMPLEMENTED
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/clients | Get all clients |
+| POST | /api/clients | Create client |
+| GET | /api/clients/{id} | Get client by ID |
+| GET | /api/clients/search?phone={phone} | Search by phone |
+| PUT | /api/clients/{id} | Update client |
+| DELETE | /api/clients/{id} | Delete client |
+| POST | /api/clients/{clientId}/vehicles | Add vehicle to client |
+| GET | /api/clients/{clientId}/vehicles | Get client vehicles |
+| GET | /api/vehicles | Get all vehicles |
+| GET | /api/vehicles/{id} | Get vehicle by ID |
+| PUT | /api/vehicles/{id} | Update vehicle |
+| DELETE | /api/vehicles/{id} | Delete vehicle |
+| GET | /api/v1/clients/subscriptions/check?licensePlate={plate} | Subscription check (service-to-service) |
 
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| GET | /api/management/spots/available | Get all available spaces | 200, 500 |
-| GET | /api/management/spots/available/lot/{lotId} | Get available by lot | 200, 404, 500 |
-| GET | /api/management/spots | Get all spaces | 200, 500 |
-| GET | /api/management/spots/available/count | Count available spaces | 200, 500 |
-| GET | /api/management/spots/search?type=X&status=Y | Search spaces | 200, 400, 500 |
+### Gate Control Service
 
-### Reporting Service (Port 8084) ⭐ IMPLEMENTED
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/gate/entry | Process vehicle entry |
+| POST | /api/gate/exit | Process vehicle exit |
+| POST | /api/gate/control | Manual gate control |
 
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| POST | /api/reporting/log | Create log entry | 201, 400, 500 |
-| GET | /api/reporting/logs?level=X&service=Y&userId=Z&fromDate=A&toDate=B&limit=N | Get logs (filtered) | 200, 400, 500 |
+### Billing Service
 
-### Gate Control Service (Port 8085) 📋 DOCUMENTED
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/billing/calculate | Calculate parking fee |
+| POST | /api/billing/pay | Process payment |
+| GET | /api/billing/status?parkingEventId={id} | Get payment status |
+| GET | /api/billing/status-by-ticket?ticketCode={code} | Get payment status by ticket |
+| POST | /api/billing/pay-test | Test payment endpoint |
 
-| Method | Endpoint | Description | Status |
-|--------|----------|-------------|--------|
-| POST | /api/gate/entry | Process vehicle entry | 201, 400, 403, 409, 500 |
-| POST | /api/gate/exit | Process vehicle exit | 200, 400, 404, 409, 500 |
-| POST | /api/gate/control | Manual gate control | 200, 400, 403, 404, 500 |
+### Management Service
 
----
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/management/spots/available | Get all available spaces |
+| GET | /api/management/spots/available/lot/{lotId} | Get available spaces by lot |
+| GET | /api/management/spots | Get all spaces |
+| GET | /api/management/spots/available/count | Count available spaces |
+| GET | /api/management/spots/search?type=X&status=Y | Search spaces |
 
-## OpenAPI Specifications Locations
+### Reporting Service
 
-| Service | OpenAPI Spec Path |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/reporting/log | Create log entry |
+| GET | /api/reporting/logs | Get logs (supports filters) |
+
+## OpenAPI specification locations
+
+| Service | OpenAPI spec path |
 |---------|-------------------|
 | Client Service | `backend/client-service/src/main/resources/openapi.yaml` |
 | Billing Service | `backend/billing-service/src/main/resources/openapi.yaml` |
 | Management Service | `backend/management-service/src/main/resources/openapi.yaml` |
 | Reporting Service | `backend/reporting-service/src/main/resources/openapi.yaml` |
 | Gate Control Service | `backend/gate-control-service/src/main/resources/openapi.yaml` |
-
----
-
-## Status Legend
-
-- ⭐ **IMPLEMENTED** - Service is running, endpoints tested and working
-- 📋 **DOCUMENTED** - OpenAPI spec created, awaiting implementation
-- ❌ **NOT STARTED** - No spec or implementation
-
----
-
-## Full Documentation
-
-See [api-contracts.md](./api-contracts.md) for complete endpoint documentation with:
-- Request/response examples
-- Error scenarios
-- Testing examples
-- Integration notes

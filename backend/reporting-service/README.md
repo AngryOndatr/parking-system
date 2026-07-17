@@ -120,7 +120,7 @@ Maps between DTOs and domain models, handling JsonNullable fields from OpenAPI g
 ### application.yml
 ```yaml
 server:
-  port: 8084
+  port: 8080
 
 spring:
   application:
@@ -345,7 +345,7 @@ mvn test
 mvn spring-boot:run
 ```
 
-The service will be available at `http://localhost:8084`
+The service will be available at `http://localhost:8080`
 
 ## Running with Docker
 
@@ -359,11 +359,11 @@ docker-compose up reporting-service
 ## API Documentation
 
 Interactive API documentation is available via Swagger UI:
-- Local: `http://localhost:8084/swagger-ui.html`
-- Docker: `http://reporting-service:8084/swagger-ui.html`
+- Local: `http://localhost:8080/swagger-ui.html`
+- Docker: `http://reporting-service:8080/swagger-ui.html`
 
 OpenAPI specification:
-- `http://localhost:8084/v3/api-docs`
+- `http://localhost:8080/v3/api-docs`
 
 ## Testing
 
@@ -430,4 +430,3 @@ The service exposes actuator endpoints:
 ## License
 
 Part of the Parking Management System - Internal Use Only
-
