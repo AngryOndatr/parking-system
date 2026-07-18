@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableDiscoveryClient
 @EntityScan(basePackages = {"com.parking.common.entity", "com.parking.client_service.entity"})
-@EnableJpaRepositories(basePackages = {"com.parking.client_service.repository"})
+@EnableJpaRepositories(basePackages = {"com.parking.client_service.repository", "com.parking.common.repository"})
 @SpringBootApplication
 public class ClientServiceApplication {
 

@@ -1007,4 +1007,4 @@ Full project unit tests: **161 tests, 0 failures, BUILD SUCCESS**
 
 ---
 
-**[View Current Status](./docs/PROJECT_PHASES.md)** | **[Session Logs](./docs/sessions/)** | **[Reports](./docs/reports/)**
+**[View Current Status (EN)](./docs/PROJECT_PHASES_EN.md)** | **[View Current Status (RU)](./docs/PROJECT_PHASES_RU.md)** | **[Session Logs](./docs/sessions/)** | **[Reports](./docs/reports/)**

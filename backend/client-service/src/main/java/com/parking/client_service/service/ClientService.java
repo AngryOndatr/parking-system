@@ -11,7 +11,9 @@ import com.parking.client_service.repository.ClientRepository;
 import com.parking.client_service.repository.VehicleRepository;
 import com.parking.common.domain.ClientDomain;
 import com.parking.common.entity.Client;
+import com.parking.common.entity.Log;
 import com.parking.common.entity.Vehicle;
+import com.parking.common.repository.LogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,17 +29,20 @@ import java.util.stream.Collectors;
 public class ClientService {
 
     private static final Logger log = LoggerFactory.getLogger(ClientService.class);
+    private static final String SERVICE_NAME = "client-service";
 
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
     private final VehicleRepository vehicleRepository;
+    private final LogRepository logRepository;
     private final AuditLogger auditLogger;
 
     public ClientService(ClientRepository clientRepository, ClientMapper clientMapper,
-                         VehicleRepository vehicleRepository, AuditLogger auditLogger) {
+                         VehicleRepository vehicleRepository, LogRepository logRepository, AuditLogger auditLogger) {
         this.clientRepository = clientRepository;
         this.clientMapper     = clientMapper;
         this.vehicleRepository = vehicleRepository;
+        this.logRepository = logRepository;
         this.auditLogger      = auditLogger;
     }
 
@@ -61,6 +67,21 @@ public class ClientService {
 
         Client savedClient = clientRepository.save(client);
         log.info("Successfully created client with id: {}, phone: {}", savedClient.getId(), savedClient.getPhoneNumber());
+
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("CLIENT_CREATED");
+        auditLog.setEntityType("CLIENT");
+        auditLog.setEntityId(savedClient.getId());
+        auditLog.setClientId(savedClient.getId());
+        auditLog.setMessage("Client created: " + savedClient.getFullName() + " (" + savedClient.getPhoneNumber() + ")");
+        auditLog.setMeta(Map.of(
+                "phone", savedClient.getPhoneNumber(),
+                "email", savedClient.getEmail() == null ? "" : savedClient.getEmail()
+        ));
+        logRepository.save(auditLog);
 
         auditLogger.audit("CLIENT_CREATED", "CLIENT", savedClient.getId(),
                 savedClient.getId(), null,
@@ -89,6 +110,21 @@ public class ClientService {
         client.setRegisteredAt(LocalDateTime.now());
 
         Client savedClient = clientRepository.save(client);
+
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("CLIENT_CREATED");
+        auditLog.setEntityType("CLIENT");
+        auditLog.setEntityId(savedClient.getId());
+        auditLog.setClientId(savedClient.getId());
+        auditLog.setMessage("Client created: " + savedClient.getFullName() + " (" + savedClient.getPhoneNumber() + ")");
+        auditLog.setMeta(Map.of(
+                "phone", savedClient.getPhoneNumber(),
+                "email", savedClient.getEmail() == null ? "" : savedClient.getEmail()
+        ));
+        logRepository.save(auditLog);
 
         auditLogger.audit("CLIENT_CREATED", "CLIENT", savedClient.getId(),
                 savedClient.getId(), null,
@@ -192,6 +228,21 @@ public class ClientService {
         Client saved = clientRepository.save(domain.getEntity());
         log.info("Successfully updated client with id: {}, phone: {}", saved.getId(), saved.getPhoneNumber());
 
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("CLIENT_UPDATED");
+        auditLog.setEntityType("CLIENT");
+        auditLog.setEntityId(saved.getId());
+        auditLog.setClientId(saved.getId());
+        auditLog.setMessage("Client updated: " + saved.getFullName() + " (" + saved.getPhoneNumber() + ")");
+        auditLog.setMeta(Map.of(
+                "phone", saved.getPhoneNumber(),
+                "email", saved.getEmail() == null ? "" : saved.getEmail()
+        ));
+        logRepository.save(auditLog);
+
         auditLogger.audit("CLIENT_UPDATED", "CLIENT", saved.getId(),
                 saved.getId(), null,
                 "Client updated: " + saved.getFullName() + " (" + saved.getPhoneNumber() + ")");
@@ -213,6 +264,18 @@ public class ClientService {
         String name = existing.getFullName();
         clientRepository.delete(existing);
         log.info("Successfully deleted client with id: {}", id);
+
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("CLIENT_DELETED");
+        auditLog.setEntityType("CLIENT");
+        auditLog.setEntityId(id);
+        auditLog.setClientId(id);
+        auditLog.setMessage("Client deleted: " + name + " (id=" + id + ")");
+        auditLog.setMeta(Map.of("deletedName", name));
+        logRepository.save(auditLog);
 
         auditLogger.audit("CLIENT_DELETED", "CLIENT", id, id, null,
                 "Client deleted: " + name + " (id=" + id + ")");

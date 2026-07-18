@@ -7,9 +7,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Combobox, type ComboboxOption } from '@/components/ui/combobox'
 import { PageHeader } from '@/components/PageHeader'
 import { useLanguage } from '@/store/languageContext'
-import { getLogs, getAuditLogs, getClientHistory, getVehicleHistory } from '@/api/reporting'
+import { getLogs, getAuditLogs, getClientHistory, getVehicleHistory, getAllClients, getAllVehicles } from '@/api/reporting'
 import type { LogEntry, AuditEntry } from '@/api/reporting'
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -34,6 +35,16 @@ const ACTION_COLORS: Record<string, string> = {
   GATE_EXIT_DENIED:         'bg-red-100 text-red-700',
   GATE_MANUAL_CONTROL:      'bg-purple-100 text-purple-700',
   PAYMENT_PROCESSED:        'bg-teal-100 text-teal-700',
+}
+
+const SERVICE_NAMES: Record<string, string> = {
+  'api-gateway': 'API Gateway',
+  'client-service': 'Client Service',
+  'gate-control-service': 'Gate Control Service',
+  'billing-service': 'Billing Service',
+  'management-service': 'Management Service',
+  'reporting-service': 'Reporting Service',
+  'eureka-server': 'Eureka Server',
 }
 
 function actionColor(action: string | null) {
@@ -175,7 +186,7 @@ export default function ReportingPage() {
   const [auditTo, setAuditTo]           = useState('')
   const [auditLimit, setAuditLimit]     = useState('200')
 
-  const [clientIdInput, setClientIdInput] = useState('')
+  const [clientIdInput, setClientIdInput] = useState<number | undefined>()
   const [clientFrom, setClientFrom]       = useState('')
   const [clientTo, setClientTo]           = useState('')
   const [clientSearch, setClientSearch]   = useState(false)
@@ -186,6 +197,35 @@ export default function ReportingPage() {
   const [vehicleSearch, setVehicleSearch] = useState(false)
 
   const levels: LogEntry['level'][] = ['INFO', 'WARN', 'ERROR', 'DEBUG', 'TRACE']
+
+  // Generate service options from SERVICE_NAMES
+  const serviceOptions: ComboboxOption[] = Object.entries(SERVICE_NAMES).map(([value, label]) => ({
+    value,
+    label,
+  }))
+
+  // Queries for dropdowns
+  const clientsQuery = useQuery({
+    queryKey: ['all-clients'],
+    queryFn: getAllClients,
+    enabled: activeTab === 'client',
+  })
+
+  const vehiclesQuery = useQuery({
+    queryKey: ['all-vehicles'],
+    queryFn: getAllVehicles,
+    enabled: activeTab === 'vehicle',
+  })
+
+  const clientOptions: ComboboxOption[] = (clientsQuery.data ?? []).map(c => ({
+    value: c.id,
+    label: `${c.name} (ID: ${c.id})`,
+  }))
+
+  const vehicleOptions: ComboboxOption[] = (vehiclesQuery.data ?? []).map(v => ({
+    value: v.licensePlate,
+    label: v.licensePlate,
+  }))
 
   const logsQuery = useQuery({
     queryKey: ['logs', filterLevel, filterService, filterLimit],
@@ -204,15 +244,14 @@ export default function ReportingPage() {
     enabled: activeTab === 'audit',
   })
 
-  const clientId = Number(clientIdInput)
   const clientQuery = useQuery({
-    queryKey: ['audit-client', clientId, clientFrom, clientTo],
-    queryFn: () => getClientHistory(clientId, {
+    queryKey: ['audit-client', clientIdInput, clientFrom, clientTo],
+    queryFn: () => getClientHistory(clientIdInput!, {
       from: clientFrom ? new Date(clientFrom).toISOString() : undefined,
       to:   clientTo   ? new Date(clientTo).toISOString()   : undefined,
       limit: 500,
     }),
-    enabled: activeTab === 'client' && clientSearch && !isNaN(clientId) && clientId > 0,
+    enabled: activeTab === 'client' && clientSearch && clientIdInput !== undefined && clientIdInput > 0,
   })
 
   const vehicleQuery = useQuery({
@@ -291,8 +330,13 @@ export default function ReportingPage() {
               <div className="flex flex-wrap gap-3 items-center">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-slate-500 shrink-0">{t('reporting.filter_service')}:</span>
-                  <Input placeholder="e.g. gate-control-service" className="w-48 h-8 text-sm"
-                    value={auditService} onChange={e => setAuditService(e.target.value)} />
+                  <select className="border rounded px-2 py-1 text-sm h-8" value={auditService}
+                    onChange={e => setAuditService(e.target.value)}>
+                    <option value="">{t('reporting.all_services') ?? 'All Services'}</option>
+                    {serviceOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <DateRange from={auditFrom} to={auditTo} onFrom={setAuditFrom} onTo={setAuditTo} />
                 <div className="flex items-center gap-2">
@@ -331,10 +375,19 @@ export default function ReportingPage() {
               <div className="flex flex-wrap gap-3 items-end">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-slate-500 shrink-0">{t('reporting.client_id_filter')}:</span>
-                  <Input type="number" placeholder="e.g. 1" className="w-28 h-8 text-sm"
-                    value={clientIdInput}
-                    onChange={e => { setClientIdInput(e.target.value); setClientSearch(false) }}
-                    onKeyDown={e => { if (e.key === 'Enter') setClientSearch(true) }} />
+                  <div className="w-80">
+                    <Combobox
+                      options={clientOptions}
+                      value={clientIdInput}
+                      onChange={v => {
+                        setClientIdInput(v as number | undefined)
+                        setClientSearch(false)
+                      }}
+                      placeholder="Search client..."
+                      isLoading={clientsQuery.isLoading}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
                 <DateRange from={clientFrom} to={clientTo} onFrom={setClientFrom} onTo={setClientTo} />
                 <Button size="sm" onClick={() => setClientSearch(true)} disabled={!clientIdInput}>
@@ -343,10 +396,10 @@ export default function ReportingPage() {
               </div>
             </CardContent>
           </Card>
-          {clientSearch && clientId > 0 && (
+          {clientSearch && clientIdInput && clientIdInput > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">{t('reporting.history_client', { id: clientId })}</CardTitle>
+                <CardTitle className="text-base">{t('reporting.history_client', { id: clientIdInput })}</CardTitle>
                 <CardDescription>
                   {clientQuery.data?.length ?? 0} {t('reporting.logs')}
                   {(clientFrom || clientTo) && ` ${t('reporting.events_in_period')}`}
@@ -374,10 +427,19 @@ export default function ReportingPage() {
               <div className="flex flex-wrap gap-3 items-end">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-slate-500 shrink-0">{t('reporting.col_plate')}:</span>
-                  <Input placeholder="e.g. ABC123" className="w-36 h-8 text-sm uppercase"
-                    value={plateInput}
-                    onChange={e => { setPlateInput(e.target.value.toUpperCase()); setVehicleSearch(false) }}
-                    onKeyDown={e => { if (e.key === 'Enter') setVehicleSearch(true) }} />
+                  <div className="w-80">
+                    <Combobox
+                      options={vehicleOptions}
+                      value={plateInput}
+                      onChange={v => {
+                        setPlateInput((v as string) || '')
+                        setVehicleSearch(false)
+                      }}
+                      placeholder="Search plate..."
+                      isLoading={vehiclesQuery.isLoading}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
                 <DateRange from={vehicleFrom} to={vehicleTo} onFrom={setVehicleFrom} onTo={setVehicleTo} />
                 <Button size="sm" onClick={() => setVehicleSearch(true)} disabled={plateInput.trim().length < 2}>

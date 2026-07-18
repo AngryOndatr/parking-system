@@ -8,7 +8,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EntityScan(basePackages = {"com.parking.common.entity", "com.parking.billing.entity"})
-@EnableJpaRepositories(basePackages = {"com.parking.billing.repository", "com.parking.billing_service.repository"})
+@EnableJpaRepositories(basePackages = {"com.parking.billing.repository", "com.parking.billing_service.repository", "com.parking.common.repository"})
 @ComponentScan(basePackages = {"com.parking.billing", "com.parking.billing_service"})
 @SpringBootApplication
 @EnableDiscoveryClient

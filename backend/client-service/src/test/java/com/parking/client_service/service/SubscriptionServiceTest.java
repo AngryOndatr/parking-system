@@ -10,7 +10,9 @@ import com.parking.client_service.repository.ClientRepository;
 import com.parking.client_service.repository.ParkingSpaceRepository;
 import com.parking.client_service.repository.SubscriptionRepository;
 import com.parking.common.entity.Client;
+import com.parking.common.entity.Log;
 import com.parking.common.entity.Subscription;
+import com.parking.common.repository.LogRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +40,7 @@ class SubscriptionServiceTest {
     @Mock private ParkingSpaceRepository parkingSpaceRepository;
     @Mock private SubscriptionMapper     subscriptionMapper;
     @Mock private AuditLogger            auditLogger;
+    @Mock private LogRepository          logRepository;
 
     @InjectMocks
     private SubscriptionService subscriptionService;
@@ -103,6 +106,15 @@ class SubscriptionServiceTest {
         assertThat(result.getId()).isEqualTo(10L);
         assertThat(result.getClientId()).isEqualTo(1L);
         verify(subscriptionRepository).save(entity);
+
+        ArgumentCaptor<Log> logCaptor = ArgumentCaptor.forClass(Log.class);
+        verify(logRepository).save(logCaptor.capture());
+        Log savedLog = logCaptor.getValue();
+        assertThat(savedLog.getAction()).isEqualTo("SUBSCRIPTION_CREATED");
+        assertThat(savedLog.getService()).isEqualTo("client-service");
+        assertThat(savedLog.getEntityType()).isEqualTo("SUBSCRIPTION");
+        assertThat(savedLog.getEntityId()).isEqualTo(10L);
+        assertThat(savedLog.getClientId()).isEqualTo(1L);
     }
 
     @Test
@@ -195,6 +207,15 @@ class SubscriptionServiceTest {
         ArgumentCaptor<Subscription> captor = ArgumentCaptor.forClass(Subscription.class);
         verify(subscriptionRepository).save(captor.capture());
         assertThat(captor.getValue().getIsActive()).isFalse();
+
+        ArgumentCaptor<Log> logCaptor = ArgumentCaptor.forClass(Log.class);
+        verify(logRepository).save(logCaptor.capture());
+        Log savedLog = logCaptor.getValue();
+        assertThat(savedLog.getAction()).isEqualTo("SUBSCRIPTION_DEACTIVATED");
+        assertThat(savedLog.getService()).isEqualTo("client-service");
+        assertThat(savedLog.getEntityType()).isEqualTo("SUBSCRIPTION");
+        assertThat(savedLog.getEntityId()).isEqualTo(7L);
+        assertThat(savedLog.getClientId()).isEqualTo(1L);
     }
 
     @Test
@@ -207,4 +228,3 @@ class SubscriptionServiceTest {
                 .hasMessageContaining("999");
     }
 }
-

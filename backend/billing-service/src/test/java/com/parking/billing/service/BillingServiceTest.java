@@ -10,7 +10,9 @@ import com.parking.billing.audit.AuditLogger;
 import com.parking.billing.repository.ParkingEventRepository;
 import com.parking.billing.repository.PaymentRepository;
 import com.parking.billing_service.repository.TariffRepository;
+import com.parking.common.entity.Log;
 import com.parking.common.entity.Tariff;
+import com.parking.common.repository.LogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,6 +49,8 @@ class BillingServiceTest {
 
     @Mock
     private AuditLogger auditLogger;
+    @Mock
+    private LogRepository logRepository;
 
     @InjectMocks
     private BillingService billingService;
@@ -56,6 +60,8 @@ class BillingServiceTest {
 
     @Captor
     private ArgumentCaptor<ParkingEvent> parkingEventCaptor;
+    @Captor
+    private ArgumentCaptor<Log> logCaptor;
 
     private Tariff testTariff;
     private ParkingEvent testParkingEvent;
@@ -99,6 +105,13 @@ class BillingServiceTest {
         assertThat(fee).isEqualByComparingTo(new BigDecimal("5.00"));
         verify(parkingEventRepository, atLeastOnce()).findByTicketCode(ticketCode);
         verify(tariffRepository).findByTariffTypeAndIsActiveTrue("ONE_TIME");
+        verify(logRepository).save(logCaptor.capture());
+        Log savedLog = logCaptor.getValue();
+        assertThat(savedLog.getAction()).isEqualTo("FEE_CALCULATED");
+        assertThat(savedLog.getService()).isEqualTo("billing-service");
+        assertThat(savedLog.getEntityType()).isEqualTo("BILLING");
+        assertThat(savedLog.getEntityId()).isEqualTo(1L);
+        assertThat(savedLog.getLicensePlate()).isEqualTo("ABC123");
     }
 
     @Test
@@ -262,6 +275,16 @@ class BillingServiceTest {
         verify(parkingEventRepository).save(parkingEventCaptor.capture());
         ParkingEvent updatedEvent = parkingEventCaptor.getValue();
         assertThat(updatedEvent.getExitTime()).isNotNull();
+
+        verify(logRepository, atLeast(2)).save(logCaptor.capture());
+        assertThat(logCaptor.getAllValues())
+                .anySatisfy(savedLog -> {
+                    assertThat(savedLog.getAction()).isEqualTo("PAYMENT_PROCESSED");
+                    assertThat(savedLog.getService()).isEqualTo("billing-service");
+                    assertThat(savedLog.getEntityType()).isEqualTo("BILLING");
+                    assertThat(savedLog.getEntityId()).isEqualTo(1L);
+                    assertThat(savedLog.getLicensePlate()).isEqualTo("ABC123");
+                });
     }
 
     @Test
@@ -394,4 +417,3 @@ class BillingServiceTest {
         verify(paymentRepository, never()).existsByParkingEventIdAndStatus(anyLong(), any());
     }
 }
-

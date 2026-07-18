@@ -9,10 +9,13 @@ import com.parking.client_service.mapper.VehicleMapper;
 import com.parking.client_service.repository.ClientRepository;
 import com.parking.client_service.repository.VehicleRepository;
 import com.parking.common.entity.Client;
+import com.parking.common.entity.Log;
 import com.parking.common.entity.Vehicle;
+import com.parking.common.repository.LogRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,6 +43,8 @@ class VehicleServiceTest {
 
     @Mock
     private AuditLogger auditLogger;
+    @Mock
+    private LogRepository logRepository;
 
     @InjectMocks
     private VehicleService vehicleService;
@@ -88,6 +93,15 @@ class VehicleServiceTest {
         assertThat(result.getLicensePlate()).isEqualTo("AA1234BB");
         assertThat(result.getClientId()).isEqualTo(1L);
         verify(vehicleRepository).save(any(Vehicle.class));
+
+        ArgumentCaptor<Log> logCaptor = ArgumentCaptor.forClass(Log.class);
+        verify(logRepository).save(logCaptor.capture());
+        Log savedLog = logCaptor.getValue();
+        assertThat(savedLog.getAction()).isEqualTo("VEHICLE_CREATED");
+        assertThat(savedLog.getService()).isEqualTo("client-service");
+        assertThat(savedLog.getEntityType()).isEqualTo("VEHICLE");
+        assertThat(savedLog.getClientId()).isEqualTo(1L);
+        assertThat(savedLog.getLicensePlate()).isEqualTo("AA1234BB");
     }
 
     @Test
@@ -194,4 +208,3 @@ class VehicleServiceTest {
         verify(vehicleRepository, never()).delete(any());
     }
 }
-

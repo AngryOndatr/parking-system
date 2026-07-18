@@ -27,14 +27,14 @@ Modern parking lot management system built on microservices architecture using S
 
 ## 📈 Project Status & Roadmap
 
-### Current Status: Phase 3 — Completed ✅
+### Current Status: Phase 4 — In Progress 🔄
 
 ```
 Phase 0: ████████████████████ 100% ✅ COMPLETE
 Phase 1: ████████████████████ 100% ✅ COMPLETE
 Phase 2: ████████████████████ 100% ✅ COMPLETE
 Phase 3: ████████████████████ 100% ✅ COMPLETE
-Phase 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
+Phase 4: ████░░░░░░░░░░░░░░░░  20% 🔄 IN PROGRESS
 Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
 ```
 
@@ -46,12 +46,12 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ P
 | **Phase 1** | 3 weeks | ✅ Complete | 100% | Basic Backend (CRUD & DB) |
 | **Phase 2** | 2 weeks | ✅ Complete | 100% | Core Business Logic |
 | **Phase 3** | 2 weeks | ✅ Complete | 100% | Security, CORS & React Frontend |
-| **Phase 4** | 3 weeks | ⏳ Pending | 0% | Reports & Advanced E2E |
+| **Phase 4** | 3 weeks | 🔄 In Progress | 20% | Reports & Advanced E2E |
 | **Phase 5** | 1 week | ⏳ Pending | 0% | Finalization & Deployment |
 
-📖 **Detailed roadmap:** [PROJECT_PHASES.md](./docs/PROJECT_PHASES.md)
+📖 **Detailed roadmap:** [PROJECT_PHASES_EN.md](./docs/PROJECT_PHASES_EN.md)
 
-### 🎯 Phase 3 Completion
+### 🎯 Phase 4 Progress
 
 **Completed:**
 - ✅ Issue #78 — RBAC: role-based route protection in SecurityFilter
@@ -62,8 +62,8 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ P
 - ✅ Issue #74 — React frontend: project init, auth, role-based layout
 
 **Status:**
-- ✅ Phase 3 scope completed
-- ⏳ Next focus: Phase 4 (Reports & Advanced E2E)
+- 🔄 Phase 4 started with active backlog issues
+- 🔄 Active issues: #92 (Admin UI tariffs scope), #93 (Reporting UI parity), #94 (Coverage), #95 (E2E expansion)
 
 ### 📊 Quick Stats
 

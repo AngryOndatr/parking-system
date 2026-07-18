@@ -12,13 +12,17 @@ import com.parking.client_service.repository.ClientRepository;
 import com.parking.client_service.repository.VehicleRepository;
 import com.parking.common.domain.VehicleDomain;
 import com.parking.common.entity.Client;
+import com.parking.common.entity.Log;
 import com.parking.common.entity.Vehicle;
+import com.parking.common.repository.LogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,19 +30,23 @@ import java.util.stream.Collectors;
 public class VehicleService {
 
     private static final Logger log = LoggerFactory.getLogger(VehicleService.class);
+    private static final String SERVICE_NAME = "client-service";
 
     private final VehicleRepository vehicleRepository;
     private final ClientRepository clientRepository;
     private final VehicleMapper vehicleMapper;
+    private final LogRepository logRepository;
     private final AuditLogger auditLogger;
 
     public VehicleService(VehicleRepository vehicleRepository,
                          ClientRepository clientRepository,
                          VehicleMapper vehicleMapper,
+                         LogRepository logRepository,
                          AuditLogger auditLogger) {
         this.vehicleRepository = vehicleRepository;
         this.clientRepository  = clientRepository;
         this.vehicleMapper     = vehicleMapper;
+        this.logRepository     = logRepository;
         this.auditLogger       = auditLogger;
     }
 
@@ -66,6 +74,19 @@ public class VehicleService {
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
         log.info("Successfully created vehicle with id: {}, license plate: {}, for client: {}",
                 savedVehicle.getId(), savedVehicle.getLicensePlate(), client.getId());
+
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("VEHICLE_CREATED");
+        auditLog.setEntityType("VEHICLE");
+        auditLog.setEntityId(savedVehicle.getId());
+        auditLog.setClientId(client.getId());
+        auditLog.setLicensePlate(savedVehicle.getLicensePlate());
+        auditLog.setMessage("Vehicle registered: " + savedVehicle.getLicensePlate() + " for clientId=" + client.getId());
+        auditLog.setMeta(Map.of("clientId", client.getId().toString(), "licensePlate", savedVehicle.getLicensePlate()));
+        logRepository.save(auditLog);
 
         auditLogger.audit("VEHICLE_CREATED", "VEHICLE", savedVehicle.getId(),
                 client.getId(), savedVehicle.getLicensePlate(),
@@ -98,6 +119,19 @@ public class VehicleService {
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
         log.info("Successfully created vehicle with id: {}, license plate: {}, for client: {}",
                 savedVehicle.getId(), savedVehicle.getLicensePlate(), client.getId());
+
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("VEHICLE_CREATED");
+        auditLog.setEntityType("VEHICLE");
+        auditLog.setEntityId(savedVehicle.getId());
+        auditLog.setClientId(client.getId());
+        auditLog.setLicensePlate(savedVehicle.getLicensePlate());
+        auditLog.setMessage("Vehicle registered: " + savedVehicle.getLicensePlate() + " for clientId=" + client.getId());
+        auditLog.setMeta(Map.of("clientId", client.getId().toString(), "licensePlate", savedVehicle.getLicensePlate()));
+        logRepository.save(auditLog);
 
         auditLogger.audit("VEHICLE_CREATED", "VEHICLE", savedVehicle.getId(),
                 client.getId(), savedVehicle.getLicensePlate(),
@@ -181,6 +215,22 @@ public class VehicleService {
         Vehicle saved = vehicleRepository.save(domain.getEntity());
         log.info("Successfully updated vehicle with id: {}, license plate: {}", saved.getId(), saved.getLicensePlate());
 
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("VEHICLE_UPDATED");
+        auditLog.setEntityType("VEHICLE");
+        auditLog.setEntityId(saved.getId());
+        auditLog.setClientId(saved.getClient() != null ? saved.getClient().getId() : null);
+        auditLog.setLicensePlate(saved.getLicensePlate());
+        auditLog.setMessage("Vehicle updated: " + saved.getLicensePlate() + " (id=" + saved.getId() + ")");
+        auditLog.setMeta(Map.of(
+                "clientId", saved.getClient() != null ? saved.getClient().getId().toString() : "unknown",
+                "licensePlate", saved.getLicensePlate()
+        ));
+        logRepository.save(auditLog);
+
         auditLogger.audit("VEHICLE_UPDATED", "VEHICLE", saved.getId(),
                 saved.getClient() != null ? saved.getClient().getId() : null, saved.getLicensePlate(),
                 "Vehicle updated: " + saved.getLicensePlate() + " (id=" + saved.getId() + ")");
@@ -231,6 +281,22 @@ public class VehicleService {
         Vehicle saved = vehicleRepository.save(domain.getEntity());
         log.info("Successfully updated vehicle with id: {}, license plate: {}", saved.getId(), saved.getLicensePlate());
 
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("VEHICLE_UPDATED");
+        auditLog.setEntityType("VEHICLE");
+        auditLog.setEntityId(saved.getId());
+        auditLog.setClientId(saved.getClient() != null ? saved.getClient().getId() : null);
+        auditLog.setLicensePlate(saved.getLicensePlate());
+        auditLog.setMessage("Vehicle updated: " + saved.getLicensePlate() + " (id=" + saved.getId() + ")");
+        auditLog.setMeta(Map.of(
+                "clientId", saved.getClient() != null ? saved.getClient().getId().toString() : "unknown",
+                "licensePlate", saved.getLicensePlate()
+        ));
+        logRepository.save(auditLog);
+
         auditLogger.audit("VEHICLE_UPDATED", "VEHICLE", saved.getId(),
                 saved.getClient() != null ? saved.getClient().getId() : null, saved.getLicensePlate(),
                 "Vehicle updated: " + saved.getLicensePlate() + " (id=" + saved.getId() + ")");
@@ -252,6 +318,22 @@ public class VehicleService {
         Long clientId = existing.getClient() != null ? existing.getClient().getId() : null;
         vehicleRepository.delete(existing);
 
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("VEHICLE_DELETED");
+        auditLog.setEntityType("VEHICLE");
+        auditLog.setEntityId(id);
+        auditLog.setClientId(clientId);
+        auditLog.setLicensePlate(plate);
+        auditLog.setMessage("Vehicle deleted: " + plate + " (id=" + id + ")");
+        auditLog.setMeta(Map.of(
+                "clientId", clientId != null ? clientId.toString() : "unknown",
+                "licensePlate", plate
+        ));
+        logRepository.save(auditLog);
+
         auditLogger.audit("VEHICLE_DELETED", "VEHICLE", id,
                 clientId, plate,
                 "Vehicle deleted: " + plate + " (id=" + id + ")");
@@ -264,4 +346,3 @@ public class VehicleService {
         return a.equals(b);
     }
 }
-

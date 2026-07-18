@@ -6,7 +6,6 @@ import com.parking.billing.exception.ParkingEventNotFoundException;
 import com.parking.billing.exception.TicketAlreadyPaidException;
 import com.parking.billing.mapper.BillingMapper;
 import com.parking.billing.service.BillingService;
-import com.parking.billing.repository.PaymentRepository;
 import com.parking.billing.repository.ParkingEventRepository;
 import com.parking.billing_service.generated.api.BillingApi;
 import com.parking.billing_service.generated.model.*;
@@ -35,7 +34,6 @@ public class BillingController implements BillingApi {
 
     private final BillingService billingService;
     private final BillingMapper billingMapper;
-    private final PaymentRepository paymentRepository;
     private final ParkingEventRepository parkingEventRepository;
 
     @Override
@@ -253,19 +251,14 @@ public class BillingController implements BillingApi {
                         return saved;
                     });
 
-            // Create Payment
-            Payment payment = new Payment();
-            payment.setParkingEventId(parkingEvent.getId());
-            payment.setAmount(BigDecimal.valueOf(amount));
-            payment.setPaymentMethod(Payment.PaymentMethod.CARD);
-            payment.setStatus(Payment.PaymentStatus.COMPLETED);
-            payment.setPaymentTime(LocalDateTime.now());
-            payment.setTransactionId("TEST-" + System.currentTimeMillis());
+            Payment saved = billingService.recordPaymentByEventId(
+                    parkingEvent.getId(),
+                    BigDecimal.valueOf(amount),
+                    Payment.PaymentMethod.CARD,
+                    null
+            );
 
-            log.info("Saving payment with transaction ID: {}", payment.getTransactionId());
-            Payment saved = paymentRepository.save(payment);
-
-            log.info("✅ Test payment saved successfully with ID: {}, parkingEventId: {}",
+            log.info("✅ Test payment processed successfully with ID: {}, parkingEventId: {}",
                     saved.getId(), parkingEvent.getId());
 
             PaymentResponse response = billingMapper.toPaymentResponse(saved);

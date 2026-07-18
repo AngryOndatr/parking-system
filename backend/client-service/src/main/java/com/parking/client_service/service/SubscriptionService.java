@@ -11,8 +11,10 @@ import com.parking.client_service.repository.ParkingSpaceRepository;
 import com.parking.client_service.repository.SubscriptionRepository;
 import com.parking.common.domain.SubscriptionDomain;
 import com.parking.common.entity.Client;
+import com.parking.common.entity.Log;
 import com.parking.common.entity.ParkingSpace;
 import com.parking.common.entity.Subscription;
+import com.parking.common.repository.LogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -34,10 +37,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class SubscriptionService {
+    private static final String SERVICE_NAME = "client-service";
 
     private final SubscriptionRepository subscriptionRepository;
     private final ClientRepository clientRepository;
     private final ParkingSpaceRepository parkingSpaceRepository;
+    private final LogRepository logRepository;
     private final SubscriptionMapper subscriptionMapper;
     private final AuditLogger auditLogger;
 
@@ -101,6 +106,24 @@ public class SubscriptionService {
         String spaceInfo = reservedSpace != null
                 ? ", spaceId=" + reservedSpace.getId() + ", space=" + reservedSpace.getSpaceNumber()
                 : "";
+
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("SUBSCRIPTION_CREATED");
+        auditLog.setEntityType("SUBSCRIPTION");
+        auditLog.setEntityId(saved.getId());
+        auditLog.setClientId(clientId);
+        auditLog.setMessage("Subscription created: type=" + typeValue + ", clientId=" + clientId
+                + ", from=" + request.getStartDate() + " to " + request.getEndDate() + spaceInfo);
+        auditLog.setMeta(Map.of(
+                "clientId", clientId.toString(),
+                "type", typeValue,
+                "parkingSpaceId", reservedSpace != null ? reservedSpace.getId().toString() : ""
+        ));
+        logRepository.save(auditLog);
+
         auditLogger.audit("SUBSCRIPTION_CREATED", "SUBSCRIPTION", saved.getId(),
                 clientId, null,
                 "Subscription created: type=" + typeValue + ", clientId=" + clientId
@@ -162,6 +185,22 @@ public class SubscriptionService {
         subscriptionRepository.save(domain.getEntity());
 
         log.info("Subscription id={} deactivated", subscriptionId);
+
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("SUBSCRIPTION_DEACTIVATED");
+        auditLog.setEntityType("SUBSCRIPTION");
+        auditLog.setEntityId(subscriptionId);
+        auditLog.setClientId(clientId);
+        auditLog.setMessage("Subscription deactivated: id=" + subscriptionId + ", type=" + type
+                + ", clientId=" + clientId);
+        auditLog.setMeta(Map.of(
+                "clientId", clientId != null ? clientId.toString() : "",
+                "type", type != null ? type : ""
+        ));
+        logRepository.save(auditLog);
 
         auditLogger.audit("SUBSCRIPTION_DEACTIVATED", "SUBSCRIPTION", subscriptionId,
                 clientId, null,

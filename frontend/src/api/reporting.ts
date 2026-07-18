@@ -68,3 +68,40 @@ export async function getVehicleHistory(
   )
   return res.data
 }
+
+export interface ClientOption {
+  id: number
+  name: string
+}
+
+export interface VehicleOption {
+  licensePlate: string
+}
+
+export async function getAllClients(): Promise<ClientOption[]> {
+  interface ClientResponseData {
+    id: number
+    fullName: string
+    phoneNumber: string
+    email?: string
+    registeredAt?: string
+  }
+  const res = await apiClient.get<ClientResponseData[]>('/clients')
+  return res.data.map(c => ({
+    id: c.id,
+    name: `${c.fullName} (${c.phoneNumber})`,
+  }))
+}
+
+export async function getAllVehicles(): Promise<VehicleOption[]> {
+  interface VehicleResponseData {
+    id: number
+    licensePlate: string
+    isAllowed?: boolean
+    clientId?: number
+  }
+  const res = await apiClient.get<VehicleResponseData[]>('/vehicles')
+  return res.data.map(v => ({
+    licensePlate: v.licensePlate,
+  }))
+}

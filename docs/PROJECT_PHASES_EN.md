@@ -230,7 +230,7 @@ Ensure system security and reliable service integration.
 ## Phase 4: Frontend, Reports and E2E 📊
 
 **Duration:** 3 weeks  
-**Status:** ⏳ PENDING
+**Status:** 🔄 IN PROGRESS
 
 ### Goal
 Create fully functional user interface and end-to-end testing.
@@ -239,10 +239,10 @@ Create fully functional user interface and end-to-end testing.
 
 | ID | Task | Description | Status | Issue |
 |----|------|-------------|--------|-------|
-| 4.1 | **Admin UI** | CRUD for clients, subscriptions and tariffs (Client Service calls) | ⏳ | - |
-| 4.2 | **Reporting UI** | View parking logs (GET /reports/events) and operator actions (GET /reports/actions), filters by date/number | ⏳ | - |
-| 4.3 | **Test Coverage** | Unit and Integration tests for Billing and Gate Control (complex logic) | ⏳ | - |
-| 4.4 | **E2E Test Suite** | All E2E tests (E2E-001 to E2E-203) with Cypress/Selenium | ⏳ | - |
+| 4.1 | **Admin UI** | Complete remaining admin scope (tariffs CRUD; clients/subscriptions already implemented) | 🔄 | #92 |
+| 4.2 | **Reporting UI** | View parking logs and operator actions with production-ready filters/export | ⏳ | #93 |
+| 4.3 | **Test Coverage** | Expand Unit and Integration tests for Billing and Gate Control complex logic | ⏳ | #94 |
+| 4.4 | **E2E Test Suite** | Expand E2E suite beyond smoke scenarios in dockerized workflow | ⏳ | #95 |
 
 ### Expected Results
 - Fully functional Admin UI for system management
@@ -286,14 +286,14 @@ Phase 0: ████████████████████ 100% ✅ C
 Phase 1: ████████████████████ 100% ✅ COMPLETED
 Phase 2: ████████████████████ 100% ✅ COMPLETED
 Phase 3: ████████████████████ 100% ✅ COMPLETED
-Phase 4: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
+Phase 4: ████░░░░░░░░░░░░░░░░  20% 🔄 IN PROGRESS
 Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ PENDING
 
-Total Progress: █████████████░░░░░░░ 67% (4/6 phases)
+Total Progress: ██████████████░░░░░░ 70% (4/6 phases + Phase 4 started)
 ```
 
 **Current Phase:** Phase 4 - Frontend, Reports and E2E  
-**Current Focus:** Reports backlog and advanced E2E expansion  
+**Current Focus:** Tariffs admin UI completion, reporting parity, and test/e2e expansion  
 **Completed Phases:** 4 of 6  
 
 ---
@@ -304,9 +304,9 @@ Total Progress: █████████████░░░░░░░ 67%
 
 | Metric | Value |
 |--------|-------|
-| **Total Issues** | 47 |
-| **Closed Issues** | 46 (98%) |
-| **Active Issues** | 1 |
+| **Total Issues** | 57 |
+| **Closed Issues** | 53 (93%) |
+| **Active Issues** | 4 |
 | **Microservices** | 7 backend + 1 frontend |
 | **API Endpoints** | 20+ (via API Gateway) |
 | **Tests** | 177+ |

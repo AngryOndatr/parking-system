@@ -7,8 +7,10 @@ import com.parking.gate_control_service.dto.EntryDecision;
 import com.parking.gate_control_service.dto.ExitDecision;
 import com.parking.gate_control_service.dto.PaymentStatusResponse;
 import com.parking.gate_control_service.dto.SubscriptionCheckResponse;
+import com.parking.common.entity.Log;
 import com.parking.gate_control_service.entity.GateEvent;
 import com.parking.gate_control_service.repository.GateEventRepository;
+import com.parking.common.repository.LogRepository;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +41,8 @@ class GateServiceTest {
 
     @Mock
     private AuditLogger auditLogger;
+    @Mock
+    private LogRepository logRepository;
 
     @InjectMocks
     private GateService gateService;
@@ -77,6 +81,14 @@ class GateServiceTest {
         assertThat(savedEvent.getReason()).contains("200");
         assertThat(savedEvent.getGateId()).isEqualTo("ENTRY-1");
         assertThat(savedEvent.getTicketCode()).isNull();
+
+        ArgumentCaptor<Log> logCaptor = ArgumentCaptor.forClass(Log.class);
+        verify(logRepository).save(logCaptor.capture());
+        Log savedLog = logCaptor.getValue();
+        assertThat(savedLog.getAction()).isEqualTo("GATE_ENTRY");
+        assertThat(savedLog.getService()).isEqualTo("gate-control-service");
+        assertThat(savedLog.getEntityType()).isEqualTo("GATE");
+        assertThat(savedLog.getLicensePlate()).isEqualTo(licensePlate);
     }
 
     @Test
@@ -236,6 +248,15 @@ class GateServiceTest {
         assertThat(decision).isNotNull();
         assertThat(decision.getAction()).isEqualTo("DENY");
         assertThat(decision.getMessage()).contains("Payment required: 20.00");
+
+        ArgumentCaptor<Log> logCaptor = ArgumentCaptor.forClass(Log.class);
+        verify(logRepository).save(logCaptor.capture());
+        Log savedLog = logCaptor.getValue();
+        assertThat(savedLog.getAction()).isEqualTo("GATE_EXIT_DENIED");
+        assertThat(savedLog.getService()).isEqualTo("gate-control-service");
+        assertThat(savedLog.getEntityType()).isEqualTo("GATE");
+        assertThat(savedLog.getLogLevel()).isEqualTo("WARNING");
+        assertThat(savedLog.getLicensePlate()).isEqualTo(licensePlate);
     }
 
     @Test
@@ -252,4 +273,3 @@ class GateServiceTest {
         assertThat(decision.getMessage()).contains("No valid ticket or subscription");
     }
 }
-

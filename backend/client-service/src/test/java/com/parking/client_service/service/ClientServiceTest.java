@@ -7,6 +7,8 @@ import com.parking.client_service.mapper.ClientMapper;
 import com.parking.client_service.repository.ClientRepository;
 import com.parking.client_service.repository.VehicleRepository;
 import com.parking.common.entity.Client;
+import com.parking.common.entity.Log;
+import com.parking.common.repository.LogRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,6 +36,8 @@ public class ClientServiceTest {
 
     @Mock
     private AuditLogger auditLogger;
+    @Mock
+    private LogRepository logRepository;
 
     @InjectMocks
     private ClientService clientService;
@@ -75,6 +79,14 @@ public class ClientServiceTest {
         verify(clientRepository, times(1)).save(captor.capture());
         Client captured = captor.getValue();
         assertThat(captured.getPhoneNumber()).isEqualTo(dto.getPhoneNumber());
+
+        ArgumentCaptor<Log> logCaptor = ArgumentCaptor.forClass(Log.class);
+        verify(logRepository).save(logCaptor.capture());
+        Log savedLog = logCaptor.getValue();
+        assertThat(savedLog.getAction()).isEqualTo("CLIENT_CREATED");
+        assertThat(savedLog.getService()).isEqualTo("client-service");
+        assertThat(savedLog.getEntityType()).isEqualTo("CLIENT");
+        assertThat(savedLog.getClientId()).isEqualTo(1L);
     }
 
     @Test

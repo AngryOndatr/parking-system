@@ -1,5 +1,7 @@
 package com.parking.gate_control_service.service;
 
+import com.parking.common.entity.Log;
+import com.parking.common.repository.LogRepository;
 import com.parking.gate_control_service.audit.AuditLogger;
 import com.parking.gate_control_service.client.BillingServiceClient;
 import com.parking.gate_control_service.client.ClientServiceClient;
@@ -30,8 +32,10 @@ public class GateService {
     private final ClientServiceClient clientServiceClient;
     private final BillingServiceClient billingServiceClient;
     private final GateEventRepository gateEventRepository;
+    private final LogRepository logRepository;
     private final AuditLogger auditLogger;
 
+    private static final String SERVICE_NAME = "gate-control-service";
     private static final String GATE_ID_ENTRY = "ENTRY-1";
     private static final String ACTION_OPEN   = "OPEN";
     private static final String ACTION_DENY   = "DENY";
@@ -80,6 +84,19 @@ public class GateService {
         event.setTimestamp(LocalDateTime.now());
         GateEvent saved = gateEventRepository.save(event);
 
+        // Log to audit trail (direct DB write - guaranteed persistence)
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("GATE_ENTRY");
+        auditLog.setEntityType("GATE");
+        auditLog.setEntityId(saved.getId());
+        auditLog.setLicensePlate(licensePlate);
+        auditLog.setMessage("Gate ENTRY opened for subscriber: plate=" + licensePlate + ", subscriptionId=" + subId);
+        auditLog.setMeta(Map.of("gateId", GATE_ID_ENTRY, "subscriptionId", String.valueOf(subId), "decision", ACTION_OPEN));
+        logRepository.save(auditLog);
+
         auditLogger.audit("GATE_ENTRY", "GATE", saved.getId(), null, licensePlate,
                 "Gate ENTRY opened for subscriber: plate=" + licensePlate + ", subscriptionId=" + subId,
                 Map.of("gateId", GATE_ID_ENTRY, "subscriptionId", String.valueOf(subId), "decision", ACTION_OPEN));
@@ -113,6 +130,19 @@ public class GateService {
         event.setReason("Ticket issued");
         event.setTimestamp(LocalDateTime.now());
         GateEvent saved = gateEventRepository.save(event);
+
+        // Log to audit trail (direct DB write - guaranteed persistence)
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("GATE_ENTRY");
+        auditLog.setEntityType("GATE");
+        auditLog.setEntityId(saved.getId());
+        auditLog.setLicensePlate(licensePlate);
+        auditLog.setMessage("Gate ENTRY opened for visitor: plate=" + licensePlate + ", ticket=" + ticketCode);
+        auditLog.setMeta(Map.of("gateId", GATE_ID_ENTRY, "ticketCode", ticketCode, "decision", ACTION_OPEN));
+        logRepository.save(auditLog);
 
         auditLogger.audit("GATE_ENTRY", "GATE", saved.getId(), null, licensePlate,
                 "Gate ENTRY opened for visitor: plate=" + licensePlate + ", ticket=" + ticketCode,
@@ -168,6 +198,19 @@ public class GateService {
                 event.setTimestamp(LocalDateTime.now());
                 GateEvent saved = gateEventRepository.save(event);
 
+                // Log to audit trail (direct DB write - guaranteed persistence)
+                Log auditLog = new Log();
+                auditLog.setTimestamp(LocalDateTime.now());
+                auditLog.setLogLevel("INFO");
+                auditLog.setService(SERVICE_NAME);
+                auditLog.setAction("GATE_EXIT");
+                auditLog.setEntityType("GATE");
+                auditLog.setEntityId(saved.getId());
+                auditLog.setLicensePlate(licensePlate);
+                auditLog.setMessage("Gate EXIT opened for subscriber: plate=" + licensePlate);
+                auditLog.setMeta(Map.of("gateId", "EXIT-1", "decision", ACTION_OPEN));
+                logRepository.save(auditLog);
+
                 auditLogger.audit("GATE_EXIT", "GATE", saved.getId(), null, licensePlate,
                         "Gate EXIT opened for subscriber: plate=" + licensePlate,
                         Map.of("gateId", "EXIT-1", "decision", ACTION_OPEN));
@@ -196,6 +239,19 @@ public class GateService {
                     event.setTimestamp(LocalDateTime.now());
                     GateEvent saved = gateEventRepository.save(event);
 
+                    // Log to audit trail (direct DB write - guaranteed persistence)
+                    Log auditLog = new Log();
+                    auditLog.setTimestamp(LocalDateTime.now());
+                    auditLog.setLogLevel("INFO");
+                    auditLog.setService(SERVICE_NAME);
+                    auditLog.setAction("GATE_EXIT");
+                    auditLog.setEntityType("GATE");
+                    auditLog.setEntityId(saved.getId());
+                    auditLog.setLicensePlate(licensePlate);
+                    auditLog.setMessage("Gate EXIT opened after payment: plate=" + licensePlate + ", ticket=" + ticketCode);
+                    auditLog.setMeta(Map.of("gateId", "EXIT-1", "ticketCode", ticketCode, "decision", ACTION_OPEN));
+                    logRepository.save(auditLog);
+
                     auditLogger.audit("GATE_EXIT", "GATE", saved.getId(), null, licensePlate,
                             "Gate EXIT opened after payment: plate=" + licensePlate + ", ticket=" + ticketCode,
                             Map.of("gateId", "EXIT-1", "ticketCode", ticketCode, "decision", ACTION_OPEN));
@@ -220,6 +276,19 @@ public class GateService {
                     Long billingEventId = paymentStatus != null ? paymentStatus.getParkingEventId() : null;
                     java.math.BigDecimal remainingFee = paymentStatus != null ? paymentStatus.getRemainingFee() : null;
 
+                    // Log to audit trail (direct DB write - guaranteed persistence)
+                    Log auditLog = new Log();
+                    auditLog.setTimestamp(LocalDateTime.now());
+                    auditLog.setLogLevel("WARNING");
+                    auditLog.setService(SERVICE_NAME);
+                    auditLog.setAction("GATE_EXIT_DENIED");
+                    auditLog.setEntityType("GATE");
+                    auditLog.setEntityId(saved.getId());
+                    auditLog.setLicensePlate(licensePlate);
+                    auditLog.setMessage("Gate EXIT DENIED — payment required: plate=" + licensePlate + ", fee=" + feeMsg);
+                    auditLog.setMeta(Map.of("gateId", "EXIT-1", "ticketCode", ticketCode, "decision", ACTION_DENY, "fee", feeMsg));
+                    logRepository.save(auditLog);
+
                     auditLogger.audit("GATE_EXIT_DENIED", "GATE", saved.getId(), null, licensePlate,
                             "Gate EXIT DENIED — payment required: plate=" + licensePlate + ", fee=" + feeMsg,
                             Map.of("gateId", "EXIT-1", "ticketCode", ticketCode, "decision", ACTION_DENY, "fee", feeMsg));
@@ -234,6 +303,18 @@ public class GateService {
             } else {
                 // No ticket and not a subscriber
                 log.warn("No ticket and not a subscriber plate={}", licensePlate);
+
+                // Log to audit trail (direct DB write - guaranteed persistence)
+                Log auditLog = new Log();
+                auditLog.setTimestamp(LocalDateTime.now());
+                auditLog.setLogLevel("WARNING");
+                auditLog.setService(SERVICE_NAME);
+                auditLog.setAction("GATE_EXIT_DENIED");
+                auditLog.setEntityType("GATE");
+                auditLog.setLicensePlate(licensePlate);
+                auditLog.setMessage("Gate EXIT DENIED — no ticket or subscription: plate=" + licensePlate);
+                auditLog.setMeta(Map.of("gateId", "EXIT-1", "decision", ACTION_DENY));
+                logRepository.save(auditLog);
 
                 auditLogger.audit("GATE_EXIT_DENIED", "GATE", null, null, licensePlate,
                         "Gate EXIT DENIED — no ticket or subscription: plate=" + licensePlate,

@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EntityScan(basePackages = {"com.parking.gate_control_service", "com.parking.common.entity"})
-@EnableJpaRepositories(basePackages = {"com.parking.gate_control_service.repository"})
+@EnableJpaRepositories(basePackages = {"com.parking.gate_control_service.repository", "com.parking.common.repository"})
 public class GateControlServiceApplication {
 
 	public static void main(String[] args) {

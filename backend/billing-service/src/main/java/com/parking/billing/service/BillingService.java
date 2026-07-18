@@ -12,7 +12,9 @@ import com.parking.billing.exception.TicketAlreadyPaidException;
 import com.parking.billing.repository.ParkingEventRepository;
 import com.parking.billing.repository.PaymentRepository;
 import com.parking.billing_service.repository.TariffRepository;
+import com.parking.common.entity.Log;
 import com.parking.common.entity.Tariff;
+import com.parking.common.repository.LogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Service for billing operations.
@@ -30,11 +33,13 @@ import java.time.LocalDateTime;
 @Slf4j
 public class BillingService {
 
+    private static final String SERVICE_NAME = "billing-service";
     private static final String ONE_TIME_TARIFF = "ONE_TIME";
 
     private final TariffRepository tariffRepository;
     private final ParkingEventRepository parkingEventRepository;
     private final PaymentRepository paymentRepository;
+    private final LogRepository logRepository;
     private final AuditLogger auditLogger;
 
     /**
@@ -75,6 +80,19 @@ public class BillingService {
 
         log.info("Calculated fee for ticket {}: {} (Duration: {} hours, Rate: {}/hour)",
                 ticketCode, fee, domain.calculateDurationInHours(exitTime), hourlyRate);
+
+        saveAuditLog(
+                "FEE_CALCULATED",
+                "BILLING",
+                parkingEvent.getId(),
+                parkingEvent.getLicensePlate(),
+                "Fee calculated: ticket=" + ticketCode + ", fee=" + fee + ", rate=" + hourlyRate,
+                Map.of(
+                        "ticketCode", ticketCode,
+                        "fee", fee.toString(),
+                        "hourlyRate", hourlyRate.toString()
+                )
+        );
 
         return fee;
     }
@@ -122,6 +140,19 @@ public class BillingService {
 
         log.info("Calculated fee for event {}: {} (Duration: {} hours, Rate: {}/hour)",
                 parkingEventId, fee, domain.calculateDurationInHours(exitTime), hourlyRate);
+
+        saveAuditLog(
+                "FEE_CALCULATED",
+                "BILLING",
+                parkingEvent.getId(),
+                parkingEvent.getLicensePlate(),
+                "Fee calculated: eventId=" + parkingEventId + ", fee=" + fee + ", rate=" + hourlyRate,
+                Map.of(
+                        "eventId", parkingEventId.toString(),
+                        "fee", fee.toString(),
+                        "hourlyRate", hourlyRate.toString()
+                )
+        );
 
         return fee;
     }
@@ -178,6 +209,19 @@ public class BillingService {
 
         log.info("Calculated fee for event {}: {} (Duration: {} hours, Rate: {}/hour)",
                 parkingEventId, fee, domain.calculateDurationInHours(exitTime), hourlyRate);
+
+        saveAuditLog(
+                "FEE_CALCULATED",
+                "BILLING",
+                parkingEvent.getId(),
+                parkingEvent.getLicensePlate(),
+                "Fee calculated with custom times: eventId=" + parkingEventId + ", fee=" + fee + ", rate=" + hourlyRate,
+                Map.of(
+                        "eventId", parkingEventId.toString(),
+                        "fee", fee.toString(),
+                        "hourlyRate", hourlyRate.toString()
+                )
+        );
 
         return fee;
     }
@@ -243,6 +287,19 @@ public class BillingService {
 
         log.info("Payment recorded successfully. Transaction ID: {} for ticket: {}",
                 savedPayment.getTransactionId(), ticketCode);
+
+        // Log to audit trail (direct DB write - guaranteed persistence)
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction("PAYMENT_PROCESSED");
+        auditLog.setEntityType("BILLING");
+        auditLog.setEntityId(savedPayment.getId());
+        auditLog.setLicensePlate(parkingEvent.getLicensePlate());
+        auditLog.setMessage("Payment processed: ticket=" + ticketCode + ", amount=" + amountPaid + ", method=" + method + ", txId=" + savedPayment.getTransactionId());
+        auditLog.setMeta(Map.of("ticketCode", ticketCode, "amount", amountPaid.toString(), "method", method.toString(), "transactionId", savedPayment.getTransactionId()));
+        logRepository.save(auditLog);
 
         auditLogger.audit("PAYMENT_PROCESSED", "BILLING", savedPayment.getId(), null,
                 parkingEvent.getLicensePlate(),
@@ -343,6 +400,19 @@ public class BillingService {
             log.info("✅ Payment saved successfully with ID: {}, Transaction ID: {}",
                 savedPayment.getId(), savedPayment.getTransactionId());
 
+            // Log to audit trail (direct DB write - guaranteed persistence)
+            Log auditLog = new Log();
+            auditLog.setTimestamp(LocalDateTime.now());
+            auditLog.setLogLevel("INFO");
+            auditLog.setService(SERVICE_NAME);
+            auditLog.setAction("PAYMENT_PROCESSED");
+            auditLog.setEntityType("BILLING");
+            auditLog.setEntityId(savedPayment.getId());
+            auditLog.setLicensePlate(parkingEvent.getLicensePlate());
+            auditLog.setMessage("Payment processed: eventId=" + parkingEventId + ", amount=" + amountPaid + ", method=" + method + ", txId=" + savedPayment.getTransactionId());
+            auditLog.setMeta(Map.of("eventId", parkingEventId.toString(), "amount", amountPaid.toString(), "method", method.toString(), "transactionId", savedPayment.getTransactionId()));
+            logRepository.save(auditLog);
+
             auditLogger.audit("PAYMENT_PROCESSED", "BILLING", savedPayment.getId(), null,
                     parkingEvent.getLicensePlate(),
                     "Payment processed: eventId=" + parkingEventId + ", amount=" + amountPaid +
@@ -441,5 +511,25 @@ public class BillingService {
             return BigDecimal.ZERO;
         }
     }
-}
 
+    private void saveAuditLog(
+            String action,
+            String entityType,
+            Long entityId,
+            String licensePlate,
+            String message,
+            Map<String, Object> meta
+    ) {
+        Log auditLog = new Log();
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setLogLevel("INFO");
+        auditLog.setService(SERVICE_NAME);
+        auditLog.setAction(action);
+        auditLog.setEntityType(entityType);
+        auditLog.setEntityId(entityId);
+        auditLog.setLicensePlate(licensePlate);
+        auditLog.setMessage(message);
+        auditLog.setMeta(meta);
+        logRepository.save(auditLog);
+    }
+}
