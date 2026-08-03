@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   BarChart3, Loader2, RefreshCw, Filter,
-  Shield, Car, User, Search, Clock,
+  Shield, Car, User, Search, Clock, Download,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -45,6 +45,34 @@ const SERVICE_NAMES: Record<string, string> = {
   'management-service': 'Management Service',
   'reporting-service': 'Reporting Service',
   'eureka-server': 'Eureka Server',
+}
+
+function escapeCsvValue(value: unknown) {
+  if (value === null || value === undefined) return ''
+  const normalized = String(value)
+  if (/[",\n]/.test(normalized)) {
+    return `"${normalized.replace(/"/g, '""')}"`
+  }
+  return normalized
+}
+
+function downloadCsv(filename: string, rows: Array<Record<string, unknown>>) {
+  if (rows.length === 0) return
+  const headers = Object.keys(rows[0])
+  const csv = [
+    headers.join(','),
+    ...rows.map(row => headers.map(header => escapeCsvValue(row[header])).join(',')),
+  ].join('\n')
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
 }
 
 function actionColor(action: string | null) {
@@ -279,6 +307,70 @@ export default function ReportingPage() {
 
   const isFetching = logsQuery.isFetching || auditQuery.isFetching || clientQuery.isFetching || vehicleQuery.isFetching
 
+  const exportCurrentData = () => {
+    if (activeTab === 'general') {
+      const rows = (logsQuery.data ?? []).map(log => ({
+        timestamp: log.timestamp,
+        level: log.level,
+        service: log.service,
+        userId: log.userId ?? '',
+        message: log.message,
+      }))
+      downloadCsv(`parking-system-logs-${new Date().toISOString().slice(0, 10)}.csv`, rows)
+      return
+    }
+
+    if (activeTab === 'audit') {
+      const rows = (auditEntries ?? []).map(entry => ({
+        timestamp: entry.timestamp,
+        action: entry.action ?? '',
+        entityType: entry.entityType ?? '',
+        entityId: entry.entityId ?? '',
+        clientId: entry.clientId ?? '',
+        licensePlate: entry.licensePlate ?? '',
+        service: entry.service,
+        message: entry.message,
+      }))
+      downloadCsv(`parking-system-audit-${new Date().toISOString().slice(0, 10)}.csv`, rows)
+      return
+    }
+
+    if (activeTab === 'client') {
+      const rows = (clientQuery.data ?? []).map(entry => ({
+        timestamp: entry.timestamp,
+        action: entry.action ?? '',
+        entityType: entry.entityType ?? '',
+        entityId: entry.entityId ?? '',
+        clientId: entry.clientId ?? '',
+        licensePlate: entry.licensePlate ?? '',
+        service: entry.service,
+        message: entry.message,
+      }))
+      downloadCsv(`parking-system-client-history-${clientIdInput ?? 'unknown'}-${new Date().toISOString().slice(0, 10)}.csv`, rows)
+      return
+    }
+
+    const rows = (vehicleQuery.data ?? []).map(entry => ({
+      timestamp: entry.timestamp,
+      action: entry.action ?? '',
+      entityType: entry.entityType ?? '',
+      entityId: entry.entityId ?? '',
+      clientId: entry.clientId ?? '',
+      licensePlate: entry.licensePlate ?? '',
+      service: entry.service,
+      message: entry.message,
+    }))
+    downloadCsv(`parking-system-vehicle-history-${plateInput || 'unknown'}-${new Date().toISOString().slice(0, 10)}.csv`, rows)
+  }
+
+  const canExport = activeTab === 'general'
+    ? (logsQuery.data?.length ?? 0) > 0
+    : activeTab === 'audit'
+      ? auditEntries.length > 0
+      : activeTab === 'client'
+        ? !!(clientSearch && clientIdInput && clientIdInput > 0 && (clientQuery.data?.length ?? 0) > 0)
+        : !!(vehicleSearch && plateInput.trim().length >= 2 && (vehicleQuery.data?.length ?? 0) > 0)
+  
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'audit',   label: t('reporting.tab_audit'),   icon: <Shield size={15} /> },
     { id: 'client',  label: t('reporting.tab_client'),  icon: <User size={15} /> },
@@ -292,9 +384,14 @@ export default function ReportingPage() {
         icon={<Shield size={24} />}
         title={t('reporting.page_title')}
         actions={
-          <Button variant="ghost" size="sm" onClick={refetchCurrent} disabled={isFetching}>
-            <RefreshCw size={16} className={`mr-1 ${isFetching ? 'animate-spin' : ''}`} /> {t('common.refresh')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={exportCurrentData} disabled={!canExport}>
+              <Download size={16} className="mr-1" /> {t('common.export')}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={refetchCurrent} disabled={isFetching}>
+              <RefreshCw size={16} className={`mr-1 ${isFetching ? 'animate-spin' : ''}`} /> {t('common.refresh')}
+            </Button>
+          </div>
         }
       />
 
