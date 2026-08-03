@@ -1,0 +1,12 @@
+# Production profile - active when SPRING_PROFILES_ACTIVE=production
+# No default DB credentials here: startup fails fast if the environment
+# variables are not set, instead of silently reusing dev values.
+spring:
+  datasource:
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+logging:
+  level:
+    com.parking.billing_service: INFO
+    org.springframework.web: WARN

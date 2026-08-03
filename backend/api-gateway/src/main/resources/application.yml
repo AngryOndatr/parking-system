@@ -101,8 +101,10 @@ logging:
 
 security:
   jwt:
-    access-token-expiration: 3600    # 1 hour (for development convenience)
-    refresh-token-expiration: 86400  # 24 hours
+    secret: ${JWT_SECRET:ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction}
+    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:1800}
+    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:43200}
+    issuer: ${JWT_ISSUER:parking-system}
 
 ---
 # Production Security Profile

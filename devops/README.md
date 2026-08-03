@@ -6,8 +6,23 @@ This directory contains Docker Compose configurations for deploying the parking-
 
 ### Docker Compose Files
 
-**`../docker-compose.yml`** (project root) — ⭐ **Primary** — full stack including observability  
-All infrastructure + all services + Prometheus + Grafana + Jaeger + OTel Collector + pgAdmin
+**`../docker-compose.yml`** (project root) — **Base topology** — full stack, no secrets, no environment-specific ports
+
+**`../docker-compose.override.yml`** (project root) — **Development overlay**, applied on top of the base file automatically  
+Publishes ports for every internal service and brings back pgAdmin for local DB access
+
+**`../docker-compose.prod.yml`** (project root) — **Production overlay**, used *instead of* the override file  
+No extra published ports; fails fast if a required secret is missing; adds `restart: unless-stopped`
+
+### Environment Files
+
+**`devops/.env.dev`** — committed, safe local defaults. Loaded automatically by every script below.
+
+**`devops/.env.prod.example`** — committed template for production. Copy to `devops/.env.prod` (git-ignored) and fill in real secrets:
+```powershell
+cp devops\.env.prod.example devops\.env.prod
+# edit devops\.env.prod with real DB/Redis/JWT/Grafana secrets
+```
 
 ### Management Scripts
 
@@ -17,6 +32,8 @@ All infrastructure + all services + Prometheus + Grafana + Jaeger + OTel Collect
 - **check-system.ps1** — Check the status of all services
 - **start-full-system.ps1** — Start the full system with all services
 - **run-e2e-tests.ps1** — Run E2E tests (with Docker health check)
+
+> `quick-restart.ps1`, `start-all.ps1`, `start-full-system.ps1`, `start-infrastructure.ps1` and `unlock-and-test.ps1` are development-only utility scripts — they always run against `docker-compose.override.yml` + `devops/.env.dev`.
 
 ### Test Scripts
 
@@ -97,7 +114,7 @@ test-login.html
 ### Option 1: Using a script (daily workflow)
 
 ```powershell
-# Start the full system
+# Start the full system (development — no setup required)
 .\start-system.ps1
 
 # Stop
@@ -107,11 +124,27 @@ test-login.html
 .\stop-system.ps1 -RemoveVolumes
 ```
 
+### Option 1b: Production
+
+```powershell
+# One-time setup: create devops\.env.prod from template and fill in real secrets
+cp devops\.env.prod.example devops\.env.prod
+
+# Start with production overlay
+.\start-system.ps1 -Prod
+
+# Stop
+.\stop-system.ps1 -Prod
+```
+
 ### Option 2: Manual startup
 
 ```powershell
-# From project root
-docker-compose -f docker-compose.yml up -d
+# Development (override + dev env file)
+docker-compose -f docker-compose.yml -f docker-compose.override.yml --env-file devops\.env.dev up -d
+
+# Production (prod overlay + prod env file)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml --env-file devops\.env.prod up -d
 
 # Check status
 docker ps

@@ -1,0 +1,2 @@
+# Development profile - active when SPRING_PROFILES_ACTIVE=development
+# (base application.yml already runs with DEBUG logging and show-sql:true)

@@ -1,0 +1,11 @@
+# Development profile - active when SPRING_PROFILES_ACTIVE=development
+# Base application.yml already has dev-safe fallback defaults for every
+# ${VAR:default}, so this file only needs to add dev-only conveniences.
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.parking.client_service: DEBUG
+    org.springframework.web: DEBUG

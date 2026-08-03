@@ -8,6 +8,15 @@ Modern parking lot management system built on microservices architecture using S
 
 > **Showing last commit only.** Full history: [CHANGELOG.md](./CHANGELOG.md)
 
+### 2026-08-02 — Dev/prod Docker Compose separation ✅
+
+- Removed all hardcoded secrets from `docker-compose.yml`; internal service ports no longer published by default
+- Added `docker-compose.override.yml` (dev, auto-loaded) and `docker-compose.prod.yml` (fails fast on missing secrets)
+- Added `devops/.env.dev` (committed dev defaults) and `devops/.env.prod.example` (template, git-ignored when populated)
+- Added Spring `development`/`production` profiles to all five remaining services; fixed datasource config in `reporting-service`/`gate-control-service`
+- `start-system.ps1` / `stop-system.ps1` gained a `-Prod` switch; local dev usage unchanged
+- Removed unused duplicate `devops/docker-compose.yml`
+
 ### 2026-07-13 — Frontend multilingual UI (EN/DE/UA/RU) ✅
 
 - 🌍 Added centralized i18n dictionaries in `frontend/src/i18n/translations.ts`
@@ -154,12 +163,15 @@ cd parking-system
 # Build all services
 mvn clean install -DskipTests
 
-# Start all containers
-docker-compose up -d
+# Start all containers (development - no setup required)
+docker-compose -f docker-compose.yml -f docker-compose.override.yml --env-file devops/.env.dev up -d
+# Windows shortcut: .\devops\start-system.ps1
 
 # Check status
 docker-compose ps
 ```
+
+Production uses a separate overlay and a secrets file that is never committed — see [devops/README.md](./devops/README.md) for the full walkthrough.
 
 ### Launch Frontend (Dev)
 ```bash

@@ -1,16 +1,21 @@
-﻿# Полный запуск Parking System (Infrastructure + Services)
+# System Management Script
+param (
+    [switch]$Prod
+)
+
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$composeFile = "$projectRoot\docker-compose.yml"
+$overlayFile = if ($Prod) { "$projectRoot\docker-compose.prod.yml" } else { "$projectRoot\docker-compose.override.yml" }
+$envFile = if ($Prod) { "$projectRoot\devops\.env.prod" } else { "$projectRoot\devops\.env.dev" }
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Parking System Full Startup" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$projectRoot = Split-Path $PSScriptRoot -Parent
-$composeFile = "$projectRoot\docker-compose.yml"
-
 # Запуск инфраструктуры
 Write-Host "[1/3] Запуск инфраструктуры..." -ForegroundColor Yellow
-& .\start-infrastructure.ps1
+& "$PSScriptRoot\start-infrastructure.ps1" -Prod:$Prod
 
 Write-Host ""
 Write-Host "[2/3] Ожидание готовности инфраструктуры (15 секунд)..." -ForegroundColor Yellow
@@ -18,17 +23,13 @@ Start-Sleep -Seconds 15
 
 # Запуск сервисов
 Write-Host "[3/3] Запуск микросервисов (API Gateway, Client Service)..." -ForegroundColor Yellow
-docker-compose -f $composeFile up -d
-
-Write-Host ""
-Write-Host "Ожидание запуска сервисов (30 секунд)..." -ForegroundColor Yellow
-Start-Sleep -Seconds 30
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Статус всех контейнеров:" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
-docker ps --format "table {{.Names}}\t{{.Status}}"
+docker ps --format "table {{.Names}}`t{{.Status}}"
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
@@ -42,7 +43,6 @@ if ($apiStatus) {
     Write-Host "✓ API Gateway запущен (http://localhost:8086)" -ForegroundColor Green
 } else {
     Write-Host "○ API Gateway еще запускается..." -ForegroundColor Yellow
-    docker logs api-gateway --tail 10
 }
 
 # Проверка Client Service
@@ -88,9 +88,8 @@ Write-Host "Просмотр логов Client Service:" -ForegroundColor White
 Write-Host "  docker logs client-service -f" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Перезапуск сервисов:" -ForegroundColor White
-Write-Host "  docker-compose -f $composeFile restart" -ForegroundColor Gray
+Write-Host "  docker-compose -f $composeFile -f $overlayFile --env-file $envFile restart" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Остановка всей системы:" -ForegroundColor White
 Write-Host "  .\stop-system.ps1" -ForegroundColor Gray
 Write-Host ""
-

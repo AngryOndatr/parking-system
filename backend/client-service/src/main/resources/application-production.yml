@@ -1,0 +1,19 @@
+# Production profile - active when SPRING_PROFILES_ACTIVE=production
+# Every value below has NO default: the app fails fast on startup if the
+# corresponding environment variable is not set, instead of silently
+# falling back to the shared development secret.
+spring:
+  datasource:
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    show-sql: false
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+
+logging:
+  level:
+    com.parking.client_service: INFO
+    org.springframework.web: WARN

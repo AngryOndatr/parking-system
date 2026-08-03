@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase 4 planning and report features backlog
 
 ### Recently Completed
+- ✅ **Dev/prod Docker Compose separation** — 2026-08-02
 - ✅ **[Phase 3] Tech Debt: unify API path versioning across microservices** (Issue #81) — 2026-07-13
 - ✅ **[Phase 3] Frontend multilingual support documentation and context sync** (Issue #84) — 2026-07-13
 - ✅ **[Phase 3] Frontend: Billing Operator UI (payment processing)** (Issue #76) — 2026-07-13
@@ -28,6 +29,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **[Phase 3] Subscription check: real DB logic in client-service** (Issue #72) — 2026-03-08
 - ✅ **[Phase 3] Add default OPERATOR user on application startup** (Issue #80) — 2026-03-08
 - ✅ **[Phase 3] RBAC: role-based route protection in SecurityFilter** (Issue #78) — 2026-03-08
+
+## [Unreleased] - Dev/prod Docker Compose separation - 2026-08-02
+
+### Changed
+
+**Problem:** `docker-compose.yml` hardcoded the same DB/Redis/JWT/Grafana/pgAdmin
+credentials in every environment, all internal service ports were published to the
+host, and five of six services had no Spring production profile — meaning they
+silently reused development secrets if the environment variable was missing.
+`reporting-service` and `gate-control-service` had datasource credentials hardcoded
+with no environment-variable override at all.
+
+#### `docker-compose.yml`
+- Replaced every hardcoded secret with `${VAR}` placeholders.
+- Removed port publishing for all internal services; only `api-gateway` is reachable from outside the compose network in the base file.
+- Added `SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}` to all six application services.
+
+#### `docker-compose.override.yml` (new)
+- Development-only overlay: republishes ports for DB/Redis/Eureka/each microservice and adds pgAdmin. Loaded automatically by all dev scripts — no extra steps for local development.
+
+#### `docker-compose.prod.yml` (new)
+- Production overlay: no extra ports, `restart: unless-stopped`, and `${VAR:?message}` guards on all secrets so the stack refuses to start with a missing secret.
+
+#### `devops/.env.dev` (committed) / `devops/.env.prod.example` (committed template)
+- Single source of truth for dev defaults. The real `devops/.env.prod` is git-ignored.
+
+#### Spring profiles for remaining five services
+- Added `application-development.yml` / `application-production.yml` to `client-service`, `billing-service`, `management-service`, `reporting-service`, `gate-control-service`.
+- Production profiles drop every default value for secrets so the app fails fast on a missing environment variable.
+- Fixed `reporting-service` and `gate-control-service`: datasource credentials were fully hardcoded with no `${VAR:default}` override.
+
+#### `devops/start-system.ps1` / `devops/stop-system.ps1`
+- Added `-Prod` switch. Without it (default), behaviour is identical to before. With `-Prod`, uses `docker-compose.prod.yml` + `devops/.env.prod` and refuses to start if the file is missing.
+
+#### Other devops scripts updated
+- `full-rebuild.ps1`, `quick-restart.ps1`, `start-all.ps1`, `start-full-system.ps1`, `start-infrastructure.ps1`, `unlock-and-test.ps1`, `backup-db.ps1`.
+
+#### Removed
+- `devops/docker-compose.yml` — stale unused duplicate of the root compose file.
+
+---
 
 ## [Issue #81] - 2026-07-13
 

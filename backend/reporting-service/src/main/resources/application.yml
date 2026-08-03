@@ -8,9 +8,9 @@ spring:
 
   # Database configuration
   datasource:
-    url: jdbc:postgresql://postgres:5432/parking_db
-    username: parking_user
-    password: parking_pass
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/parking_db}
+    username: ${SPRING_DATASOURCE_USERNAME:parking_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:parking_pass}
     driver-class-name: org.postgresql.Driver
 
   # JPA/Hibernate configuration

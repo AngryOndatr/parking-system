@@ -1,16 +1,55 @@
-﻿# Скрипт для запуска инфраструктуры Parking System
+# System Management Script
+param (
+    [switch]$Prod
+)
+
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$composeFile = "$projectRoot\docker-compose.yml"
+$overlayFile = if ($Prod) { "$projectRoot\docker-compose.prod.yml" } else { "$projectRoot\docker-compose.override.yml" }
+$envFile = if ($Prod) { "$projectRoot\devops\.env.prod" } else { "$projectRoot\devops\.env.dev" }
+
+$composeContainerNames = @(
+    'parking_db',
+    'parking_redis',
+    'eureka-server',
+    'api-gateway',
+    'client-service',
+    'gate-control-service',
+    'billing-service',
+    'management-service',
+    'reporting-service',
+    'parking_pgadmin',
+    'parking_prometheus',
+    'parking_grafana',
+    'parking_jaeger',
+    'parking_otel_collector'
+)
+
+function Remove-ComposeContainer {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    & docker container inspect $Name 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Removing stale container '$Name'..." -ForegroundColor Yellow
+        & docker rm -f $Name 2>$null | Out-Null
+    }
+}
+
+foreach ($containerName in $composeContainerNames) {
+    Remove-ComposeContainer -Name $containerName
+}
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Parking System Infrastructure Setup" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$projectRoot = Split-Path $PSScriptRoot -Parent
-$composeFile = "$projectRoot\docker-compose.yml"
-
 # Шаг 1: Остановка всех контейнеров
 Write-Host "[1/4] Остановка существующих контейнеров..." -ForegroundColor Yellow
-docker-compose -f $composeFile down 2>$null
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile down 2>$null
 Start-Sleep -Seconds 3
 
 # Шаг 2: Очистка сети
@@ -20,7 +59,7 @@ Start-Sleep -Seconds 2
 
 # Шаг 3: Запуск инфраструктуры
 Write-Host "[3/4] Запуск инфраструктуры (PostgreSQL, Redis, Eureka, Observability)..." -ForegroundColor Yellow
-docker-compose -f $composeFile up -d postgres redis eureka-server pgadmin prometheus grafana jaeger otel-collector
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d postgres redis eureka-server pgadmin prometheus grafana jaeger otel-collector
 
 # Ожидание запуска
 Write-Host "[4/4] Ожидание запуска контейнеров (30 секунд)..." -ForegroundColor Yellow
@@ -37,10 +76,8 @@ $otelStatus = docker ps --filter "name=parking_otel_collector" --format "{{.Stat
 if ($otelStatus -like "*Up*") {
     Write-Host "✓ OTEL Collector запущен" -ForegroundColor Green
 } else {
-    Write-Host "✗ OTEL Collector не запущен. Проверяем логи:" -ForegroundColor Red
-    docker logs parking_otel_collector --tail 20
+    Write-Host "✗ OTEL Collector не запущен" -ForegroundColor Red
 }
-Write-Host ""
 
 Write-Host "Проверка Jaeger..." -ForegroundColor Cyan
 $jaegerStatus = docker ps --filter "name=parking_jaeger" --format "{{.Status}}"
@@ -49,8 +86,8 @@ if ($jaegerStatus -like "*Up*") {
 } else {
     Write-Host "✗ Jaeger не запущен" -ForegroundColor Red
 }
-Write-Host ""
 
+Write-Host ""
 Write-Host "Проверка PostgreSQL..." -ForegroundColor Cyan
 $dbStatus = docker ps --filter "name=parking_db" --format "{{.Status}}"
 if ($dbStatus -like "*healthy*") {
@@ -75,4 +112,4 @@ Write-Host "                  http://localhost:4318 (HTTP)" -ForegroundColor Whi
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Для запуска всей системы выполните:" -ForegroundColor Green
-Write-Host "docker-compose -f $composeFile up -d" -ForegroundColor Yellow
+Write-Host "docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d" -ForegroundColor Yellow

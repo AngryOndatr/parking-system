@@ -1,0 +1,9 @@
+# Development profile - active when SPRING_PROFILES_ACTIVE=development
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.parking.billing_service: DEBUG
+    org.springframework.web: DEBUG

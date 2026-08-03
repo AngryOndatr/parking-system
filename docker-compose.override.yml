@@ -1,0 +1,64 @@
+version: '3.8'
+
+# Development-only convenience layer, loaded automatically by
+# `docker compose up` together with docker-compose.yml as long as both
+# files sit in the project root (which they do). Publishes ports for
+# every internal service so you can hit them directly / attach a
+# debugger, and brings back pgAdmin for local DB browsing.
+#
+# This file is NEVER used in production — docker-compose.prod.yml is
+# used instead of it there, not in addition to it.
+services:
+  postgres:
+    ports:
+      - "${DB_PORT}:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  eureka-server:
+    ports:
+      - "8761:8761"
+
+  client-service:
+    ports:
+      - "8081:8081"
+
+  gate-control-service:
+    ports:
+      - "8082:8080"
+
+  billing-service:
+    ports:
+      - "8083:8080"
+
+  management-service:
+    ports:
+      - "8084:8083"
+
+  reporting-service:
+    ports:
+      - "8087:8080"
+
+  # pgAdmin is a dev-only convenience tool: it ships with server-mode and
+  # master-password checks disabled, which is fine on localhost but must
+  # never be exposed outside a developer's machine.
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: parking_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./devops/pgadmin-servers.json:/pgadmin4/servers.json
+    networks:
+      - parking-network
+    depends_on:
+      - postgres
+    restart: unless-stopped

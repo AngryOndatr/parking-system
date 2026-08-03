@@ -1,0 +1,49 @@
+version: '3.8'
+
+# Production overlay. Used INSTEAD of docker-compose.override.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#                   --env-file devops/.env.prod up -d
+#
+# - No internal service or admin-tool ports are published (only
+#   api-gateway is reachable from outside the compose network).
+# - Fails fast if a required secret is missing/blank in .env.prod,
+#   instead of silently starting with an empty or default value.
+services:
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in devops/.env.prod}
+
+  api-gateway:
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in devops/.env.prod}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in devops/.env.prod}
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set in devops/.env.prod}
+
+  client-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in devops/.env.prod}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in devops/.env.prod}
+
+  gate-control-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in devops/.env.prod}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in devops/.env.prod}
+
+  billing-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in devops/.env.prod}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in devops/.env.prod}
+
+  management-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in devops/.env.prod}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in devops/.env.prod}
+
+  reporting-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in devops/.env.prod}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in devops/.env.prod}
+
+  grafana:
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set in devops/.env.prod}

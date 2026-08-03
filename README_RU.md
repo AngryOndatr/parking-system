@@ -8,6 +8,15 @@
 
 > **Показан последний коммит.** Полная история: [CHANGELOG.md](./CHANGELOG.md)
 
+### 2026-08-02 — Разделение dev/prod конфигураций Docker Compose ✅
+
+- Убраны все захардкоженные секреты из `docker-compose.yml`; порты внутренних сервисов больше не публикуются по умолчанию
+- Добавлены `docker-compose.override.yml` (dev, подключается автоматически) и `docker-compose.prod.yml` (падает при отсутствии секретов)
+- Добавлены `devops/.env.dev` (коммитится, дев-дефолты) и `devops/.env.prod.example` (шаблон, копируется в `devops/.env.prod`, в .gitignore)
+- Добавлены Spring-профили `development`/`production` во все оставшиеся сервисы; исправлена конфигурация datasource в `reporting-service`/`gate-control-service`
+- У `start-system.ps1` / `stop-system.ps1` появился флаг `-Prod`; для локальной разработки ничего не изменилось
+- Удалён неиспользуемый дубликат `devops/docker-compose.yml`
+
 ### 2026-07-13 — Мультиязычный UI фронтенда (EN/DE/UA/RU) ✅
 
 - 🌍 Добавлены централизованные словари i18n в `frontend/src/i18n/translations.ts`
@@ -118,12 +127,15 @@ cd parking-system
 # Собрать все сервисы
 mvn clean install -DskipTests
 
-# Запустить все контейнеры
-docker-compose up -d
+# Запустить все контейнеры (development — ничего настраивать не нужно)
+docker-compose -f docker-compose.yml -f docker-compose.override.yml --env-file devops/.env.dev up -d
+# Windows: .\devops\start-system.ps1
 
 # Проверить статус
 docker-compose ps
 ```
+
+Продакшн использует отдельный overlay-файл и секреты вне репозитория — подробности в [devops/README.md](./devops/README.md).
 
 ### Запуск фронтенда (dev)
 ```bash

@@ -113,3 +113,6 @@ yarn-error.log*
 build/
 dist/
 
+
+# Production secrets (never commit real values)
+devops/.env.prod

@@ -5,7 +5,8 @@
 #   -SkipMavenBuild : Skip Maven build if JARs already exist
 
 param(
-    [switch]$SkipMavenBuild
+    [switch]$SkipMavenBuild,
+    [switch]$Prod
 )
 
 Write-Host "`n============================================" -ForegroundColor Cyan
@@ -15,6 +16,19 @@ Write-Host "============================================`n" -ForegroundColor Cya
 $ErrorActionPreference = "Continue"
 $startTime = Get-Date
 $projectRoot = Split-Path $PSScriptRoot -Parent
+$composeFile = "$projectRoot\docker-compose.yml"
+$overlayFile = if ($Prod) { "$projectRoot\docker-compose.prod.yml" } else { "$projectRoot\docker-compose.override.yml" }
+$envFile = if ($Prod) { "$projectRoot\devops\.env.prod" } else { "$projectRoot\devops\.env.dev" }
+
+$envData = @{}
+if (Test-Path $envFile) {
+    foreach ($line in Get-Content $envFile) {
+        if ($line -match '^([A-Za-z_][A-Za-z0-9_]*)=(.*)$') {
+            $envData[$Matches[1]] = $Matches[2].Trim()
+        }
+    }
+}
+$dbUser = if ($envData.ContainsKey('DB_USER')) { $envData['DB_USER'] } else { 'postgres' }
 
 # ============================================
 # HELPER FUNCTIONS
@@ -71,7 +85,7 @@ function Show-ContainerStatus {
 # Step 1: Stop and remove all containers
 Write-Host "Step 1: Stopping and removing all containers..." -ForegroundColor Yellow
 Set-Location $projectRoot
-docker-compose -f docker-compose.yml down -v 2>&1 | Out-Null
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile down -v 2>&1 | Out-Null
 Start-Sleep -Seconds 3
 Write-Host "   OK - All containers stopped and removed`n" -ForegroundColor Green
 
@@ -140,7 +154,7 @@ if (-not $SkipMavenBuild) {
 
 # Step 5: Start database and cache
 Write-Host "Step 5: Starting database and cache services..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml up -d postgres redis
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d postgres redis
 Write-Host "   Waiting for PostgreSQL and Redis to initialize (15 seconds)..." -ForegroundColor Gray
 Start-Sleep -Seconds 15
 Write-Host "   OK - Database and cache started`n" -ForegroundColor Green
@@ -155,7 +169,7 @@ $dbReady = $false
 
 while (-not $dbReady -and $retry -lt $maxRetries) {
     try {
-        $result = docker exec parking_db pg_isready -U postgres 2>&1
+        $result = docker exec parking_db pg_isready -U $dbUser 2>&1
         if ($result -match "accepting connections") {
             $dbReady = $true
             Write-Host "   Database is accepting connections" -ForegroundColor Gray
@@ -173,15 +187,15 @@ if (-not $dbReady) {
 
 # Check if database is initialized
 try {
-    $userCount = docker exec parking_db psql -U postgres -d parking_db -t -c "SELECT COUNT(*) FROM users;" 2>&1
+    $userCount = docker exec parking_db psql -U $dbUser -d parking_db -t -c "SELECT COUNT(*) FROM users;" 2>&1
 
     if ($userCount -match "relation.*does not exist" -or $userCount -match "ERROR") {
         Write-Host "   Database not initialized, running init.sql..." -ForegroundColor Gray
-        Get-Content "$projectRoot\database\init.sql" | docker exec -i parking_db psql -U postgres -d parking_db 2>&1 | Out-Null
+        Get-Content "$projectRoot\database\init.sql" | docker exec -i parking_db psql -U $dbUser -d parking_db 2>&1 | Out-Null
         Start-Sleep -Seconds 2
 
         # Verify initialization
-        $userCount = docker exec parking_db psql -U postgres -d parking_db -t -c "SELECT COUNT(*) FROM users;" 2>&1
+        $userCount = docker exec parking_db psql -U $dbUser -d parking_db -t -c "SELECT COUNT(*) FROM users;" 2>&1
     }
 
     # Convert to string if it's an array, then extract number
@@ -192,7 +206,7 @@ try {
         Write-Host "   OK - Database initialized with $count user(s)" -ForegroundColor Green
     } else {
         Write-Host "   WARNING - Database initialized but users table is empty!" -ForegroundColor Yellow
-        Write-Host "   Consider running: Get-Content database\init.sql | docker exec -i parking_db psql -U postgres -d parking_db" -ForegroundColor Gray
+        Write-Host "   Consider running: Get-Content database\init.sql | docker exec -i parking_db psql -U $dbUser -d parking_db" -ForegroundColor Gray
     }
 } catch {
     Write-Host "   WARNING - Could not verify database: $($_.Exception.Message)" -ForegroundColor Yellow
@@ -201,14 +215,14 @@ Write-Host ""
 
 # Step 7: Start observability stack
 Write-Host "Step 7: Starting observability services..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml up -d prometheus grafana jaeger otel-collector pgadmin
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d prometheus grafana jaeger otel-collector pgadmin
 Write-Host "   Waiting for observability stack to start (10 seconds)..." -ForegroundColor Gray
 Start-Sleep -Seconds 10
 Write-Host "   OK - Observability stack started`n" -ForegroundColor Green
 
 # Step 8: Start Eureka Server
 Write-Host "Step 8: Starting Eureka Server..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml up -d eureka-server
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d eureka-server
 Write-Host "   Waiting for Eureka to become healthy..." -ForegroundColor Gray
 
 # Wait for Eureka health check with timeout
@@ -233,7 +247,7 @@ Write-Host "   OK - Eureka Server started`n" -ForegroundColor Green
 
 # Step 9: Start API Gateway
 Write-Host "Step 9: Starting API Gateway..." -ForegroundColor Yellow
-docker-compose -f docker-compose.yml up -d api-gateway
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d api-gateway
 Write-Host "   Waiting for API Gateway to become healthy..." -ForegroundColor Gray
 
 # Wait for API Gateway health check with timeout
@@ -259,7 +273,7 @@ Write-Host "   OK - API Gateway started`n" -ForegroundColor Green
 # Step 10: Start all microservices
 Write-Host "Step 10: Starting all microservices..." -ForegroundColor Yellow
 Write-Host "   Starting: client-service, gate-control-service, billing-service, management-service, reporting-service" -ForegroundColor Gray
-docker-compose -f docker-compose.yml up -d client-service gate-control-service billing-service management-service reporting-service
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d client-service gate-control-service billing-service management-service reporting-service
 
 Write-Host "   Waiting for all services to become healthy (max 90s)..." -ForegroundColor Gray
 

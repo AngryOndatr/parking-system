@@ -1,25 +1,29 @@
-﻿# Скрипт для запуска всей системы
+# System Management Script
+param (
+    [switch]$Prod
+)
+
+$projectRoot = Split-Path $PSScriptRoot -Parent
+$composeFile = "$projectRoot\docker-compose.yml"
+$overlayFile = if ($Prod) { "$projectRoot\docker-compose.prod.yml" } else { "$projectRoot\docker-compose.override.yml" }
+$envFile = if ($Prod) { "$projectRoot\devops\.env.prod" } else { "$projectRoot\devops\.env.dev" }
 
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "  Запуск Parking System" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
-$projectRoot = Split-Path $PSScriptRoot -Parent
-$composeFile = "$projectRoot\docker-compose.yml"
-
 # Шаг 1: Остановка старых контейнеров
 Write-Host "🛑 Остановка старых контейнеров..." -ForegroundColor Yellow
-docker-compose -f $composeFile down 2>&1 | Out-Null
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile down 2>&1 | Out-Null
 Write-Host "✅ Старые контейнеры остановлены`n" -ForegroundColor Green
 
 # Шаг 2: Запуск инфраструктуры
 Write-Host "🚀 Запуск инфраструктуры..." -ForegroundColor Cyan
-docker-compose -f $composeFile up -d postgres redis eureka-server pgadmin
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d postgres redis eureka-server pgadmin
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Ошибка запуска инфраструктуры!" -ForegroundColor Red
     exit 1
 }
-Write-Host "✅ Инфраструктура запущена`n" -ForegroundColor Green
 
 # Шаг 3: Ожидание готовности БД
 Write-Host "🔧 Ожидание готовности базы данных..." -ForegroundColor Cyan
@@ -28,10 +32,10 @@ Write-Host "✅ База данных готова`n" -ForegroundColor Green
 
 # Шаг 4: Запуск сервисов
 Write-Host "🚀 Запуск сервисов..." -ForegroundColor Cyan
-docker-compose -f $composeFile up -d
+docker-compose -f $composeFile -f $overlayFile --env-file $envFile up -d
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Ошибка запуска сервисов!" -ForegroundColor Red
-    Write-Host "Проверьте логи: docker-compose -f $composeFile logs" -ForegroundColor Yellow
+    Write-Host "Проверьте логи: docker-compose -f $composeFile -f $overlayFile --env-file $envFile logs" -ForegroundColor Yellow
     exit 1
 }
 Write-Host "✅ Сервисы запущены`n" -ForegroundColor Green

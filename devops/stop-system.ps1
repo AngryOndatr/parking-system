@@ -1,13 +1,24 @@
 # Script to stop parking-system
-# Usage: .\stop-system.ps1 [-RemoveVolumes]
+# Usage: .\stop-system.ps1 [-RemoveVolumes] [-Prod]
 
 param(
     [Parameter(Mandatory=$false)]
-    [switch]$RemoveVolumes = $false
+    [switch]$RemoveVolumes = $false,
+
+    [Parameter(Mandatory=$false)]
+    [switch]$Prod = $false
 )
 
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $composeFile = "$projectRoot\docker-compose.yml"
+
+if ($Prod) {
+    $overlayFile = "$projectRoot\docker-compose.prod.yml"
+    $envFile = "$projectRoot\devops\.env.prod"
+} else {
+    $overlayFile = "$projectRoot\docker-compose.override.yml"
+    $envFile = "$projectRoot\devops\.env.dev"
+}
 
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host "  Parking System - Stopping" -ForegroundColor Cyan
@@ -16,9 +27,9 @@ Write-Host ""
 
 Write-Host "Stopping all containers..." -ForegroundColor Yellow
 if ($RemoveVolumes) {
-    docker-compose -f $composeFile down -v
+    docker-compose -f $composeFile -f $overlayFile --env-file $envFile down -v
 } else {
-    docker-compose -f $composeFile down
+    docker-compose -f $composeFile -f $overlayFile --env-file $envFile down
 }
 
 if ($LASTEXITCODE -eq 0) {

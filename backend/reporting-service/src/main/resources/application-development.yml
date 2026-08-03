@@ -1,0 +1,4 @@
+# Development profile - active when SPRING_PROFILES_ACTIVE=development
+spring:
+  jpa:
+    show-sql: true

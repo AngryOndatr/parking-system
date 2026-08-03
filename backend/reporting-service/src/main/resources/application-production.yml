@@ -1,0 +1,17 @@
+# Production profile - active when SPRING_PROFILES_ACTIVE=production
+spring:
+  datasource:
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    show-sql: false
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+
+logging:
+  level:
+    com.parking.reporting_service: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
