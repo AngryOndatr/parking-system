@@ -244,6 +244,21 @@ Create fully functional user interface and end-to-end testing.
 | 4.3 | **Test Coverage** | Expand Unit and Integration tests for Billing and Gate Control complex logic | ⏳ | #94 |
 | 4.4 | **E2E Test Suite** | Expand E2E suite beyond smoke scenarios in dockerized workflow | ⏳ | #95 |
 
+### Current backlog from the repository ToDo column
+The following open Phase 4 items are currently tracked in the GitHub backlog and should be treated as part of the phase plan alongside the roadmap tasks above:
+
+| ID | Task | Status | Issue |
+|----|------|--------|-------|
+| 4.5 | **Break shared-database coupling** | ⏳ | #98 |
+| 4.6 | **Protect service-to-service communication** | ⏳ | #97 |
+| 4.7 | **Enforce secret management** | ⏳ | #96 |
+| 4.8 | **Replace hardcoded service URLs** | ⏳ | #99 |
+| 4.9 | **Define bounded contexts and API contracts** | ⏳ | #100 |
+| 4.10 | **Introduce asynchronous events** | ⏳ | #101 |
+| 4.11 | **Standardize environment profiles** | ⏳ | #102 |
+| 4.12 | **Improve observability and readiness** | ⏳ | #103 |
+| 4.13 | **Reduce build/deployment duplication** | ⏳ | #104 |
+
 ### Expected Results
 - Fully functional Admin UI for system management
 - Reporting UI with filtering and export
@@ -293,7 +308,7 @@ Total Progress: ██████████████░░░░░░ 70%
 ```
 
 **Current Phase:** Phase 4 - Frontend, Reports and E2E  
-**Current Focus:** Tariffs admin UI completion, reporting parity, and test/e2e expansion  
+**Current Focus:** Admin UI completion, reporting parity, architecture hardening, deployment standardization, and observability  
 **Completed Phases:** 4 of 6  
 
 ---
