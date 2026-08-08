@@ -258,6 +258,17 @@ The following open Phase 4 items are currently tracked in the GitHub backlog and
 | 4.11 | **Standardize environment profiles** | ⏳ | #102 |
 | 4.12 | **Improve observability and readiness** | ⏳ | #103 |
 | 4.13 | **Reduce build/deployment duplication** | ⏳ | #104 |
+| 4.14 | **Remove sensitive files from git tracking (login.json, ssh key.txt)** | ⏳ | #107 |
+| 4.15 | **Disable JWT_SECRET fallback value — enforce fail-fast startup** | ⏳ | #108 |
+| 4.16 | **Guard test billing endpoints with @Profile("test")** | ⏳ | #109 |
+| 4.17 | **Extract AuditLogger to parking-common (eliminate 3 copies)** | ⏳ | #110 |
+| 4.18 | **Resolve JwtTokenProvider duplication in client-service and reporting-service** | ⏳ | #111 |
+| 4.19 | **Align jjwt version to 0.12.6 across all services** | ⏳ | #112 |
+| 4.20 | **Add GlobalExceptionHandler to gate-control-service and management-service** | ⏳ | #113 |
+| 4.21 | **Fix dead code and logical errors in frontend API layer** | ⏳ | #114 |
+| 4.22 | **Add @Valid to billing-service controller request body parameters** | ⏳ | #115 |
+| 4.23 | **Archive docs/sessions directory** | ⏳ | #116 |
+| 4.24 | **Add docs-sync skill and Phase 4 refactoring backlog planning** | ⏳ | #117 |
 
 ### Expected Results
 - Fully functional Admin UI for system management

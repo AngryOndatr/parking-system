@@ -1,15 +1,15 @@
-## Описание
-<!-- Что делает этот PR? -->
+## Description
+<!-- What does this PR do? -->
 
-## Тип изменений
+## Type of changes
 - [ ] 🐛 Bug fix
 - [ ] ✨ Feature
 - [ ] ♻️ Refactoring
 - [ ] 🗃️ Database migration (требует новый Flyway V__)
 
-## Чеклист
-- [ ] Unit-тесты добавлены / обновлены
-- [ ] `@Mock AuditLogger auditLogger` добавлен (если сервис использует AuditLogger)
-- [ ] Изменение схемы → новая миграция в `api-gateway/db/migration/` (следующая: **V12**)
-- [ ] Нет `.env` / секретов в коммите
-- [ ] CI зелёный (tests + lint)
+## Checklist
+- [ ] Unit tests added / updated
+- [ ] `@Mock AuditLogger auditLogger` added (if the service uses AuditLogger)
+- [ ] Schema change -> new migration in `api-gateway/db/migration/` (next: **V12**)
+- [ ] No `.env` files / secrets in the commit
+- [ ] CI is green (tests + lint)

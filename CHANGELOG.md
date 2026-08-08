@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase 4 planning and report features backlog
 
 ### Recently Completed
+- ✅ **Add docs-sync Copilot CLI skill** (`.github/skills/docs-sync/`) — 2026-08-08
 - ✅ **Dev/prod Docker Compose separation** — 2026-08-02
 - ✅ **[Phase 3] Tech Debt: unify API path versioning across microservices** (Issue #81) — 2026-07-13
 - ✅ **[Phase 3] Frontend multilingual support documentation and context sync** (Issue #84) — 2026-07-13
