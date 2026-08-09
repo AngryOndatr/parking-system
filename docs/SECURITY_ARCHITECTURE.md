@@ -95,7 +95,7 @@ private final Map<String, RateLimitInfo> rateLimitCache = new ConcurrentHashMap<
 **Местоположение:** `com.parking.api_gateway.security.service.JwtTokenService`
 
 **Архитектура JWT:**
-- **Algorithm:** HMAC-SHA256 
+- **Algorithm:** HMAC-SHA512 
 - **Key Length:** 256-bit minimum
 - **Access Token:** 30 minutes (configurable)
 - **Refresh Token:** 12 hours (configurable)
@@ -105,19 +105,19 @@ private final Map<String, RateLimitInfo> rateLimitCache = new ConcurrentHashMap<
 ```json
 {
   "header": {
-    "alg": "HS256",
+    "alg": "HS512",
     "typ": "JWT"
   },
   "payload": {
     "sub": "username",
-    "user_id": 12345,
-    "roles": ["USER", "ADMIN"],
+    "userId": "12345",
+    "role": "ADMIN",
     "iss": "parking-system",
     "iat": 1703123456,
     "exp": 1703127056,
     "jti": "unique-token-id",
-    "ip": "192.168.1.1",
-    "user_agent_hash": "sha256-hash"
+    "ipAddress": "192.168.1.1",
+    "userAgentHash": "sha256-hash"
   }
 }
 ```
@@ -261,7 +261,7 @@ SECURITY_AUDIT_ENABLED=true
 
 ### Spring Security Integration
 
-**WebSecurityConfiguration:** `com.parking.api_gateway.security.config.WebSecurityConfiguration`
+**SecurityConfiguration:** `com.parking.api_gateway.security.config.SecurityConfiguration`
 
 **Production Security Headers:**
 ```java
@@ -336,7 +336,7 @@ public Claims validateAccessToken(String token, String clientIpAddress) {
     }
     
     // 2. Parse and validate JWT
-    Claims claims = Jwts.parserBuilder()
+    Claims claims = Jwts.parser()
         .setSigningKey(signingKey)
         .requireIssuer(issuer)
         .build()
@@ -344,13 +344,13 @@ public Claims validateAccessToken(String token, String clientIpAddress) {
         .getBody();
     
     // 3. Validate IP binding (if enabled)
-    String tokenIp = claims.get("ip", String.class);
+    String tokenIp = claims.get("ipAddress", String.class);
     if (tokenIp != null && !tokenIp.equals(clientIpAddress)) {
         throw new SecurityException("Token IP mismatch");
     }
     
     // 4. Additional custom validations
-    validateUserStatus(claims.get("user_id", Long.class));
+    validateUserStatus(claims.get("userId", Long.class));
     
     return claims;
 }

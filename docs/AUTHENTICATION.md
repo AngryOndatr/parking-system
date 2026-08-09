@@ -97,8 +97,8 @@ Write-Host "Access Token: $token"
 
 ```json
 {
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "accessToken": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
     "username": "admin",
@@ -119,7 +119,7 @@ Write-Host "Access Token: $token"
 
 **Headers:**
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Пример с curl (Linux/Mac/Git Bash):**
@@ -130,7 +130,7 @@ curl http://localhost:8081/api/clients \
 
 **Пример с PowerShell:**
 ```powershell
-$token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+$token = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9..."
 Invoke-WebRequest -Uri "http://localhost:8081/api/clients" `
     -Headers @{"Authorization" = "Bearer $token"} `
     -UseBasicParsing
@@ -170,7 +170,7 @@ Invoke-WebRequest -Uri "http://localhost:8086/api/clients" `
 **Body:**
 ```json
 {
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "refreshToken": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
@@ -178,7 +178,8 @@ Invoke-WebRequest -Uri "http://localhost:8086/api/clients" `
 ```json
 {
   "accessToken": "NEW_ACCESS_TOKEN",
-  "refreshToken": "NEW_REFRESH_TOKEN"
+  "expiresIn": 3600,
+  "tokenType": "Bearer"
 }
 ```
 

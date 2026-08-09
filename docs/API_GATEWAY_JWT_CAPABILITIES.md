@@ -20,11 +20,11 @@ public String createRefreshToken(UserSecurityEntity user, String ipAddress)
 // Валидация Access Token
 public Mono<Claims> validateAccessToken(String token, String clientIpAddress)
 
-// Валидация Refresh Token
-public Mono<Claims> validateRefreshToken(String token)
+// Валидация Refresh Token (возвращает userId)
+public Mono<Long> validateRefreshToken(String token)
 
 // Аннулирование токена (blacklist)
-public Mono<Void> invalidateToken(String token, String reason)
+public Mono<Void> blacklistToken(String token, String reason)
 ```
 
 **Особенности:**
@@ -64,8 +64,17 @@ Body: {"refreshToken": "eyJ..."}
 POST /api/auth/logout
 Header: Authorization: Bearer <token>
 
-// Проверка валидности токена
-GET /api/auth/validate
+// Выход со всех устройств
+POST /api/auth/logout-all
+Header: Authorization: Bearer <token>
+
+// Смена пароля
+POST /api/auth/change-password
+Header: Authorization: Bearer <token>
+Body: {"currentPassword":"...","newPassword":"..."}
+
+// Профиль текущего пользователя
+GET /api/auth/profile
 Header: Authorization: Bearer <token>
 ```
 
@@ -139,8 +148,8 @@ Get-Content ..\database\insert_users.sql | docker exec -i parking_db psql -U pos
 
 После этого в БД появятся пользователи:
 - **admin** / **parking123** (ADMIN)
-- **user** / **user123** (USER)
-- **manager** / **manager123** (ADMIN)
+- **user** / **user1234** (USER)
+- **manager** / **manager123** (MANAGER)
 
 ## 🧪 Тестирование генерации токенов
 
@@ -228,7 +237,7 @@ Invoke-WebRequest -Uri "http://localhost:8081/api/clients" `
   "aud": "parking-system-api",
   "iat": 1703174400,
   "exp": 1703176200,
-  "userId": 1,
+  "userId": "1",
   "role": "ADMIN",
   "email": "admin@example.com",
   "firstName": "Admin",
