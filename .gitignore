@@ -116,3 +116,6 @@ dist/
 
 # Production secrets (never commit real values)
 devops/.env.prod
+
+# Archived internal session logs
+docs/archive/sessions/

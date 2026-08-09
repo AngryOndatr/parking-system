@@ -108,7 +108,7 @@ Each phase report contains:
 
 ## 🔗 Related Documentation
 
-- [Session Logs](../sessions/) - Daily development logs
+- [Archived Session Logs](../archive/sessions/) - Internal AI-assisted development logs archive
 - [Main README](../../README.md) - Project overview
 - [Technical Docs](../) - Architecture guides
 
@@ -118,11 +118,10 @@ Each phase report contains:
 
 **Phase Reports:** Created at phase completion  
 **Weekly Reports:** Created every Sunday during active phases  
-**Session Logs:** Created daily during development
+**Session Logs:** Archived in `docs/archive/sessions/`
 
 ---
 
 **Last Updated:** 2026-01-12  
 **Current Phase:** Phase 1 (Week 1 Complete)  
 **Next Report:** Phase 1 Week 2 Report (due 2026-01-19)
-
