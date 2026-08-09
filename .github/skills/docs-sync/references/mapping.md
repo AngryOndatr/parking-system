@@ -51,6 +51,14 @@ append new rows to the backlog table of the matching phase section
 **Never** edit this file based on the staged diff alone; only use the output of
 `get_new_phase_issues.sh` as the source of truth for this category.
 
+## 6. Multilingual document sync (EN ↔ RU)
+**Signals:** staged documentation edits to EN files where a RU counterpart
+exists (for example `*_EN.md` with `*_RU.md` in the same docs area).
+**Where to write:** apply equivalent updates to both EN and RU files in the
+same docs-sync run.
+If the RU counterpart does not exist, do not block; report it in the skipped
+items as "RU counterpart missing".
+
 ## What to skip (not a reason to update docs)
 - Changes only in tests (`*test*`, `*spec*`, `__tests__/*`) without changes in
   the code under test.

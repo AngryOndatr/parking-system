@@ -269,6 +269,7 @@ The following open Phase 4 items are currently tracked in the GitHub backlog and
 | 4.22 | **Add @Valid to billing-service controller request body parameters** | ⏳ | #115 |
 | 4.23 | **Archive docs/sessions directory** | ✅ | #116 |
 | 4.24 | **Add docs-sync skill and Phase 4 refactoring backlog planning** | ⏳ | #117 |
+| 4.25 | **Require docs-sync to update RU counterparts for EN doc changes** | ✅ | #124 |
 
 ### Expected Results
 - Fully functional Admin UI for system management

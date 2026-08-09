@@ -38,6 +38,10 @@ unstaged or untracked files in the analysis; if the staging area is empty, say
 so and stop (suggest `git add`), and do not analyze the working directory as a
 substitute.
 
+When documentation is updated in English, update the Russian counterpart in the
+same sync pass **if the RU counterpart exists**. If no RU counterpart exists,
+continue without blocking and note that skip in the final summary.
+
 ## Workflow
 
 ### 1. Get the staged diff
@@ -146,6 +150,10 @@ confirmation). For each edit:
   changed; never rewrite already accepted ADRs after the fact;
 - in Settings/API, update the specific value, signature, or example where it is
   outdated while preserving the rest of the document's style and formatting.
+- for docs with EN/RU pairs, apply equivalent updates to both files in the same
+  commit scope. Detect counterparts using common patterns such as
+  `*_EN.*` ↔ `*_RU.*`, `*_EN` ↔ `*_RU`, and known paired docs like
+  `PROJECT_PHASES_EN.md` ↔ `PROJECT_PHASES_RU.md`.
 
 Never invent facts that are not in the diff. If the nature of the change is not
 clear from the diff (for example, only "+1 -1" with no context), leave the
@@ -160,6 +168,9 @@ At the end, show the user a table:
 
 Also include a separate list of what was skipped and why (no changelog,
 no matching document found, filtered out as trivial).
+
+If an EN document was updated but no RU counterpart exists, explicitly list that
+in the skipped section.
 
 Remind the user that updated docs are not staged - they need `git add` before
 the commit if they want to include them in the same commit.
