@@ -270,6 +270,15 @@ The following open Phase 4 items are currently tracked in the GitHub backlog and
 | 4.23 | **Archive docs/sessions directory** | ✅ | #116 |
 | 4.24 | **Add docs-sync skill and Phase 4 refactoring backlog planning** | ⏳ | #117 |
 | 4.25 | **Require docs-sync to update RU counterparts for EN doc changes** | ✅ | #124 |
+| 4.26 | **Define target JWT trust model (RS256/JWKS) and migration plan** | ⏳ | #125 |
+| 4.27 | **Standardize token propagation for service-to-service calls** | ⏳ | #126 |
+| 4.28 | **Enforce strict JWT validation rules and negative-path tests** | ⏳ | #127 |
+| 4.29 | **Design schema-per-service model inside shared PostgreSQL** | ⏳ | #128 |
+| 4.30 | **Introduce per-service DB users and least-privilege grants** | ⏳ | #129 |
+| 4.31 | **Execute phased data cutover from shared tables to bounded schemas** | ⏳ | #130 |
+| 4.32 | **Handle auth/security edge scenarios explicitly** | ⏳ | #131 |
+| 4.33 | **Add timeout/retry/circuit-breaker strategy for cross-service calls** | ⏳ | #132 |
+| 4.34 | **Cover race conditions in gate/billing/parking capacity workflows** | ⏳ | #133 |
 
 ### Expected Results
 - Fully functional Admin UI for system management

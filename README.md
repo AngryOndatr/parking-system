@@ -72,7 +72,15 @@ Phase 5: ░░░░░░░░░░░░░░░░░░░░   0% ⏳ P
 
 **Status:**
 - 🔄 Phase 4 started with active backlog issues
-- 🔄 Active issues: #92 (Admin UI tariffs scope), #93 (Reporting UI parity), #94 (Coverage), #95 (E2E expansion)
+- 🔄 In Progress column: #92 (Admin UI tariffs scope), #119 (rate-limit/brute-force env config), #120 (API contract docs fixes), #121 (remove obsolete DB migration docs), #122 (consolidate JWT/auth docs), #123 (minor docs accuracy fixes)
+- 🔄 Architecture track added: #125–#133 (JWT hardening, DB schema split, edge/resilience/concurrency hardening)
+
+### 🧭 Accepted Architecture Changes (Planned in Phase 4)
+
+- **JWT model:** migrate from shared-secret HS512 to **RS256 + JWKS** with key rotation policy (#125, #127)
+- **Inter-service auth:** standardize user-token relay and service tokens for background flows (#126)
+- **Data isolation:** move from one shared schema to **schema-per-service** + least-privilege DB users (#128, #129, #130)
+- **Edge and reliability:** formalize auth edge cases, timeout/retry/circuit-breaker, and race-condition handling (#131, #132, #133)
 
 ### 📊 Quick Stats
 
@@ -358,6 +366,8 @@ Service registry — all microservices register here for discovery.
 - **Username**: `postgres`
 - **Password**: `postgres`
 - **Port**: `5433` (host) / `5432` (inside Docker network)
+- **Current model**: single shared database schema across services
+- **Planned model (Phase 4)**: schema-per-service isolation inside the same PostgreSQL instance (issues #128–#130)
 
 ### Flyway Migrations
 
@@ -458,6 +468,8 @@ jwt:
   refresh-token-expiration: 43200  # 12 hours
   secret: ${JWT_SECRET}            # HS512, min 64 chars
 ```
+
+Current implementation uses HS512 shared secret. Planned Phase 4 migration introduces RS256/JWKS trust model and strict cross-service validation rules (issues #125–#127).
 
 ### Rate Limiting
 - 60 requests/min per IP (configurable via `RATE_LIMIT_MINUTE`)

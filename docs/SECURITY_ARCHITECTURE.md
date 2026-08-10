@@ -16,6 +16,17 @@
 - **Least Privilege** - минимальные необходимые права
 - **Audit Everything** - комплексное логирование
 
+### 📌 Принятые архитектурные решения (Phase 4, 2026-08-10)
+Ниже зафиксированы решения, согласованные для следующей итерации архитектуры (статус: planned, в процессе реализации):
+
+1. **JWT trust model hardening:** переход от общего HS512 `JWT_SECRET` к модели RS256/JWKS с ротацией ключей и явной политикой жизненного цикла ключей.
+2. **Service-to-service auth standard:** единый подход для межсервисной авторизации: user-token relay для request-driven flow и service-token для фоновых задач.
+3. **Strict token validation:** обязательная валидация `iss/aud/exp/nbf/jti` и унификация негативных auth-сценариев (401/403 + аудируемые причины отказа).
+4. **Data isolation in shared PostgreSQL:** переход к schema-per-service и отдельным DB-пользователям с правами least-privilege; cross-service доступ к данным — через API, не через прямой SQL.
+5. **Edge/resilience/concurrency hardening:** фиксированные правила для timeout/retry/circuit-breaker и покрытие race-condition сценариев в gate/billing/capacity потоках.
+
+Связанные задачи в backlog: #125, #126, #127, #128, #129, #130, #131, #132, #133.
+
 ### Компонентная архитектура
 
 ```
