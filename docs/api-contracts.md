@@ -1,7 +1,7 @@
 # API Contracts Documentation
 
 **Version:** 2.0.0  
-**Last Updated:** 2026-07-17  
+**Last Updated:** 2026-08-10  
 **Coverage:** All 5 microservices  
 **Status:** Implemented and verified
 
@@ -212,6 +212,20 @@ Delete vehicle.
 **Errors:**
 - 404 - Vehicle not found
 
+#### Subscriptions
+
+##### POST /api/clients/{clientId}/subscriptions
+Create a subscription for a client.
+
+##### GET /api/clients/{clientId}/subscriptions
+Get all subscriptions for a client.
+
+##### DELETE /api/clients/subscriptions/{id}
+Deactivate subscription by ID.
+
+##### GET /api/clients/subscriptions/check?licensePlate={plate}
+Check active subscription by license plate (used by gate-control-service).
+
 ---
 
 ## Management Service API ⭐
@@ -233,10 +247,10 @@ Get all available parking spaces.
 ```json
 [
   {
-    "id": 1,
+    "spaceId": 1,
     "lotId": 1,
     "spaceNumber": "A-001",
-    "spaceType": "STANDARD",
+    "type": "STANDARD",
     "status": "AVAILABLE",
     "level": 1
   }
@@ -253,10 +267,10 @@ Get available spaces by parking lot.
 ```json
 [
   {
-    "id": 1,
+    "spaceId": 1,
     "lotId": 1,
     "spaceNumber": "A-001",
-    "spaceType": "STANDARD",
+    "type": "STANDARD",
     "status": "AVAILABLE",
     "level": 1
   }
@@ -273,18 +287,18 @@ Get all parking spaces (regardless of status).
 ```json
 [
   {
-    "id": 1,
+    "spaceId": 1,
     "lotId": 1,
     "spaceNumber": "A-001",
-    "spaceType": "STANDARD",
+    "type": "STANDARD",
     "status": "AVAILABLE",
     "level": 1
   },
   {
-    "id": 2,
+    "spaceId": 2,
     "lotId": 1,
     "spaceNumber": "A-002",
-    "spaceType": "DISABLED",
+    "type": "HANDICAPPED",
     "status": "OCCUPIED",
     "level": 1
   }
@@ -296,9 +310,7 @@ Get count of available parking spaces.
 
 **Response 200 OK:**
 ```json
-{
-  "count": 42
-}
+42
 ```
 
 ##### GET /api/management/spots/search
@@ -314,10 +326,10 @@ Search parking spaces by type and status.
 ```json
 [
   {
-    "id": 15,
+    "spaceId": 15,
     "lotId": 1,
     "spaceNumber": "V-001",
-    "spaceType": "VIP",
+    "type": "VIP",
     "status": "AVAILABLE",
     "level": 2
   }
@@ -645,6 +657,23 @@ GET /api/billing/status?parkingEventId=12345
 - **400 Bad Request:** Missing or invalid parkingEventId
 - **404 Not Found:** Parking event not found
 - **500 Internal Server Error:** Server error
+
+---
+
+### GET /api/billing/status-by-ticket
+
+Get payment status by ticket code.
+
+**Query Parameters:**
+- `ticketCode` (required) - Ticket code
+
+### POST /api/billing/pay-test
+
+Simplified payment endpoint for test/e2e flows.
+
+### POST /api/billing/test-event
+
+Create a test parking event for test/e2e flows.
 
 ---
 

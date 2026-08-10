@@ -33,7 +33,7 @@
 | GET | /api/vehicles/{id} | Get vehicle by ID |
 | PUT | /api/vehicles/{id} | Update vehicle |
 | DELETE | /api/vehicles/{id} | Delete vehicle |
-| GET | /api/v1/clients/subscriptions/check?licensePlate={plate} | Subscription check (service-to-service) |
+| GET | /api/clients/subscriptions/check?licensePlate={plate} | Subscription check (service-to-service) |
 
 ### Gate Control Service
 
@@ -62,6 +62,10 @@
 | GET | /api/management/spots | Get all spaces |
 | GET | /api/management/spots/available/count | Count available spaces |
 | GET | /api/management/spots/search?type=X&status=Y | Search spaces |
+
+**Management response shape (`ParkingSpaceResponse`):**
+- `spaceId`, `lotId`, `spaceNumber`, `level`, `section`, `type`, `status`, `hasCharger`
+- `/api/management/spots/available/count` returns a plain number (e.g., `15`)
 
 ### Reporting Service
 

@@ -70,11 +70,11 @@ curl -X GET http://localhost:8086/api/management/spots/available \
 ```json
 [
   {
-    "id": 1,
+    "spaceId": 1,
     "spaceNumber": "A-001",
-    "floorLevel": 0,
+    "level": 0,
     "section": "A",
-    "spaceType": "STANDARD",
+    "type": "STANDARD",
     "status": "AVAILABLE",
     "hasCharger": false
   }
@@ -100,9 +100,7 @@ curl -X GET http://localhost:8086/api/management/spots/available/count \
 
 **Response Example:**
 ```json
-{
-  "count": 15
-}
+15
 ```
 
 ---
