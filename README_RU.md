@@ -389,7 +389,7 @@ mvn clean test
 ## 📚 Документация
 
 ### Архитектура и безопасность
-- [Аутентификация](./docs/AUTHENTICATION.md)
+- [Аутентификация](./docs/AUTHENTICATION_RU.md)
 - [Архитектура безопасности](./docs/SECURITY_ARCHITECTURE.md)
 - [Настройка наблюдаемости](./docs/OBSERVABILITY_SETUP.md)
 - [API-контракты](./docs/api-contracts.md)

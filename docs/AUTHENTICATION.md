@@ -1,274 +1,150 @@
-# Аутентификация в Parking System
+# Authentication (Canonical Reference)
 
-## Обзор
+> 🇷🇺 **Русская версия:** [AUTHENTICATION_RU.md](./AUTHENTICATION_RU.md)
 
-Система использует **JWT (JSON Web Token)** аутентификацию через API Gateway. Client-service и другие микросервисы не имеют собственной аутентификации - они проверяют JWT токены, выданные API Gateway.
+**Last Updated:** 2026-08-10  
+**Scope:** API Gateway authentication and JWT usage across the system
 
-## Учетные данные для тестирования
+---
 
-В базе данных созданы следующие тестовые пользователи:
+## 1. Overview
 
-### 1. Администратор
-```
-Username: admin
-Password: parking123
-Role: ADMIN
-```
+Parking System uses JWT authentication through **api-gateway** (`:8086`).
 
-### 2. Оператор
-```
-Username: operator
-Password: operator123
-Role: OPERATOR
-```
+High-level flow:
+1. `POST /api/auth/login` -> receive `accessToken` + `refreshToken`
+2. Client sends `Authorization: Bearer <accessToken>` on protected API calls
+3. When access token expires, client calls `POST /api/auth/refresh`
+4. Logout is handled via token revocation endpoints
 
-### 3. Менеджер
-```
-Username: manager
-Password: manager123
-Role: MANAGER
-```
+---
 
-## Как получить JWT токен
+## 2. Auth Endpoints (api-gateway)
 
-### Шаг 1: Отправить запрос на login
+Base path: `/api/auth`
 
-**Endpoint:** `POST http://localhost:8086/api/auth/login`
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/auth/login` | Authenticate user and issue tokens |
+| POST | `/api/auth/refresh` | Issue new access token from refresh token |
+| POST | `/api/auth/logout` | Revoke current token |
+| POST | `/api/auth/logout-all` | Revoke all user sessions |
+| POST | `/api/auth/change-password` | Change password for authenticated user |
+| GET | `/api/auth/profile` | Return current user profile |
 
-**Headers:**
-```
-Content-Type: application/json
-```
+Public endpoints (no JWT required):  
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- health checks
 
-**Body (JSON):**
+---
+
+## 3. JWT Model (current implementation)
+
+- **Algorithm:** `HS512`
+- **Access token lifetime:** `1800s` (30 min)
+- **Refresh token lifetime:** `43200s` (12 h)
+- **Required env:** `JWT_SECRET` (64+ chars in production)
+
+Access token includes claims such as:
+- `sub` (username)
+- `userId`
+- `role`
+- `iss`, `aud`, `iat`, `exp`
+- `jti`
+
+Example header:
 ```json
 {
-  "username": "admin",
-  "password": "parking123"
+  "alg": "HS512",
+  "typ": "JWT"
 }
 ```
 
-**Пример с curl (для Linux/Mac или Git Bash в Windows):**
+Example payload (shape):
+```json
+{
+  "sub": "admin",
+  "userId": "1",
+  "role": "ADMIN",
+  "iss": "parking-system",
+  "aud": "parking-system-api",
+  "iat": 1700000000,
+  "exp": 1700001800,
+  "jti": "uuid-token-id"
+}
+```
+
+---
+
+## 4. Component Roles
+
+### CorsFilter
+- Runs before security checks.
+- Handles CORS and answers preflight `OPTIONS` early.
+
+### SecurityFilter
+- Validates bearer token on protected endpoints.
+- Builds security context from token claims.
+- Enforces RBAC for route/method combinations.
+- Applies rate limiting and brute-force protections.
+
+### JwtTokenService
+- Creates access and refresh tokens.
+- Validates token signature/expiry.
+- Supports token revocation/blacklist flows.
+
+---
+
+## 5. Usage Examples
+
+### Login
+
 ```bash
-curl -X POST http://localhost:8086/api/auth/login \
+curl -s -X POST http://localhost:8086/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"parking123"}'
 ```
 
-**⚠️ ВАЖНО для PowerShell:**
-В PowerShell `curl` - это алиас для `Invoke-WebRequest`, который имеет другой синтаксис!
-
-**Вариант 1: Используйте Invoke-WebRequest (рекомендуется):**
 ```powershell
 $body = '{"username":"admin","password":"parking123"}'
-Invoke-WebRequest -Uri "http://localhost:8086/api/auth/login" `
-    -Method POST `
-    -ContentType "application/json" `
-    -Body $body `
-    -UseBasicParsing
+$r = Invoke-WebRequest -Uri "http://localhost:8086/api/auth/login" `
+     -Method POST -ContentType "application/json" -Body $body -UseBasicParsing
+$token = ($r.Content | ConvertFrom-Json).accessToken
 ```
 
-**Вариант 2: Используйте настоящий curl.exe:**
-```powershell
-curl.exe -X POST http://localhost:8086/api/auth/login `
-  -H "Content-Type: application/json" `
-  -d '{\"username\":\"admin\",\"password\":\"parking123\"}'
-```
+### Authorized request
 
-**Вариант 3: Более читаемый PowerShell:**
-```powershell
-$body = @{
-    username = "admin"
-    password = "parking123"
-} | ConvertTo-Json
-
-$response = Invoke-WebRequest -Uri "http://localhost:8086/api/auth/login" `
-    -Method POST `
-    -ContentType "application/json" `
-    -Body $body `
-    -UseBasicParsing
-
-$auth = $response.Content | ConvertFrom-Json
-$token = $auth.accessToken
-Write-Host "Access Token: $token"
-```
-
-### Шаг 2: Ответ содержит токены
-
-```json
-{
-  "accessToken": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "username": "admin",
-    "role": "ADMIN"
-  },
-  "sessionTimeoutMinutes": 480
-}
-```
-
-- **accessToken** - используется для доступа к API (срок: 30 минут)
-- **refreshToken** - используется для обновления access token (срок: 12 часов)
-
-## Как использовать JWT токен
-
-### Для прямого доступа к Client Service (обход Gateway)
-
-**Endpoint:** `GET http://localhost:8081/api/clients`
-
-**Headers:**
-```
-Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...
-```
-
-**Пример с curl (Linux/Mac/Git Bash):**
 ```bash
-curl http://localhost:8081/api/clients \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8086/api/clients
 ```
 
-**Пример с PowerShell:**
-```powershell
-$token = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9..."
-Invoke-WebRequest -Uri "http://localhost:8081/api/clients" `
-    -Headers @{"Authorization" = "Bearer $token"} `
-    -UseBasicParsing
-```
-
-**Или с curl.exe в PowerShell:**
-```powershell
-curl.exe http://localhost:8081/api/clients `
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-### Через API Gateway (рекомендуется)
-
-**Endpoint:** `GET http://localhost:8086/api/clients`
-
-API Gateway автоматически проксирует запросы к Client Service через Eureka Service Discovery.
-
-**Пример (Linux/Mac/Git Bash):**
-```bash
-curl http://localhost:8086/api/clients \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-**PowerShell:**
 ```powershell
 Invoke-WebRequest -Uri "http://localhost:8086/api/clients" `
-    -Headers @{"Authorization" = "Bearer $token"} `
-    -UseBasicParsing
+  -Headers @{Authorization="Bearer $token"} -UseBasicParsing
 ```
 
-## Обновление токена
+### Refresh
 
-Когда access token истекает (через 30 минут), используйте refresh token для получения нового:
-
-**Endpoint:** `POST http://localhost:8086/api/auth/refresh`
-
-**Body:**
-```json
-{
-  "refreshToken": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9..."
-}
+```bash
+curl -X POST http://localhost:8086/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken":"<refresh-token>"}'
 ```
 
-**Ответ:**
-```json
-{
-  "accessToken": "NEW_ACCESS_TOKEN",
-  "expiresIn": 3600,
-  "tokenType": "Bearer"
-}
-```
+---
 
-## Public Endpoints (без аутентификации)
-
-Следующие endpoints доступны без токена:
-
-- `GET http://localhost:8081/actuator/health` - health check
-- `GET http://localhost:8086/actuator/health` - health check API Gateway
-- `POST http://localhost:8086/api/auth/login` - login endpoint
-
-## Swagger UI
-
-Swagger UI доступен по адресу:
-- **Client Service:** http://localhost:8081/swagger-ui.html
-- **API Gateway:** http://localhost:8086/swagger-ui.html
-
-В Swagger UI можно авторизоваться:
-1. Получить access token через `/api/auth/login`
-2. Нажать кнопку "Authorize" в Swagger UI
-3. Ввести: `Bearer YOUR_ACCESS_TOKEN`
-4. Нажать "Authorize"
-
-## Полный пример: Получение списка клиентов
-
-### 1. Получить токен
-```powershell
-$loginBody = @{
-    username = "admin"
-    password = "parking123"
-} | ConvertTo-Json
-
-$loginResponse = Invoke-WebRequest -Uri "http://localhost:8086/api/auth/login" `
-    -Method POST `
-    -ContentType "application/json" `
-    -Body $loginBody `
-    -UseBasicParsing
-
-$auth = $loginResponse.Content | ConvertFrom-Json
-$token = $auth.accessToken
-```
-
-### 2. Использовать токен для запроса
-```powershell
-$headers = @{
-    "Authorization" = "Bearer $token"
-}
-
-$clients = Invoke-WebRequest -Uri "http://localhost:8086/api/clients" `
-    -Headers $headers `
-    -UseBasicParsing
-
-Write-Host $clients.Content
-```
-
-## Troubleshooting
-
-### 401 Unauthorized
-- Проверьте, что токен не истек (access token живет 30 минут)
-- Проверьте формат заголовка: `Authorization: Bearer TOKEN` (слово "Bearer" обязательно)
-- Используйте refresh token для получения нового access token
-
-### 403 Forbidden
-- У пользователя недостаточно прав для этого действия
-- Войдите под пользователем с ролью ADMIN
-
-### 423 Account Locked
-- Учетная запись заблокирована после нескольких неудачных попыток входа
-- Подождите или обратитесь к администратору
-
-## Безопасность
-
-- **JWT Secret** настраивается через переменную окружения `JWT_SECRET`
-- Пароли хешируются с помощью BCrypt
-- Access token истекает через 30 минут
-- Refresh token истекает через 12 часов
-- Реализована защита от брутфорса
-- Все действия аудируются
-
-## Переменные окружения
+## 6. Configuration
 
 ```yaml
-# API Gateway
-JWT_SECRET: "your-secret-key-min-64-characters-long-for-production-use-only-12345"
-JWT_ACCESS_TOKEN_EXPIRATION: 1800  # 30 минут
-JWT_REFRESH_TOKEN_EXPIRATION: 43200  # 12 часов
-
-# Client Service
-JWT_SECRET: "ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789"
+jwt:
+  algorithm: HS512
+  access-token-expiration: 1800
+  refresh-token-expiration: 43200
+  secret: ${JWT_SECRET}
 ```
 
-**Важно:** В production используйте надежный JWT_SECRET длиной минимум 64 символа!
+Production checklist:
+- use strong `JWT_SECRET` (64+ chars)
+- never commit secrets
+- keep token lifetimes controlled via env
