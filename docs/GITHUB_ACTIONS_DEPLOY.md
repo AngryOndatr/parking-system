@@ -1,32 +1,3 @@
-## GitHub Actions — Secrets и настройка деплоя
-
-Этот документ содержит конкретные шаги и рекомендации по настройке секретов и автоматического деплоя через GitHub Actions для проекта `parking-system`.
-
-Цель: безопасно подготовить репозиторий для автоматического пуша образов в GHCR и для выполнения SSH-деплоя на сервере при пуше в `main` или при создании релиз-тега.
-
-1) Короткий чеклист (выполнить перед включением deploy job)
-- [ ] Удалить приватные ключи и секреты из рабочей копии и из истории Git
-- [ ] Добавить необходимые секреты в GitHub Repo → Settings → Secrets → Actions
-- [ ] Проверить, что `GITHUB_TOKEN` имеет права на запись пакетов (GHCR) или создать персональный токен с scope `write:packages`/`delete:packages`
-- [ ] Убедиться, что целевой сервер настроен: `docker`, `docker-compose` установлены; `DEPLOY_USER` имеет права на запуск docker-compose
-- [ ] (Опционально) Создать GitHub Environment `production` и настроить required reviewers / protection
-
-2) Какие секреты нужны и как их заполнить
-
-- `DEPLOY_HOST` — IP или DNS имя сервера, куда будете деплоить (пример: `192.0.2.10` или `example.com`).
-- `DEPLOY_USER` — SSH пользователь на целевом сервере (пример: `ubuntu` или `deploy`).
-- `DEPLOY_SSH_KEY` — приватный SSH-ключ в открытом текстовом виде (начинается с `-----BEGIN OPENSSH PRIVATE KEY-----`).
-  - Рекомендация: используйте deploy-ключ без passphrase или храните passphrase в отдельном секретe и используйте ssh-agent (сложнее).
-  - При вставке в GitHub UI убедитесь, что все переносы строк сохранены. В `gh` CLI можно сохранить файл и выполнить `gh secret set DEPLOY_SSH_KEY --body "$(Get-Content -Raw path\to\id_rsa)"`.
-- `DEPLOY_PATH` — путь на сервере, где находится `docker-compose.yml` и где будет выполняться pull/up (пример: `/home/deploy/parking-system`).
-
-Дополнительные (опционально):
-- `DEPLOY_SSH_KEY_PASSPHRASE` — если ключ защищён фразой, храните её отдельно и используйте в workflow для `ssh-add`.
-- `REGISTRY_USERNAME`, `REGISTRY_TOKEN` — если вы используете приватный регистри, вместо `GITHUB_TOKEN`.
-
-3) Пример: добавление секретов через GitHub UI
-
-1. Откройте: `https://github.com/<owner>/<repo>/settings/secrets/actions`
 ## GitHub Actions — Secrets and Deploy Setup
 
 This document contains concrete steps and recommendations for configuring repository secrets and enabling automated deploys via GitHub Actions for the `parking-system` project.

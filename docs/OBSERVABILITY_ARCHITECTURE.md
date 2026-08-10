@@ -190,7 +190,7 @@ scrape_configs:
     
   - job_name: 'otel-collector'
     static_configs:
-      - targets: ['otel-collector:8888']
+      - targets: ['otel-collector:8889']
     metrics_path: '/metrics'
     scrape_interval: 15s
 ```
@@ -234,7 +234,7 @@ exporters:
       insecure: true
   
   prometheus:
-    endpoint: "0.0.0.0:8888"
+    endpoint: "0.0.0.0:8889"
 
 service:
   pipelines:

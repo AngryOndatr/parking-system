@@ -1,66 +1,62 @@
-# 🚀 Git Branching - Quick Reference
+# 🚀 Git Branching - Quick Reference (Phase 4)
 
 ## 📋 Краткие ответы
 
-### 1. Когда merge develop → main?
-**По завершении Phase/Milestone:**
-- Phase 0 → v0.1.0
-- Phase 1 → v0.2.0
-- Phase 2 → v1.0.0
+### 1. Когда merge `develop` -> `main`?
+**По завершении milestone/релизного среза Phase 4.**
 
-### 2. Нужен ли Issue?
-**НЕТ**, используйте **Pull Request**
+Пример:
+- Phase 4 increment A -> `v1.4.0`
+- Phase 4 increment B -> `v1.4.1`
+- Phase 5 release prep -> `v1.5.0`
 
-### 3. Общепринятые практики?
-**Git Flow** (для версионированных релизов)
-**GitHub Flow** (для частых деплоев)
+### 2. Нужен ли отдельный Issue для merge?
+Обычно **нет**. Используйте **Pull Request** и чеклист релиза в описании PR.
 
----
-
-## 🎯 Для вашего проекта (сейчас)
-
-```
-1. Работайте в develop
-2. Завершите Phase 0 (8 Issues)
-3. Создайте PR: develop → main
-4. Merge PR
-5. Создайте Tag v0.1.0
-6. Продолжайте в develop (Phase 1)
-```
+### 3. Какие branch names использовать сейчас?
+- `feature/phase-4-<scope>`
+- `bugfix/phase-4-<scope>`
+- `release/v1.4.x`
 
 ---
 
-## 📝 Команды
+## 🎯 Рекомендуемый поток (текущий проект)
 
-### Создать Pull Request:
+1. Работайте от `develop`
+2. Создавайте feature/bugfix ветки под задачи Phase 4
+3. Merge веток в `develop` через PR
+4. На релизном срезе создавайте `release/v1.4.x`
+5. Merge `release/*` в `main` и ставьте tag (`v1.4.x`)
+
+---
+
+## 📝 Минимальные команды
+
+### Feature branch
 ```bash
-# На GitHub:
-# Base: main
-# Compare: develop
-# Title: "Release v0.1.0 - Phase 0 Complete"
+git checkout develop
+git pull origin develop
+git checkout -b feature/phase-4-auth-doc-consolidation
 ```
 
-### Создать Tag:
+### Release branch
+```bash
+git checkout develop
+git checkout -b release/v1.4.0
+git push origin release/v1.4.0
+```
+
+### Tag after merge to main
 ```bash
 git checkout main
 git pull origin main
-git tag -a v0.1.0 -m "Release v0.1.0"
-git push origin v0.1.0
+git tag -a v1.4.0 -m "Release v1.4.0"
+git push origin v1.4.0
 ```
 
 ---
 
-## ✅ Периодичность
-
-```
-✅ Рекомендую: По Phase/Milestone
-❌ Не рекомендую: Каждый коммит
-❌ Не рекомендую: Раз в месяц
-```
-
----
-
-**TL;DR:** Работайте в `develop`, merge в `main` по завершении Phase. НЕ создавайте Issue, используйте Pull Request. Создавайте Git Tags для релизов.
+**TL;DR:** для текущего состояния проекта используйте naming и релизные примеры Phase 4 (`feature/phase-4-*`, `release/v1.4.x`, `v1.4.x`).
 
 📖 **Подробно:** см. [GIT_BRANCHING_STRATEGY.md](./GIT_BRANCHING_STRATEGY.md)
 

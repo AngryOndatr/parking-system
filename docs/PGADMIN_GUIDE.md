@@ -29,6 +29,11 @@
    - `parking_events` - события парковки
    - `payments` - платежи
    - `logs` - логи системы
+   - `parking_lots` - парковочные зоны/объекты
+   - `parking_spaces` - парковочные места
+   - `bookings` - бронирования
+   - `tariffs` - тарифы
+   - `gate_events` - события шлагбаума
 
 ## 📝 Выполнение SQL запросов
 
@@ -79,4 +84,3 @@ docker-compose -f docker-compose.yml logs pgadmin
 Пароль базы данных:
 - Username: `postgres`
 - Password: `postgres`
-
