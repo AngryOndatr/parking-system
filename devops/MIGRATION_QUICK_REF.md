@@ -4,7 +4,7 @@
 
 - **[Database README](../database/README.md)** - Complete migration guide
 - **[Deployment Guide](../docs/DEPLOYMENT_GUIDE.md)** - Production deployment
-- **[Migration Tasks](../docs/DATABASE_MIGRATION_TASKS_EN.md)** - Task breakdown
+- **[Project Phases](../docs/PROJECT_PHASES_EN.md)** - Current backlog and roadmap
 
 ## 🚀 Quick Commands
 
@@ -88,4 +88,3 @@ docker-compose up -d
 For detailed information, see:
 - [Database README](../database/README.md)
 - [Deployment Guide](../docs/DEPLOYMENT_GUIDE.md)
-

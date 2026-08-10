@@ -740,7 +740,7 @@ docker run -d \
 
 - **API Gateway Proxy Examples:** `docs/API_GATEWAY_PROXY_EXAMPLES.md`
 - **Authentication Guide:** `docs/AUTHENTICATION.md`
-- **Database Migration:** `docs/DATABASE_MIGRATION_EXPLAINED.md`
+- **Database Migration:** `docs/DEPLOYMENT_GUIDE.md`
 - **Vehicle CRUD Implementation:** `VEHICLE_CRUD_IMPLEMENTATION.md`
 
 ---
@@ -757,4 +757,3 @@ docker run -d \
 **API Gateway Port:** 8086  
 **Version:** 0.0.1-SNAPSHOT (Spring Boot 3.2.8)  
 **Last Updated:** 2026-03-09
-

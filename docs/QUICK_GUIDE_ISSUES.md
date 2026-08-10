@@ -20,9 +20,9 @@ GitHub → Repository → Issues → Labels → New label
 10. priority-medium  (цвет: #fbca04)
 ```
 
-### Шаг 2: Открыть DATABASE_MIGRATION_TASKS.md
+### Шаг 2: Открыть актуальный бэклог в GitHub
 
-Файл: `docs/DATABASE_MIGRATION_TASKS.md`
+Источник: **GitHub Issues** и `docs/PROJECT_PHASES_EN.md`
 
 ### Шаг 3: Создать Issue #1
 
@@ -72,13 +72,13 @@ gh auth login
 gh issue create `
   --title "[DB Migration] Setup Flyway dependency and configuration" `
   --label "database,migration,flyway,priority-high" `
-  --body "См. docs/DATABASE_MIGRATION_TASKS.md - Issue #1"
+  --body "См. описание задачи в GitHub issue #1"
 
 # Issue #2
 gh issue create `
   --title "[DB Migration] Create V1__initial_schema.sql migration" `
   --label "database,migration,sql,priority-high" `
-  --body "См. docs/DATABASE_MIGRATION_TASKS.md - Issue #2"
+  --body "См. описание задачи в GitHub issue #2"
 
 # ... и так далее для всех 8 issues
 ```
@@ -118,5 +118,4 @@ gh issue create `
 
 ---
 
-**TL;DR:** Открыть DATABASE_MIGRATION_TASKS.md, скопировать каждый Issue на GitHub, добавить labels, начать с Issue #1.
-
+**TL;DR:** Открыть GitHub Issues (и при необходимости `docs/PROJECT_PHASES_EN.md`), скопировать каждый Issue на GitHub, добавить labels, начать с Issue #1.
