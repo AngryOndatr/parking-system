@@ -100,6 +100,14 @@ logging:
     org.springframework.security: DEBUG
 
 security:
+  rate-limiting:
+    enabled: ${RATE_LIMITING_ENABLED:true}
+    max-requests-per-minute: ${RATE_LIMIT_MINUTE:60}
+    max-requests-per-hour: ${RATE_LIMIT_HOUR:1000}
+    brute-force-threshold: ${BRUTE_FORCE_THRESHOLD:10}
+  brute-force:
+    threshold: ${BRUTE_FORCE_THRESHOLD:10}
+    lockout-minutes: ${BRUTE_FORCE_LOCKOUT_MINUTES:30}
   jwt:
     secret: ${JWT_SECRET:ParkingSystemSecretKey2025!VeryLongAndSecureKey123456789ForDevelopmentOnlyChangeInProduction}
     access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:1800}
@@ -127,6 +135,9 @@ security:
     max-requests-per-minute: ${RATE_LIMIT_MINUTE:60}
     max-requests-per-hour: ${RATE_LIMIT_HOUR:1000}
     brute-force-threshold: ${BRUTE_FORCE_THRESHOLD:10}
+  brute-force:
+    threshold: ${BRUTE_FORCE_THRESHOLD:10}
+    lockout-minutes: ${BRUTE_FORCE_LOCKOUT_MINUTES:30}
   
   audit:
     enabled: ${SECURITY_AUDIT_ENABLED:true}

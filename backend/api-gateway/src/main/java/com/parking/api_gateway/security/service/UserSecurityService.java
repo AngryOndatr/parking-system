@@ -11,6 +11,7 @@ import com.parking.api_gateway.security.exception.AccountDisabledException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,8 +34,12 @@ public class UserSecurityService {
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10); // Match database hash strength
 
     // Security Configuration
-    private static final int MAX_FAILED_ATTEMPTS = 5;
-    private static final int LOCKOUT_DURATION_MINUTES = 30;
+    @Value("${security.brute-force.threshold:${security.rate-limiting.brute-force-threshold:${security.brute-force.max-attempts:${BRUTE_FORCE_THRESHOLD:10}}}}")
+    private int bruteForceThreshold = 10;
+
+    @Value("${security.brute-force.lockout-minutes:${security.brute-force.lock-duration-minutes:${BRUTE_FORCE_LOCKOUT_MINUTES:${BRUTE_FORCE_LOCK_DURATION:30}}}}")
+    private int lockoutDurationMinutes = 30;
+
     private static final int PASSWORD_EXPIRY_DAYS = 90;
     private static final int SESSION_TIMEOUT_HOURS = 8;
     
@@ -156,7 +161,7 @@ public class UserSecurityService {
         }
         
         // Check for too many recent failed attempts
-        if (user.getFailedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
+        if (user.getFailedLoginAttempts() >= bruteForceThreshold) {
             lockAccountTemporarily(user);
             throw new AccountLockedException("Account locked due to too many failed login attempts");
         }
@@ -212,8 +217,8 @@ public class UserSecurityService {
         log.warn("Failed login attempt #{} for user {} from IP {}: {}", 
                 attempts, user.getUsername(), ipAddress, reason);
         
-        if (attempts >= MAX_FAILED_ATTEMPTS) {
-            log.warn("🔒 [handleFailedLogin] MAX_FAILED_ATTEMPTS reached, locking account...");
+        if (attempts >= bruteForceThreshold) {
+            log.warn("🔒 [handleFailedLogin] brute force threshold reached ({}), locking account...", bruteForceThreshold);
             try {
                 lockAccountTemporarily(user);
                 log.error("Account {} locked due to {} failed login attempts from IP {}",
@@ -230,7 +235,7 @@ public class UserSecurityService {
      * Lock account temporarily
      */
     private void lockAccountTemporarily(UserSecurityEntity user) {
-        LocalDateTime lockUntil = LocalDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES);
+        LocalDateTime lockUntil = LocalDateTime.now().plusMinutes(lockoutDurationMinutes);
         log.debug("🔒 [lockAccountTemporarily] Locking user {} until {}", user.getUsername(), lockUntil);
 
         try {

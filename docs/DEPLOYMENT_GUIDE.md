@@ -214,6 +214,7 @@ JWT_REFRESH_TOKEN_EXPIRATION=43200  # 12 hours
 ```bash
 RATE_LIMIT_MINUTE=60
 BRUTE_FORCE_THRESHOLD=10
+BRUTE_FORCE_LOCKOUT_MINUTES=30
 ```
 
 **Service-to-service URLs (gate-control-service):**
@@ -695,4 +696,3 @@ For deployment issues:
 2. Verify migrations: `docker exec parking_db psql -U postgres -d parking_db -c "SELECT version, description, installed_on FROM flyway_schema_history ORDER BY installed_rank;"`
 3. Review health checks
 4. Check GitHub Issues
-

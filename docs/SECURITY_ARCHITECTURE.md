@@ -264,6 +264,7 @@ RATE_LIMITING_ENABLED=true
 RATE_LIMIT_MINUTE=30                # More restrictive for prod
 RATE_LIMIT_HOUR=500                 # More restrictive for prod
 BRUTE_FORCE_THRESHOLD=5             # More restrictive for prod
+BRUTE_FORCE_LOCKOUT_MINUTES=30
 
 # Logging
 SECURITY_LOGGING_LEVEL=WARN         # Don't log sensitive data

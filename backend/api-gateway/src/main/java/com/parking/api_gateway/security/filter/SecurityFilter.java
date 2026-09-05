@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -38,10 +39,15 @@ public class SecurityFilter extends OncePerRequestFilter {
     private final SecurityAuditService auditService;
     private final ObservabilityService observabilityService;
     
-    // Rate limiting configuration
-    private static final int MAX_REQUESTS_PER_MINUTE = 60;
-    private static final int MAX_REQUESTS_PER_HOUR = 1000;
-    private static final int BRUTE_FORCE_THRESHOLD = 10; // per IP per hour
+    // Rate limiting / brute-force configuration (env-overridable)
+    @Value("${security.rate-limiting.max-requests-per-minute:${security.rate-limit.requests-per-minute:${RATE_LIMIT_MINUTE:60}}}")
+    private int maxRequestsPerMinute = 60;
+
+    @Value("${security.rate-limiting.max-requests-per-hour:${RATE_LIMIT_HOUR:1000}}")
+    private int maxRequestsPerHour = 1000;
+
+    @Value("${security.brute-force.threshold:${security.rate-limiting.brute-force-threshold:${security.brute-force.max-attempts:${BRUTE_FORCE_THRESHOLD:10}}}}")
+    private int bruteForceThreshold = 10; // per IP per hour
     
     // Rate limiting storage
     private final Map<String, RateLimitInfo> rateLimitCache = new ConcurrentHashMap<>();
@@ -240,7 +246,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                 .filter(timestamp -> ChronoUnit.MINUTES.between(timestamp, now) < 1)
                 .count();
         
-        if (recentRequests >= MAX_REQUESTS_PER_MINUTE) {
+        if (recentRequests >= maxRequestsPerMinute) {
             log.warn("Rate limit exceeded for IP: {} - {} requests in last minute", clientIp, recentRequests);
             auditService.logSuspiciousActivity("unknown", clientIp, "Rate limit exceeded", 
                     "Too many requests per minute");
@@ -248,7 +254,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
         
         // Check hour limit
-        if (info.requestTimestamps.size() >= MAX_REQUESTS_PER_HOUR) {
+        if (info.requestTimestamps.size() >= maxRequestsPerHour) {
             log.warn("Hourly rate limit exceeded for IP: {} - {} requests", clientIp, info.requestTimestamps.size());
             return false;
         }
@@ -384,7 +390,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         RateLimitInfo info = rateLimitCache.computeIfAbsent(clientIp, k -> new RateLimitInfo());
         int failures = info.failedAttempts.incrementAndGet();
         
-        if (failures >= BRUTE_FORCE_THRESHOLD) {
+        if (failures >= bruteForceThreshold) {
             suspiciousIps.put(clientIp, LocalDateTime.now());
             log.warn("IP {} marked as suspicious after {} failed attempts", clientIp, failures);
             auditService.logSuspiciousActivity("unknown", clientIp, "Brute force detected", 

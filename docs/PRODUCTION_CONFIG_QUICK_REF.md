@@ -39,6 +39,8 @@ export SPRING_REDIS_PASSWORD=<REDIS_PASSWORD>
 export DB_POOL_SIZE=20
 export JWT_ACCESS_TOKEN_EXPIRATION=1800
 export RATE_LIMIT_MINUTE=30
+export BRUTE_FORCE_THRESHOLD=10
+export BRUTE_FORCE_LOCKOUT_MINUTES=30
 ```
 
 ### 2. Verify Configuration
@@ -132,4 +134,3 @@ docker exec parking_db psql -U postgres -d parking_db \
 
 - **Documentation:** [PRODUCTION_MIGRATION_PROCESS.md](PRODUCTION_MIGRATION_PROCESS.md)
 - **Troubleshooting:** [Database README](../database/README.md#troubleshooting)
-

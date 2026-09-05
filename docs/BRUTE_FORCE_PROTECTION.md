@@ -9,7 +9,7 @@ Activity: Brute force detected, Details: Multiple failed authentication attempts
 ```
 
 **Что происходит:**
-API Gateway имеет встроенную защиту от brute force атак. После определенного количества неудачных попыток входа (по умолчанию 5), аккаунт временно блокируется.
+API Gateway имеет встроенную защиту от brute force атак. После определенного количества неудачных попыток входа (по умолчанию 10), аккаунт временно блокируется.
 
 ---
 
@@ -27,9 +27,9 @@ account_locked_until TIMESTAMP
 
 1. При **успешном входе**: `failed_login_attempts = 0`
 2. При **неудачном входе**: `failed_login_attempts += 1`
-3. При **failed_login_attempts >= 5**: 
+3. При **failed_login_attempts >= 10**: 
    - `account_non_locked = FALSE`
-   - `account_locked_until = NOW() + 15 минут`
+   - `account_locked_until = NOW() + 30 минут`
    - Возвращается **HTTP 423 Locked**
 
 ### Код в UserSecurityService:
@@ -41,7 +41,7 @@ if (!passwordMatches) {
     
     if (user.getFailedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
         user.setAccountNonLocked(false);
-        user.setAccountLockedUntil(LocalDateTime.now().plusMinutes(15));
+        user.setAccountLockedUntil(LocalDateTime.now().plusMinutes(30));
     }
     
     userRepository.save(user);
@@ -155,8 +155,8 @@ Write-Host "Access Token: $($response.accessToken)"
 ```yaml
 security:
   brute-force:
-    max-attempts: 5              # Количество попыток до блокировки
-    lockout-duration-minutes: 15  # Время блокировки в минутах
+    threshold: ${BRUTE_FORCE_THRESHOLD:10}                  # Количество попыток до блокировки
+    lockout-minutes: ${BRUTE_FORCE_LOCKOUT_MINUTES:30}      # Время блокировки в минутах
     reset-after-success: true     # Сбросить счетчик после успешного входа
 ```
 
@@ -315,4 +315,3 @@ public void unlockExpiredAccounts() {
 
 **Создано:** 2025-12-21  
 **Статус:** ✅ Решено
-
