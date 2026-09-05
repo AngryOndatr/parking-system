@@ -1,21 +1,21 @@
-# 🔒 Brute Force Protection: Описание и решение проблем
+# 🔒 Brute Force Protection: Description and Troubleshooting
 
-## 🚨 Проблема
+## 🚨 Problem
 
-**Симптом:**
+**Symptom:**
 ```
-AUDIT: Suspicious activity - User: unknown, IP: 172.18.0.1, 
+AUDIT: Suspicious activity - User: unknown, IP: 172.18.0.1,
 Activity: Brute force detected, Details: Multiple failed authentication attempts
 ```
 
-**Что происходит:**
-API Gateway имеет встроенную защиту от brute force атак. После определенного количества неудачных попыток входа (по умолчанию 10), аккаунт временно блокируется.
+**What is happening:**
+API Gateway has built-in brute force protection. After a configurable number of failed login attempts (default: 10), the account is temporarily locked.
 
 ---
 
-## 🔍 Как работает защита
+## 🔍 How Protection Works
 
-### Поля в таблице `users`:
+### Fields in the `users` table:
 
 ```sql
 failed_login_attempts INTEGER DEFAULT 0
@@ -23,27 +23,29 @@ account_non_locked BOOLEAN DEFAULT TRUE
 account_locked_until TIMESTAMP
 ```
 
-### Логика защиты:
+### Protection logic:
 
-1. При **успешном входе**: `failed_login_attempts = 0`
-2. При **неудачном входе**: `failed_login_attempts += 1`
-3. При **failed_login_attempts >= 10**: 
+1. On **successful login**: `failed_login_attempts = 0`
+2. On **failed login**: `failed_login_attempts += 1`
+3. When **failed_login_attempts >= 10**:
    - `account_non_locked = FALSE`
-   - `account_locked_until = NOW() + 30 минут`
-   - Возвращается **HTTP 423 Locked**
+   - `account_locked_until = NOW() + 30 minutes`
+   - Returns **HTTP 423 Locked**
 
-### Код в UserSecurityService:
+### Code in UserSecurityService:
+
+> ⚙️ Thresholds `bruteForceThreshold` and `lockoutDurationMinutes` are injected via `@Value` and can be overridden with env vars `BRUTE_FORCE_THRESHOLD` and `BRUTE_FORCE_LOCKOUT_MINUTES` (see `application.yml`).
 
 ```java
-// После проверки пароля
+// After password check
 if (!passwordMatches) {
     user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
-    
-    if (user.getFailedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
+
+    if (user.getFailedLoginAttempts() >= bruteForceThreshold) {
         user.setAccountNonLocked(false);
-        user.setAccountLockedUntil(LocalDateTime.now().plusMinutes(30));
+        user.setAccountLockedUntil(LocalDateTime.now().plusMinutes(lockoutDurationMinutes));
     }
-    
+
     userRepository.save(user);
     throw new InvalidCredentialsException("Invalid credentials");
 }
@@ -51,73 +53,73 @@ if (!passwordMatches) {
 
 ---
 
-## ✅ Решение проблемы
+## ✅ Troubleshooting
 
-### Вариант 1: Автоматический скрипт (Рекомендуется)
+### Option 1: Automated Script (Recommended)
 
 ```powershell
 cd C:\Users\user\Projects\parking-system\devops
 .\reset-brute-force.ps1
 ```
 
-Скрипт:
-- ✓ Проверяет подключение к БД
-- ✓ Показывает текущее состояние пользователей
-- ✓ Сбрасывает счетчики для всех пользователей
-- ✓ Разблокирует все аккаунты
+The script:
+- ✓ Checks DB connection
+- ✓ Shows current user state
+- ✓ Resets counters for all users
+- ✓ Unlocks all accounts
 
-### Вариант 2: Ручной SQL
+### Option 2: Manual SQL
 
 ```sql
--- Разблокировать всех пользователей
-UPDATE users 
-SET 
+-- Unlock all users
+UPDATE users
+SET
     failed_login_attempts = 0,
     account_non_locked = true,
     account_locked_until = NULL;
 
--- Проверка
-SELECT username, failed_login_attempts, account_non_locked 
+-- Verification
+SELECT username, failed_login_attempts, account_non_locked
 FROM users;
 ```
 
-Выполнить через Docker:
+Run via Docker:
 ```powershell
 docker exec -it parking_db psql -U postgres -d parking_db -c "
 UPDATE users SET failed_login_attempts = 0, account_non_locked = true, account_locked_until = NULL;
 "
 ```
 
-### Вариант 3: Разблокировать конкретного пользователя
+### Option 3: Unlock a Specific User
 
 ```powershell
 docker exec -it parking_db psql -U postgres -d parking_db -c "
-UPDATE users 
-SET failed_login_attempts = 0, account_non_locked = true, account_locked_until = NULL 
+UPDATE users
+SET failed_login_attempts = 0, account_non_locked = true, account_locked_until = NULL
 WHERE username = 'admin';
 "
 ```
 
 ---
 
-## 🧪 Проверка после разблокировки
+## 🧪 Post-Unlock Verification
 
-### Полная проверка системы:
+### Full System Check:
 
 ```powershell
 cd C:\Users\user\Projects\parking-system\devops
 .\check-system.ps1
 ```
 
-Этот скрипт проверяет:
-1. Статус Docker контейнеров
-2. Доступность PostgreSQL
-3. Наличие пользователей в БД
-4. Сброс brute force защиты
-5. Health API Gateway и Client Service
-6. Тест авторизации admin/parking123
+This script checks:
+1. Docker container status
+2. PostgreSQL availability
+3. Users present in DB
+4. Brute force protection reset
+5. API Gateway and Client Service health
+6. Authentication test with admin/parking123
 
-### Ручной тест авторизации:
+### Manual Auth Test:
 
 ```powershell
 $body = @{
@@ -133,7 +135,7 @@ $response = Invoke-RestMethod -Uri "http://localhost:8086/api/auth/login" `
 Write-Host "Access Token: $($response.accessToken)"
 ```
 
-**Ожидаемый результат:**
+**Expected result:**
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9...",
@@ -148,21 +150,21 @@ Write-Host "Access Token: $($response.accessToken)"
 
 ---
 
-## 🛡️ Настройка защиты (для продакшена)
+## 🛡️ Production Configuration
 
-### Параметры в application.yml:
+### application.yml parameters:
 
 ```yaml
 security:
   brute-force:
-    threshold: ${BRUTE_FORCE_THRESHOLD:10}                  # Количество попыток до блокировки
-    lockout-minutes: ${BRUTE_FORCE_LOCKOUT_MINUTES:30}      # Время блокировки в минутах
-    reset-after-success: true     # Сбросить счетчик после успешного входа
+    threshold: ${BRUTE_FORCE_THRESHOLD:10}                  # Number of attempts before lockout
+    lockout-minutes: ${BRUTE_FORCE_LOCKOUT_MINUTES:30}   # Lockout duration in minutes
+    reset-after-success: true     # Reset counter on successful login
 ```
 
-### Рекомендации для продакшена:
+### Production Recommendations:
 
-1. **Rate Limiting** на уровне API Gateway:
+1. **Rate Limiting** at API Gateway level:
    ```yaml
    spring:
      cloud:
@@ -177,79 +179,79 @@ security:
                    redis-rate-limiter.burstCapacity: 20
    ```
 
-2. **CAPTCHA** после 3 неудачных попыток
+2. **CAPTCHA** after 3 failed attempts
 
-3. **Email уведомления** о подозрительной активности
+3. **Email notifications** for suspicious activity
 
-4. **IP Blacklist** для повторяющихся атак
+4. **IP Blacklist** for repeated attacks
 
-5. **Мониторинг** через Prometheus/Grafana:
+5. **Monitoring** via Prometheus/Grafana:
    ```promql
    rate(authentication_failures_total[5m]) > 10
    ```
 
 ---
 
-## 📊 Мониторинг brute force атак
+## 📊 Monitoring Brute Force Attacks
 
-### Проверка логов API Gateway:
+### Check API Gateway logs:
 
 ```powershell
 docker logs api-gateway 2>&1 | Select-String "AUDIT|Brute force|Suspicious"
 ```
 
-### SQL для анализа:
+### SQL for Analysis:
 
 ```sql
--- Топ пользователей с неудачными попытками
+-- Top users by failed attempts
 SELECT username, failed_login_attempts, account_non_locked, last_login_at
 FROM users
 WHERE failed_login_attempts > 0
 ORDER BY failed_login_attempts DESC;
 
--- Заблокированные аккаунты
+-- Locked accounts
 SELECT username, account_locked_until, failed_login_attempts
 FROM users
 WHERE account_non_locked = false;
 ```
 
-### Метрики в Prometheus:
+### Prometheus Metrics:
 
-- `authentication_attempts_total` - общее количество попыток
-- `authentication_failures_total` - неудачные попытки
-- `authentication_lockouts_total` - количество блокировок
-- `authentication_success_total` - успешные входы
+- `authentication_attempts_total` - total number of attempts
+- `authentication_failures_total` - failed attempts
+- `authentication_lockouts_total` - number of lockouts
+- `authentication_success_total` - successful logins
 
 ---
 
-## 🔄 Автоматическая разблокировка
+## 🔄 Automatic Unlock
 
-Можно настроить cron job для автоматической разблокировки:
+A cron job can be configured for automatic unlock:
 
 ```bash
-# Каждые 15 минут разблокировать истекшие блокировки
+# Every 15 minutes, unlock expired lockouts
 */15 * * * * docker exec parking_db psql -U postgres -d parking_db -c "
-UPDATE users 
+UPDATE users
 SET account_non_locked = true, failed_login_attempts = 0
 WHERE account_locked_until < NOW();
 "
 ```
 
-Или через Spring Scheduler в коде:
+Or via Spring Scheduler in code:
 
 ```java
-@Scheduled(fixedRate = 900000) // 15 минут
+@Scheduled(fixedRate = 900000) // 15 minutes
 public void unlockExpiredAccounts() {
     LocalDateTime now = LocalDateTime.now();
     List<UserSecurityEntity> lockedUsers = userRepository
         .findByAccountNonLockedAndAccountLockedUntilBefore(false, now);
-    
+
     lockedUsers.forEach(user -> {
         user.setAccountNonLocked(true);
         user.setFailedLoginAttempts(0);
         user.setAccountLockedUntil(null);
     });
-    
+
     userRepository.saveAll(lockedUsers);
     log.info("Unlocked {} expired accounts", lockedUsers.size());
 }
@@ -257,61 +259,61 @@ public void unlockExpiredAccounts() {
 
 ---
 
-## 📝 Скрипты для управления
+## 📝 Management Scripts
 
-### 1. Сброс brute force
+### 1. Reset brute force
 ```powershell
 .\reset-brute-force.ps1
 ```
 
-### 2. Проверка системы
+### 2. System check
 ```powershell
 .\check-system.ps1
 ```
 
-### 3. Тест авторизации
+### 3. Auth test
 ```powershell
 .\test-auth.ps1
 ```
 
 ---
 
-## 🚫 Частые ошибки
+## 🚫 Common Errors
 
 ### 1. "Multiple failed authentication attempts"
-**Причина:** Неверный пароль или username  
-**Решение:** Проверить учетные данные в БД
+**Cause:** Wrong password or username
+**Solution:** Verify credentials in DB
 
 ### 2. "HTTP 423 Locked"
-**Причина:** Аккаунт заблокирован после 5 неудачных попыток  
-**Решение:** `.\reset-brute-force.ps1`
+**Cause:** Account locked after failed attempts
+**Solution:** `.\reset-brute-force.ps1`
 
 ### 3. "User not found"
-**Причина:** Пользователь не существует в БД  
-**Решение:** Проверить `docker exec parking_db psql ... -c "SELECT * FROM users;"`
+**Cause:** User does not exist in DB
+**Solution:** Check `docker exec parking_db psql ... -c "SELECT * FROM users;"`
 
-### 4. "Invalid credentials" (после сброса)
-**Причина:** Хеш пароля в БД не совпадает  
-**Решение:** Пересоздать пользователя с правильным BCrypt хешем
-
----
-
-## 🎯 Резюме
-
-**Защита от brute force** - это важная функция безопасности, но она может вызвать проблемы во время разработки и тестирования.
-
-**Для разработки:**
-- Используйте `reset-brute-force.ps1` для быстрого сброса
-- Увеличьте `max-attempts` в конфигурации
-- Уменьшите `lockout-duration`
-
-**Для продакшена:**
-- Оставьте защиту включенной
-- Настройте мониторинг
-- Добавьте email уведомления
-- Рассмотрите CAPTCHA и rate limiting
+### 4. "Invalid credentials" (after reset)
+**Cause:** Password hash in DB doesn't match
+**Solution:** Recreate user with correct BCrypt hash
 
 ---
 
-**Создано:** 2025-12-21  
-**Статус:** ✅ Решено
+## 🎯 Summary
+
+**Brute force protection** is an important security feature but can cause issues during development and testing.
+
+**For development:**
+- Use `reset-brute-force.ps1` for quick reset
+- Increase `max-attempts` in config
+- Reduce `lockout-duration`
+
+**For production:**
+- Keep protection enabled
+- Configure monitoring
+- Add email notifications
+- Consider CAPTCHA and rate limiting
+
+---
+
+**Created:** 2025-12-21
+**Status:** ✅ Resolved
